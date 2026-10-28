@@ -34,9 +34,77 @@ const tabVisualBtn = document.getElementById("tabVisualBtn");
 const tabSmtBtn = document.getElementById("tabSmtBtn");
 const visualProofPane = document.getElementById("visualProofPane");
 const smtProofPane = document.getElementById("smtProofPane");
+const symbolExplainerDialog = document.getElementById("symbolExplainerDialog");
+const explainerDialogTitle = document.getElementById("explainerDialogTitle");
+const explainerDialogBody = document.getElementById("explainerDialogBody");
 
 let activeSmtFilter = "all";
 let highlightedTrackerId = null;
+
+const syllableOverridesMap = {
+  evaporation: 5,
+  condensation: 4,
+  precipitation: 5,
+  simultaneously: 5,
+  transformation: 4,
+  continuously: 5,
+  photosynthesis: 5,
+  biodiversity: 6,
+  ecosystem: 4,
+  temperature: 4,
+  atmosphere: 3,
+  denominator: 5,
+  numerator: 4,
+  equivalent: 4,
+  proportional: 4,
+  simplification: 5,
+  characterization: 6,
+  subterranean: 5,
+  camouflage: 3,
+  predator: 3,
+  environment: 4,
+  adaptation: 4,
+  area: 3,
+  idea: 3,
+  science: 2,
+  ratio: 3,
+  every: 2,
+  water: 2,
+  changes: 2,
+  causes: 2,
+};
+
+function estimateWordSyllablesClient(rawWord) {
+  const cleaned = rawWord.toLowerCase().replace(/[^a-z]/g, "");
+  if (!cleaned) {
+    return { count: 0, method: "empty", vowelGroups: [] };
+  }
+  if (syllableOverridesMap[cleaned] !== undefined) {
+    const groups = cleaned.match(/[aeiouy]+/g) || [];
+    return {
+      count: syllableOverridesMap[cleaned],
+      method: "SYLLABLE_OVERRIDES lookup + vowel-group scan",
+      vowelGroups: groups,
+    };
+  }
+  if (cleaned.length <= 3) {
+    return { count: 1, method: "short-word rule (<=3 chars)", vowelGroups: [cleaned] };
+  }
+  let stemmed = cleaned;
+  if (stemmed.endsWith("es") || stemmed.endsWith("ed")) {
+    if (!stemmed.endsWith("ted") && !stemmed.endsWith("ded") && !stemmed.endsWith("ses")) {
+      stemmed = stemmed.slice(0, -2);
+    }
+  } else if (stemmed.endsWith("e") && !stemmed.endsWith("le")) {
+    stemmed = stemmed.slice(0, -1);
+  }
+  const vowelGroups = stemmed.match(/[aeiouy]+/g) || [];
+  return {
+    count: Math.max(1, vowelGroups.length),
+    method: "regex [aeiouy]+ vowel-cluster scan (silent-e stripped)",
+    vowelGroups,
+  };
+}
 
 function populateSpecInputs(gradeSpec, allowlistOverride) {
   maxWordsInput.value = gradeSpec.maxWordsPerSentence;
@@ -473,7 +541,11 @@ function buildProofSliceInspectorHtml(
     .map(
       (vInfo) => `
       <tr>
-        <td class="varSymCell">${vInfo.varName}</td>
+        <td class="varSymCell">
+          <button type="button" class="clickableVarBtn explainSymbolTrigger" data-symbol-name="${vInfo.varName}">
+            ${vInfo.varName} &#9432;
+          </button>
+        </td>
         <td><code>${vInfo.varType}</code></td>
         <td><span class="varValCell">${vInfo.actualValue}</span></td>
         <td><code>${escapeHtmlText(vInfo.factStmt)}</code></td>
@@ -535,8 +607,10 @@ function buildProofSliceInspectorHtml(
           selectedTracker.categoryLabel
         })</span>
       </div>
-      <div class="sliceHeaderSub">
-        Click any tracker card in the matrix above to switch the inspected proof slice
+      <div style="display:flex;align-items:center;gap:0.65rem;flex-wrap:wrap;">
+        <button type="button" class="explainTriggerBtn explainSymbolTrigger" data-symbol-name="${trackerId}">
+          &#9432; How Is This Calculated? (Library &amp; Proof Explainer)
+        </button>
       </div>
     </div>
 
@@ -624,6 +698,213 @@ function buildProofSliceInspectorHtml(
       </div>
     </div>
   `;
+}
+
+function openSymbolExplainerModal(
+  selectedTracker,
+  declareTypeMap,
+  factBindingsMap,
+  factRawStmtMap,
+  verificationResult,
+  assessment,
+  gradeSpec
+) {
+  const trackerId = selectedTracker.trackerId;
+  const metrics = verificationResult.metrics;
+  const qMatch = trackerId.match(/^q(\d+)_/);
+  const qIndex = qMatch ? parseInt(qMatch[1], 10) - 1 : 0;
+  const questionObj =
+    assessment && assessment.questions && assessment.questions[qIndex]
+      ? assessment.questions[qIndex]
+      : null;
+
+  let targetText = "";
+  let fieldDesc = "Assessment-wide text";
+  if (questionObj) {
+    if (trackerId.includes("_stem_")) {
+      targetText = questionObj.stem;
+      fieldDesc = `assessment.questions[${qIndex}].stem`;
+    } else if (trackerId.includes("_explanation_")) {
+      targetText = questionObj.explanation;
+      fieldDesc = `assessment.questions[${qIndex}].explanation`;
+    } else if (trackerId.includes("_opt")) {
+      const optMatch = trackerId.match(/_opt(\d+)_/);
+      const optIdx = optMatch ? parseInt(optMatch[1], 10) : 0;
+      targetText = questionObj.options[optIdx] || "";
+      fieldDesc = `assessment.questions[${qIndex}].options[${optIdx}]`;
+    }
+  }
+
+  const referencedVars = [];
+  Object.keys(factBindingsMap).forEach((varName) => {
+    const varRegex = new RegExp(`\\b${escapeRegexLiteral(varName)}\\b`);
+    if (varRegex.test(selectedTracker.exprBody)) {
+      referencedVars.push({
+        varName,
+        varType: declareTypeMap[varName] || "Int",
+        actualValue: factBindingsMap[varName],
+        factStmt: factRawStmtMap[varName] || `(assert (= ${varName} ${factBindingsMap[varName]}))`,
+      });
+    }
+  });
+
+  const primaryVar = referencedVars[0] || {
+    varName: `${trackerId}_val`,
+    varType: "Int",
+    actualValue: "0",
+    factStmt: "",
+  };
+
+  explainerDialogTitle.innerHTML = `How <code>${trackerId}</code> &amp; <code>${primaryVar.varName}</code> Are Calculated`;
+
+  let preProofDetailHtml = "";
+  if (selectedTracker.categoryKey === "lexicalComplexity" && targetText) {
+    const wordsArr = targetText.match(/[A-Za-z0-9']+/g) || [];
+    const allowSet = new Set((gradeSpec.topicAllowlist || []).map((w) => w.toLowerCase()));
+    const rowsHtml = wordsArr
+      .map((word) => {
+        const lower = word.toLowerCase();
+        const sylInfo = estimateWordSyllablesClient(lower);
+        const isAllowlisted = allowSet.has(lower);
+        const exceedsCap = sylInfo.count > gradeSpec.maxSyllablesPerWord;
+        const isFlagged = exceedsCap && !isAllowlisted;
+        return `
+          <tr style="${isFlagged ? "background:#fef2f2;font-weight:700;" : ""}">
+            <td><code>"${escapeHtmlText(word)}"</code></td>
+            <td><strong>${sylInfo.count}</strong> syllables</td>
+            <td><code>${escapeHtmlText(sylInfo.method)}</code> (clusters: <code>${sylInfo.vowelGroups.join("-")}</code>)</td>
+            <td>${
+              isAllowlisted
+                ? `<span class="trackerStatusTag tagSat">Exempt (in topicAllowlist)</span>`
+                : exceedsCap
+                ? `<span class="trackerStatusTag tagUnsat">&gt; ${gradeSpec.maxSyllablesPerWord} syl &rarr; FLAGGED (+1)</span>`
+                : `<span class="trackerStatusTag tagSat">&le; ${gradeSpec.maxSyllablesPerWord} syl (OK)</span>`
+            }</td>
+          </tr>
+        `;
+      })
+      .join("");
+
+    preProofDetailHtml = `
+      <div class="sliceSectionBox">
+        <div class="sliceSectionHeading">
+          <span>Step-by-Step Word &amp; Syllable Trace in Python (BEFORE Z3 Runs)</span>
+          <span>Source: <code>${fieldDesc}</code></span>
+        </div>
+        <p style="margin:0 0 0.55rem;font-size:0.8rem;color:#334155;">
+          <strong>Important Architecture Distinction:</strong> Z3 does not know English phonetics. Before Z3 starts,
+          <code>count_syllables(word)</code> in <code>app/verifier/linguistic_analyzer.py</code> (using Python's built-in
+          <code>re</code> regex engine + the <code>SYLLABLE_OVERRIDES</code> dictionary) scans each word in
+          <code>"${escapeHtmlText(targetText)}"</code>:
+        </p>
+        <table class="syllableBreakdownTable">
+          <thead>
+            <tr>
+              <th>Token</th>
+              <th>Syllable Count</th>
+              <th>Python Detection Rule (<code>linguistic_analyzer.py</code>)</th>
+              <th>Cap Check (<code>maxSyllablesPerWord = ${gradeSpec.maxSyllablesPerWord}</code>)</th>
+            </tr>
+          </thead>
+          <tbody>${rowsHtml}</tbody>
+        </table>
+        <div style="margin-top:0.55rem;font-size:0.8rem;font-weight:700;color:#0f172a;">
+          &rArr; Python Output: <code>len(complex_words) = ${primaryVar.actualValue}</code> &mdash; passed into Z3 as integer constant <code>${primaryVar.varName} == ${primaryVar.actualValue}</code>.
+        </div>
+      </div>
+    `;
+  } else if (selectedTracker.categoryKey === "sentenceLength" && targetText) {
+    const wordsArr = targetText.match(/[A-Za-z0-9']+/g) || [];
+    preProofDetailHtml = `
+      <div class="sliceSectionBox">
+        <div class="sliceSectionHeading">
+          <span>Step-by-Step Sentence &amp; Word Tokenization in Python (BEFORE Z3 Runs)</span>
+          <span>Source: <code>${fieldDesc}</code></span>
+        </div>
+        <p style="margin:0;font-size:0.8rem;color:#334155;">
+          <code>split_sentences()</code> and <code>extract_words()</code> in <code>app/verifier/linguistic_analyzer.py</code>
+          use Python's standard <code>re</code> regex module (<code>WORD_RE = re.compile(r"[A-Za-z0-9']+")</code>) to tokenize
+          <code>"${escapeHtmlText(targetText)}"</code> into <strong>${wordsArr.length} words</strong>.
+          That integer (<code>${primaryVar.actualValue}</code>) is then bound to Z3 variable <code>${primaryVar.varName}</code>.
+        </p>
+      </div>
+    `;
+  } else {
+    preProofDetailHtml = `
+      <div class="sliceSectionBox">
+        <div class="sliceSectionHeading">
+          <span>Pre-Proof Deterministic Metric Calculation (BEFORE Z3 Runs)</span>
+          <span>Module: <code>app/verifier/linguistic_analyzer.py</code></span>
+        </div>
+        <p style="margin:0;font-size:0.8rem;color:#334155;">
+          <code>analyze_assessment()</code> deterministically computes the numeric metric from the assessment text
+          (${referencedVars.map((v) => `<code>${v.varName} = ${v.actualValue}</code>`).join(", ")})
+          using pure Python arithmetic and passes the exact number into Microsoft's <code>z3-solver</code>.
+        </p>
+      </div>
+    `;
+  }
+
+  explainerDialogBody.innerHTML = `
+    <div class="phaseBannerGrid">
+      <div class="phaseCard phaseCardPython">
+        <div class="phaseTag">Phase 1 &bull; Pre-Proof Extraction (Before Z3)</div>
+        <div class="phaseTitle">Deterministic Linguistic Analyzer</div>
+        <span class="phaseLibraryPill">Library: Python stdlib <code>re</code> + <code>linguistic_analyzer.py</code></span>
+        <div style="font-size:0.79rem;color:#334155;">
+          Tokenizes sentences, counts syllables via vowel clusters + <code>SYLLABLE_OVERRIDES</code>, filters out
+          <code>topicAllowlist</code> terms, and outputs raw numeric facts (e.g., <code>${primaryVar.varName} = ${primaryVar.actualValue}</code>).
+        </div>
+      </div>
+      <div class="pipelineArrow">&rarr;</div>
+      <div class="phaseCard phaseCardZ3">
+        <div class="phaseTag">Phase 2 &bull; Formal SMT Proof (Inside Z3)</div>
+        <div class="phaseTitle">Z3 Theorem Prover &amp; Optimizer</div>
+        <span class="phaseLibraryPill">Library: Microsoft <code>z3-solver</code> (C++ SMT Kernel)</span>
+        <div style="font-size:0.79rem;color:#334155;">
+          Declares symbolic variables (<code>z3.Int</code> / <code>z3.Real</code>), binds Phase 1's numbers as ground-truth axioms,
+          and proves whether <code>${trackerId}</code> holds via <code>solver.assert_and_track()</code>.
+        </div>
+      </div>
+    </div>
+
+    ${preProofDetailHtml}
+
+    <div class="sliceSectionBox">
+      <div class="sliceSectionHeading">
+        <span>Exact Python Z3 Code vs. Compiled SMT-LIB2 Proof</span>
+        <span>Module: <code>app/verifier/z3_kernel.py</code></span>
+      </div>
+      <pre class="sliceSmtBlock"><span class="smtCommentLine"># --- Python (app/verifier/z3_kernel.py using z3-solver) ---</span>
+solver = z3.Solver()
+${referencedVars
+  .map(
+    (v) =>
+      `${v.varName} = z3.${v.varType}("${v.varName}")\nsolver.add(${v.varName} == ${v.actualValue})  <span class="smtCommentLine"># Ground-truth value from Phase 1</span>`
+  )
+  .join("\n")}
+solver.assert_and_track(
+    <span class="smtCommentLine"># Formal theorem constraint:</span>
+    ${escapeHtmlText(selectedTracker.exprBody)},
+    "${trackerId}"
+)
+result = solver.check()  <span class="smtCommentLine"># &rArr; z3.${
+    selectedTracker.isUnsat ? "unsat (contradiction proven!)" : "sat (verified!)"
+  }</span>
+
+<span class="smtCommentLine">;; --- Compiled SMT-LIB2 S-Expressions Sent to Z3 Kernel ---</span>
+${referencedVars.map((v) => `(declare-fun ${v.varName} () ${v.varType})\n${escapeHtmlText(v.factStmt)}`).join("\n")}
+(declare-fun <span class="smtTrackerSym">${trackerId}</span> () Bool)
+(assert (=&gt; <span class="smtTrackerSym">${trackerId}</span> ${escapeHtmlText(
+    selectedTracker.exprBody
+  )}))
+<span class="smtCommentLine">;; Populated inside Z3: (assert (=&gt; true ${escapeHtmlText(
+    selectedTracker.concreteExpr
+  )})) &rArr; ${selectedTracker.isUnsat ? "FALSE (UNSAT CORE)" : "TRUE (SAT)"}</span></pre>
+    </div>
+  `;
+
+  symbolExplainerDialog.showModal();
 }
 
 function renderSmtVisualization(verificationResult, assessmentOverride) {
@@ -878,6 +1159,19 @@ function renderSmtVisualization(verificationResult, assessmentOverride) {
       currentAssessment,
       currentGradeSpec
     );
+    smtProofSliceInspector.querySelectorAll(".explainSymbolTrigger").forEach((triggerBtn) => {
+      triggerBtn.addEventListener("click", () => {
+        openSymbolExplainerModal(
+          selectedTrackerObj,
+          declareTypeMap,
+          factBindingsMap,
+          factRawStmtMap,
+          verificationResult,
+          currentAssessment,
+          currentGradeSpec
+        );
+      });
+    });
   } else {
     smtProofSliceInspector.innerHTML = "";
   }
@@ -1129,6 +1423,33 @@ async function initializePlayground() {
 
   runRepairBtn.addEventListener("click", executeRepairLoop);
   verifyJsonBtn.addEventListener("click", executeVerifyEditedJson);
+
+  if (symbolExplainerDialog) {
+    symbolExplainerDialog.addEventListener("close", () => {
+      symbolExplainerDialog.returnValue = "";
+    });
+
+    if (!("closedBy" in HTMLDialogElement.prototype)) {
+      const isOutsideDialog = (evt, dlg) => {
+        const rect = dlg.getBoundingClientRect();
+        return (
+          evt.clientX < rect.left ||
+          evt.clientX > rect.right ||
+          evt.clientY < rect.top ||
+          evt.clientY > rect.bottom
+        );
+      };
+      let pressedOutside = false;
+      symbolExplainerDialog.addEventListener("pointerdown", (evt) => {
+        pressedOutside = isOutsideDialog(evt, symbolExplainerDialog);
+      });
+      symbolExplainerDialog.addEventListener("pointerup", (evt) => {
+        if (pressedOutside && isOutsideDialog(evt, symbolExplainerDialog)) {
+          symbolExplainerDialog.close();
+        }
+      });
+    }
+  }
 
   // Trigger initial scenario load
   scenarioSelect.value = demoScenariosList[0].scenarioId;

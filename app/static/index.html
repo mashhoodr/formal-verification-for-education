@@ -4,7 +4,7 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>K-12 Educational Formal Verification Playground (Z3 SMT Kernel)</title>
-  <link rel="stylesheet" href="/static/styles.css?v=5" />
+  <link rel="stylesheet" href="/static/styles.css?v=6" />
 </head>
 <body>
   <header class="topHeader">
@@ -115,6 +115,19 @@
     </section>
   </main>
 
-  <script src="/static/app.js?v=5"></script>
+  <dialog id="symbolExplainerDialog" closedby="any" aria-labelledby="explainerDialogTitle">
+    <div class="explainerModalHeader">
+      <div>
+        <span id="explainerDialogBadge" class="badgePill">2-Phase Architecture Explainer</span>
+        <h2 id="explainerDialogTitle" class="explainerModalTitle">Function &amp; Variable Deep Explainer</h2>
+      </div>
+      <form method="dialog">
+        <button type="submit" value="close" class="modalCloseBtn" autofocus>Close &times;</button>
+      </form>
+    </div>
+    <div id="explainerDialogBody" class="explainerModalBody"></div>
+  </dialog>
+
+  <script src="/static/app.js?v=6"></script>
 </body>
 </html>

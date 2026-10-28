@@ -67,7 +67,25 @@ Full-page view of the **SMT-LIB2 Formal Proof Script** tab during `UNSAT` analys
 
 ---
 
-### 3. Verified Assessment & Cryptographic Proof Certificate (`Repair 2: SAT`)
+### 3. 2-Phase Architecture Explainer Popup: Pre-Proof Linguistic Calculation vs. Z3 Proof (`q1_explanation_complex_words`)
+
+Clicking **`ⓘ How Is This Calculated? (Library & Proof Explainer)`** (or any Z3 variable symbol in the Variable Binding Table) opens a modal breaking down what happens **before** the Z3 proof versus **inside** the Z3 SMT solver:
+
+![2-Phase Architecture & Variable Explainer Popup](docs/screenshots/symbol-explainer-popup-continuously.png)
+
+- **Phase 1 — Pre-Proof Deterministic Extraction (`app/verifier/linguistic_analyzer.py`):**
+  - **Library:** Python Standard Library (`re` regex tokenizer + deterministic vowel-cluster scanner `[aeiouy]+` + [`SYLLABLE_OVERRIDES`](file:///Users/mashhoodr/dev/playground/educationformalverification/app/verifier/linguistic_analyzer.py)).
+  - Scans `"Solar heat causes evaporation continuously throughout the day."` word-by-word **before** Z3 starts:
+    - `"evaporation"` (5 syllables) $\rightarrow$ **Exempt** because it is listed in `topicAllowlist`.
+    - `"continuously"` (5 syllables, clusters `o-i-uou-y`) $\rightarrow$ **Flagged (`+1`)** because `5 > 3` (`maxSyllablesPerWord`) and it is not allowlisted.
+  - Outputs the integer `1` (`len(explanation_complex_words)`).
+- **Phase 2 — Formal SMT Proof (`app/verifier/z3_kernel.py`):**
+  - **Library:** Microsoft Research `z3-solver` (C++ SMT kernel bindings).
+  - Binds Phase 1's output as an SMT integer fact `(assert (= q1_explanation_complex_words_val 1))` and checks the tracked theorem implication `(assert (=> q1_explanation_complex_words (= q1_explanation_complex_words_val 0)))`, proving `1 = 0` is `false` (`UNSAT Core`).
+
+---
+
+### 4. Verified Assessment & Cryptographic Proof Certificate (`Repair 2: SAT`)
 
 After counterexample-guided auto-repair balances all four options to **5 words each** (`spread = 5 - 5 = 0 <= 5`), simplifies sentences to `<= 14 words`, and replaces unapproved `>3`-syllable words, `(check-sat)` resolves to **`SAT` (`30/30 Verified`)** and issues a SHA-256 proof certificate:
 

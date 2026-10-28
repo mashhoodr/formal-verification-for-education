@@ -1040,3 +1040,184 @@ textarea {
   margin-top: 0.12rem;
   opacity: 0.92;
 }
+
+/* Native <dialog> Explainer Modal & Trigger Buttons */
+.explainTriggerBtn {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.3rem;
+  background: #eff6ff;
+  color: #1d4ed8;
+  border: 1px solid #93c5fd;
+  border-radius: 6px;
+  padding: 0.28rem 0.6rem;
+  font-size: 0.74rem;
+  font-weight: 700;
+  cursor: pointer;
+  transition: background 0.15s ease, transform 0.1s ease;
+}
+
+.explainTriggerBtn:hover {
+  background: #dbeafe;
+  transform: translateY(-1px);
+}
+
+.clickableVarBtn {
+  background: none;
+  border: none;
+  padding: 0;
+  font: inherit;
+  color: #1d4ed8;
+  text-decoration: underline dotted #3b82f6;
+  cursor: pointer;
+}
+
+.clickableVarBtn:hover {
+  color: #1e40af;
+}
+
+dialog:modal {
+  overscroll-behavior: contain;
+  border: 1px solid #cbd5e1;
+  border-radius: 12px;
+  padding: 0;
+  max-width: 860px;
+  width: 92vw;
+  max-height: 88vh;
+  box-shadow: 0 20px 45px rgba(15, 23, 42, 0.28);
+  background: #ffffff;
+  color: var(--text-main);
+}
+
+dialog::backdrop {
+  overflow: hidden;
+  overscroll-behavior: contain;
+  background: rgba(15, 23, 42, 0.58);
+  backdrop-filter: blur(2px);
+}
+
+.explainerModalHeader {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: 1rem;
+  padding: 1rem 1.35rem;
+  background: #0f172a;
+  color: #ffffff;
+  border-bottom: 1px solid #1e293b;
+}
+
+.explainerModalTitle {
+  margin: 0.3rem 0 0;
+  font-size: 1.1rem;
+}
+
+.modalCloseBtn {
+  background: #1e293b;
+  color: #f8fafc;
+  border: 1px solid #475569;
+  border-radius: 6px;
+  padding: 0.35rem 0.75rem;
+  font-size: 0.82rem;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.modalCloseBtn:hover {
+  background: #334155;
+}
+
+.explainerModalBody {
+  padding: 1.2rem 1.35rem;
+  overflow-y: auto;
+  max-height: calc(88vh - 82px);
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+}
+
+.phaseBannerGrid {
+  display: grid;
+  grid-template-columns: 1fr auto 1fr;
+  gap: 0.65rem;
+  align-items: stretch;
+}
+
+@media (max-width: 760px) {
+  .phaseBannerGrid {
+    grid-template-columns: 1fr;
+  }
+}
+
+.phaseCard {
+  border: 1px solid var(--border-color);
+  border-radius: 8px;
+  padding: 0.85rem 1rem;
+  background: #f8fafc;
+}
+
+.phaseCardPython {
+  border-left: 4px solid #0284c7;
+  background: #f0f9ff;
+}
+
+.phaseCardZ3 {
+  border-left: 4px solid #7c3aed;
+  background: #f5f3ff;
+}
+
+.phaseTag {
+  font-size: 0.68rem;
+  font-weight: 800;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  margin-bottom: 0.25rem;
+}
+
+.phaseCardPython .phaseTag {
+  color: #0369a1;
+}
+
+.phaseCardZ3 .phaseTag {
+  color: #6d28d9;
+}
+
+.phaseTitle {
+  font-size: 0.9rem;
+  font-weight: 700;
+  margin-bottom: 0.35rem;
+}
+
+.phaseLibraryPill {
+  display: inline-block;
+  font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+  font-size: 0.72rem;
+  font-weight: 700;
+  background: #ffffff;
+  border: 1px solid #cbd5e1;
+  padding: 0.12rem 0.45rem;
+  border-radius: 4px;
+  margin-bottom: 0.45rem;
+}
+
+.syllableBreakdownTable {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 0.76rem;
+  background: #ffffff;
+  border: 1px solid #e2e8f0;
+  border-radius: 6px;
+  overflow: hidden;
+}
+
+.syllableBreakdownTable th,
+.syllableBreakdownTable td {
+  padding: 0.4rem 0.6rem;
+  text-align: left;
+  border-bottom: 1px solid #e2e8f0;
+}
+
+.syllableBreakdownTable th {
+  background: #f1f5f9;
+  font-weight: 700;
+}
