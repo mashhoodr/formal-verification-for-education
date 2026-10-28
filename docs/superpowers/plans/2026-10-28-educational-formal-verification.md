@@ -2820,6 +2820,8 @@ Create `README.md`:
 ```markdown
 # K-12 Educational Content Formal Verification Playground
 
+> **Built with [Google Antigravity](https://antigravity.google) and Gemini 4 Argon.**
+
 Inspired by [Anthropic's Formal Verification Research](https://www.anthropic.com/research/formal-verification), this application pairs a deterministic linguistic analyzer and Microsoft's **Z3 Theorem Prover (`z3-solver`)** with a counterexample-guided LLM repair loop to formally verify primary and secondary school assessments.
 
 ## Quick Start
@@ -2832,6 +2834,10 @@ python3 -m venv .venv
 ```
 
 Then open `http://localhost:8000` in your browser.
+
+## Attribution
+
+Designed, planned, and implemented autonomously using **Google Antigravity** powered by **Gemini 4 Argon**.
 ```
 
 - [ ] **Step 4: Run the full test suite to verify all tests pass**
