@@ -726,3 +726,317 @@ textarea {
   font-weight: 600;
   margin-bottom: 0.4rem;
 }
+
+/* Interactive Single-Tracker Proof Slice & Visual Explainer */
+.smtProofSliceInspector {
+  border: 2px solid #cbd5e1;
+  border-radius: 10px;
+  background: #ffffff;
+  margin-bottom: 1.25rem;
+  overflow: hidden;
+  box-shadow: 0 3px 10px rgba(15, 23, 42, 0.06);
+}
+
+.smtProofSliceInspector.sliceSat {
+  border-color: var(--sat-green-border);
+}
+
+.smtProofSliceInspector.sliceUnsat {
+  border-color: var(--unsat-red-border);
+}
+
+.sliceHeaderBar {
+  padding: 0.85rem 1.1rem;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+  border-bottom: 1px solid var(--border-color);
+}
+
+.sliceHeaderSat {
+  background: var(--sat-green-bg);
+}
+
+.sliceHeaderUnsat {
+  background: var(--unsat-red-bg);
+}
+
+.sliceHeaderTitle {
+  font-size: 0.95rem;
+  font-weight: 700;
+  display: flex;
+  align-items: center;
+  gap: 0.55rem;
+  flex-wrap: wrap;
+}
+
+.sliceHeaderSub {
+  font-size: 0.78rem;
+  color: var(--text-muted);
+}
+
+.sliceBodyGrid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 1rem;
+  padding: 1rem 1.1rem;
+}
+
+@media (max-width: 960px) {
+  .sliceBodyGrid {
+    grid-template-columns: 1fr;
+  }
+}
+
+.sliceSectionBox {
+  border: 1px solid var(--border-color);
+  border-radius: 8px;
+  padding: 0.85rem;
+  background: #f8fafc;
+}
+
+.sliceSectionBoxFull {
+  grid-column: 1 / -1;
+}
+
+.sliceSectionHeading {
+  font-size: 0.78rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  color: #334155;
+  margin: 0 0 0.55rem 0;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.wordTokenStream {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.35rem;
+  padding: 0.5rem;
+  background: #ffffff;
+  border: 1px solid #e2e8f0;
+  border-radius: 6px;
+}
+
+.wordPill {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.25rem;
+  padding: 0.2rem 0.45rem;
+  border-radius: 5px;
+  font-size: 0.78rem;
+  border: 1px solid #cbd5e1;
+  background: #f8fafc;
+}
+
+.wordPillOk {
+  background: #ecfdf5;
+  border-color: #6ee7b7;
+  color: #065f46;
+}
+
+.wordPillOver {
+  background: #fef2f2;
+  border-color: #fca5a5;
+  color: #991b1b;
+  font-weight: 700;
+}
+
+.wordPillAllow {
+  background: #eff6ff;
+  border-color: #93c5fd;
+  color: #1e40af;
+  font-weight: 600;
+}
+
+.wordIdxTag {
+  font-size: 0.65rem;
+  opacity: 0.75;
+  font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+}
+
+.optionSpreadBars {
+  display: flex;
+  flex-direction: column;
+  gap: 0.4rem;
+}
+
+.optionBarRow {
+  display: grid;
+  grid-template-columns: 70px 1fr 68px;
+  gap: 0.5rem;
+  align-items: center;
+  font-size: 0.76rem;
+}
+
+.optionBarTrack {
+  background: #e2e8f0;
+  height: 16px;
+  border-radius: 4px;
+  overflow: hidden;
+}
+
+.optionBarFill {
+  height: 100%;
+  border-radius: 4px;
+}
+
+/* Variable Binding Table & Bound Gauge */
+.varBindingTable {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 0.76rem;
+  background: #ffffff;
+  border-radius: 6px;
+  overflow: hidden;
+  border: 1px solid #e2e8f0;
+  margin-bottom: 0.65rem;
+}
+
+.varBindingTable th,
+.varBindingTable td {
+  padding: 0.4rem 0.6rem;
+  text-align: left;
+  border-bottom: 1px solid #e2e8f0;
+}
+
+.varBindingTable th {
+  background: #f1f5f9;
+  font-weight: 700;
+  color: #334155;
+}
+
+.varSymCell {
+  font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+  font-weight: 700;
+  color: #1d4ed8;
+}
+
+.varValCell {
+  font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+  font-weight: 700;
+  color: #0f172a;
+  background: #fef9c3;
+  padding: 0.1rem 0.35rem;
+  border-radius: 4px;
+}
+
+.boundGaugeWrap {
+  background: #ffffff;
+  border: 1px solid #e2e8f0;
+  border-radius: 6px;
+  padding: 0.6rem 0.75rem;
+}
+
+.boundGaugeLabels {
+  display: flex;
+  justify-content: space-between;
+  font-size: 0.75rem;
+  font-weight: 600;
+  margin-bottom: 0.35rem;
+}
+
+.boundGaugeBar {
+  position: relative;
+  height: 14px;
+  background: #e2e8f0;
+  border-radius: 999px;
+  overflow: hidden;
+}
+
+.boundGaugeFill {
+  height: 100%;
+  border-radius: 999px;
+}
+
+/* 3-Step Symbolic -> Populated -> Evaluated Transformer */
+.substitutionStepsGrid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 0.65rem;
+}
+
+@media (max-width: 900px) {
+  .substitutionStepsGrid {
+    grid-template-columns: 1fr;
+  }
+}
+
+.subStepCard {
+  background: #0f172a;
+  color: #f8fafc;
+  border-radius: 7px;
+  padding: 0.65rem 0.75rem;
+  border-left: 4px solid #38bdf8;
+}
+
+.subStepCard.subStepPopulated {
+  border-left-color: #facc15;
+}
+
+.subStepCard.subStepResultSat {
+  border-left-color: #10b981;
+  background: #064e3b;
+}
+
+.subStepCard.subStepResultUnsat {
+  border-left-color: #ef4444;
+  background: #7f1d1d;
+}
+
+.subStepLabel {
+  font-size: 0.68rem;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  color: #94a3b8;
+  font-weight: 700;
+  margin-bottom: 0.3rem;
+}
+
+.subStepResultSat .subStepLabel,
+.subStepResultUnsat .subStepLabel {
+  color: #e2e8f0;
+}
+
+.subStepCode {
+  font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+  font-size: 0.76rem;
+  word-break: break-word;
+}
+
+.populatedValChip {
+  background: #facc15;
+  color: #0f172a;
+  font-weight: 800;
+  padding: 0.05rem 0.35rem;
+  border-radius: 4px;
+}
+
+.sliceSmtBlock {
+  background: #0f172a;
+  color: #e2e8f0;
+  padding: 0.85rem 1rem;
+  border-radius: 8px;
+  font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+  font-size: 0.76rem;
+  overflow-x: auto;
+  line-height: 1.55;
+}
+
+.smtCommentLine {
+  color: #94a3b8;
+  font-style: italic;
+}
+
+.smtPopulatedSubline {
+  display: block;
+  font-size: 0.7rem;
+  color: #fde047;
+  margin-top: 0.12rem;
+  opacity: 0.92;
+}

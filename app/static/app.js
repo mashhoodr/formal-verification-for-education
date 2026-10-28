@@ -26,6 +26,7 @@ const questionsContainer = document.getElementById("questionsContainer");
 const certificateBox = document.getElementById("certificateBox");
 const smtPipelineDiagram = document.getElementById("smtPipelineDiagram");
 const smtTrackerMatrix = document.getElementById("smtTrackerMatrix");
+const smtProofSliceInspector = document.getElementById("smtProofSliceInspector");
 const smtFilterBar = document.getElementById("smtFilterBar");
 const smtInteractiveViewer = document.getElementById("smtInteractiveViewer");
 const smtScriptPre = document.getElementById("smtScriptPre");
@@ -154,7 +155,7 @@ function renderIterationView(iterationRecord) {
 
   questionsContainer.innerHTML = `<h3>Assessment Items & Metrics</h3>${questionsHtml}`;
   smtScriptPre.textContent = verificationResult.smtLib2Script;
-  renderSmtVisualization(verificationResult);
+  renderSmtVisualization(verificationResult, assessment);
 }
 
 function parseSmtStatements(smtText) {
@@ -251,10 +252,391 @@ function highlightSmtSyntax(stmtText, trackedIdsSet) {
   return escaped;
 }
 
-function renderSmtVisualization(verificationResult) {
+function buildSourceTextVisualHtml(trackerObj, verificationResult, assessment, gradeSpec) {
+  const trackerId = trackerObj.trackerId;
+  const metrics = verificationResult.metrics;
+  const qMatch = trackerId.match(/^q(\d+)_/);
+  const qIndex = qMatch ? parseInt(qMatch[1], 10) - 1 : 0;
+  const questionObj =
+    assessment && assessment.questions && assessment.questions[qIndex]
+      ? assessment.questions[qIndex]
+      : null;
+  const qMetrics =
+    metrics && metrics.questionMetrics && metrics.questionMetrics[qIndex]
+      ? metrics.questionMetrics[qIndex]
+      : null;
+
+  let targetText = "";
+  let locationLabel = "Whole Assessment";
+  let complexWordsList = [];
+
+  if (questionObj && qMetrics) {
+    if (trackerId.includes("_stem_")) {
+      targetText = questionObj.stem;
+      locationLabel = `Question ${questionObj.questionId.toUpperCase()} Stem`;
+      complexWordsList = qMetrics.stemComplexWords || [];
+    } else if (trackerId.includes("_explanation_")) {
+      targetText = questionObj.explanation;
+      locationLabel = `Question ${questionObj.questionId.toUpperCase()} Explanation`;
+      complexWordsList = qMetrics.explanationComplexWords || [];
+    } else if (trackerId.includes("_opt")) {
+      const optMatch = trackerId.match(/_opt(\d+)_/);
+      const optIdx = optMatch ? parseInt(optMatch[1], 10) : 0;
+      targetText = questionObj.options[optIdx] || "";
+      locationLabel = `Question ${questionObj.questionId.toUpperCase()} Option ${optIdx + 1}`;
+      complexWordsList =
+        (qMetrics.optionComplexWords && qMetrics.optionComplexWords[optIdx]) || [];
+    }
+  }
+
+  if (trackerObj.categoryKey === "sentenceLength" && targetText) {
+    const wordsArr = targetText.match(/[A-Za-z0-9']+/g) || [];
+    const maxAllowed = gradeSpec.maxWordsPerSentence;
+    const pillsHtml = wordsArr
+      .map((word, wIdx) => {
+        const wordNum = wIdx + 1;
+        const isOver = wordNum > maxAllowed;
+        return `
+          <span class="wordPill ${isOver ? "wordPillOver" : "wordPillOk"}">
+            <span class="wordIdxTag">#${wordNum}</span>
+            <span>${escapeHtmlText(word)}</span>
+          </span>
+        `;
+      })
+      .join("");
+    return `
+      <div class="sliceSectionHeading">
+        <span>1. Source Text &amp; Word Count Tokenizer (${locationLabel})</span>
+        <span>${wordsArr.length} words vs &le; ${maxAllowed} limit</span>
+      </div>
+      <div class="wordTokenStream">${pillsHtml}</div>
+      <div style="font-size:0.74rem;color:#475569;margin-top:0.4rem;">
+        Green pills (#1&ndash;#${maxAllowed}) are within the grade sentence cap; red pills (#${
+      maxAllowed + 1
+    }+) exceed <code>maxWordsPerSentence = ${maxAllowed}</code>.
+      </div>
+    `;
+  }
+
+  if (trackerObj.categoryKey === "lexicalComplexity" && targetText) {
+    const wordsArr = targetText.match(/[A-Za-z0-9']+/g) || [];
+    const complexSet = new Set(complexWordsList.map((w) => w.toLowerCase()));
+    const allowSet = new Set((gradeSpec.topicAllowlist || []).map((w) => w.toLowerCase()));
+    const pillsHtml = wordsArr
+      .map((word) => {
+        const lower = word.toLowerCase();
+        if (complexSet.has(lower)) {
+          return `<span class="wordPill wordPillOver">${escapeHtmlText(
+            word
+          )} <span class="wordIdxTag">(&gt;${gradeSpec.maxSyllablesPerWord} syl &bull; VIOLATION)</span></span>`;
+        }
+        if (allowSet.has(lower)) {
+          return `<span class="wordPill wordPillAllow">${escapeHtmlText(
+            word
+          )} <span class="wordIdxTag">(allowlisted)</span></span>`;
+        }
+        return `<span class="wordPill wordPillOk">${escapeHtmlText(word)}</span>`;
+      })
+      .join("");
+    return `
+      <div class="sliceSectionHeading">
+        <span>1. Lexical Complexity &amp; Allowlist Scanner (${locationLabel})</span>
+        <span>${complexWordsList.length} unapproved complex words (target = 0)</span>
+      </div>
+      <div class="wordTokenStream">${pillsHtml}</div>
+      <div style="font-size:0.74rem;color:#475569;margin-top:0.4rem;">
+        Words exceeding <code>maxSyllablesPerWord = ${
+          gradeSpec.maxSyllablesPerWord
+        }</code> are flagged in red unless exempted by <code>topicAllowlist</code> (blue).
+      </div>
+    `;
+  }
+
+  if (trackerObj.categoryKey === "distractorBalance" && questionObj && qMetrics) {
+    const counts = qMetrics.optionWordCounts || [];
+    const maxCount = Math.max(...counts, 1);
+    const minCount = Math.min(...counts);
+    const spreadVal = qMetrics.optionWordSpread;
+    const barsHtml = questionObj.options
+      .map((optText, idx) => {
+        const wCount = counts[idx] || 0;
+        const widthPct = Math.max(8, Math.round((wCount / Math.max(maxCount, 15)) * 100));
+        const isExtreme =
+          spreadVal > gradeSpec.maxOptionWordSpread && (wCount === maxCount || wCount === minCount);
+        return `
+          <div class="optionBarRow">
+            <strong>Option ${idx + 1}${idx === questionObj.correctOptionIndex ? " ✓" : ""}</strong>
+            <div class="optionBarTrack">
+              <div
+                class="optionBarFill"
+                style="width:${widthPct}%;background:${isExtreme ? "#ef4444" : "#10b981"};"
+              ></div>
+            </div>
+            <span><strong>${wCount}</strong> words</span>
+          </div>
+        `;
+      })
+      .join("");
+    return `
+      <div class="sliceSectionHeading">
+        <span>1. Distractor Word-Length Spread (${questionObj.questionId.toUpperCase()} Options)</span>
+        <span>max(${maxCount}) &minus; min(${minCount}) = ${spreadVal} words (limit &le; ${
+      gradeSpec.maxOptionWordSpread
+    })</span>
+      </div>
+      <div class="optionSpreadBars">${barsHtml}</div>
+    `;
+  }
+
+  if (trackerObj.categoryKey === "readabilityBand") {
+    return `
+      <div class="sliceSectionHeading">
+        <span>1. Flesch-Kincaid Grade Formula Derivation</span>
+        <span>FK = ${metrics.fleschKincaidGrade} (Band [${gradeSpec.fleschKincaidMin}, ${gradeSpec.fleschKincaidMax}])</span>
+      </div>
+      <div class="wordTokenStream" style="font-family:ui-monospace,monospace;font-size:0.76rem;">
+        0.39 &times; (${metrics.totalWords} words / ${metrics.totalSentences} sentences) + 11.8 &times; (${metrics.totalSyllables} syllables / ${metrics.totalWords} words) &minus; 15.59 = <strong>${metrics.fleschKincaidGrade}</strong>
+      </div>
+    `;
+  }
+
+  if (trackerObj.categoryKey === "scaffoldingProgression") {
+    const q1Score =
+      metrics.questionMetrics[0] ? metrics.questionMetrics[0].complexityScore : 0;
+    const q2Score =
+      metrics.questionMetrics[1] ? metrics.questionMetrics[1].complexityScore : 0;
+    return `
+      <div class="sliceSectionHeading">
+        <span>1. Sequential Complexity Scaffolding (Q1 &rarr; Q2)</span>
+        <span>Tolerance: drop &le; ${gradeSpec.maxBackwardComplexityDrop} pts</span>
+      </div>
+      <div class="wordTokenStream" style="font-family:ui-monospace,monospace;font-size:0.76rem;">
+        Q1 Complexity = <strong>${q1Score}</strong> &bull; Q2 Complexity = <strong>${q2Score}</strong> &bull; Condition: (${q2Score} + ${gradeSpec.maxBackwardComplexityDrop}) &ge; ${q1Score}
+      </div>
+    `;
+  }
+
+  const numQuestions = assessment && assessment.questions ? assessment.questions.length : 2;
+  return `
+    <div class="sliceSectionHeading">
+      <span>1. Student Reading &amp; Thinking Time Derivation</span>
+      <span>${metrics.estimatedCompletionSeconds}s vs ${gradeSpec.quizDurationMinutes * 60}s budget</span>
+    </div>
+    <div class="wordTokenStream" style="font-family:ui-monospace,monospace;font-size:0.76rem;">
+      (${metrics.totalWords} words / ${gradeSpec.readingSpeedWpm} wpm) &times; 60s + (${numQuestions} questions &times; ${gradeSpec.perQuestionThinkSeconds}s think time) = <strong>${metrics.estimatedCompletionSeconds}s</strong>
+    </div>
+  `;
+}
+
+function buildProofSliceInspectorHtml(
+  selectedTracker,
+  declareTypeMap,
+  factBindingsMap,
+  factRawStmtMap,
+  verificationResult,
+  assessment,
+  gradeSpec
+) {
+  const trackerId = selectedTracker.trackerId;
+  const isUnsat = selectedTracker.isUnsat;
+
+  // Identify all variables referenced inside this tracker's constraint expression
+  const referencedVars = [];
+  Object.keys(factBindingsMap).forEach((varName) => {
+    const varRegex = new RegExp(`\\b${escapeRegexLiteral(varName)}\\b`);
+    if (varRegex.test(selectedTracker.exprBody)) {
+      referencedVars.push({
+        varName,
+        varType: declareTypeMap[varName] || "Int",
+        actualValue: factBindingsMap[varName],
+        factStmt: factRawStmtMap[varName] || `(assert (= ${varName} ${factBindingsMap[varName]}))`,
+      });
+    }
+  });
+
+  // Build populated S-expression with highlighted actual value chips
+  let populatedChipExpr = escapeHtmlText(selectedTracker.exprBody);
+  referencedVars.forEach((vInfo) => {
+    const safeVarRegex = new RegExp(`\\b${escapeRegexLiteral(vInfo.varName)}\\b`, "g");
+    populatedChipExpr = populatedChipExpr.replace(
+      safeVarRegex,
+      `<span class="populatedValChip" title="${vInfo.varName} = ${vInfo.actualValue}">${vInfo.actualValue}</span>`
+    );
+  });
+  populatedChipExpr = populatedChipExpr.replace(
+    /\(\/\s+([0-9.]+)\s+([0-9.]+)\)/g,
+    (fullMatch) => formatSmtRationalOrValue(fullMatch)
+  );
+
+  // Build Variable Binding Table rows
+  const varRowsHtml = referencedVars
+    .map(
+      (vInfo) => `
+      <tr>
+        <td class="varSymCell">${vInfo.varName}</td>
+        <td><code>${vInfo.varType}</code></td>
+        <td><span class="varValCell">${vInfo.actualValue}</span></td>
+        <td><code>${escapeHtmlText(vInfo.factStmt)}</code></td>
+      </tr>
+    `
+    )
+    .join("");
+
+  const matchingPrescription = (verificationResult.prescriptions || []).find(
+    (p) => p.trackerId === trackerId
+  );
+
+  // Assemble complete isolated SMT-LIB2 proof slice with populated value comments
+  const sliceLines = [
+    `<span class="smtCommentLine">;; === Complete Isolated Z3 Sub-Proof for [${trackerId}] ===</span>`,
+    `<span class="smtCommentLine">;; 1. Symbolic Declarations</span>`,
+    ...referencedVars.map(
+      (vInfo) =>
+        `(declare-fun ${vInfo.varName} () ${vInfo.varType}) <span class="smtCommentLine">; measured variable</span>`
+    ),
+    `(declare-fun <span class="smtTrackerSym">${trackerId}</span> () Bool) <span class="smtCommentLine">; assert_and_track guard</span>`,
+    ``,
+    `<span class="smtCommentLine">;; 2. Ground-Truth Fact Bindings (Populated from Assessment)</span>`,
+    ...referencedVars.map(
+      (vInfo) =>
+        `${escapeHtmlText(vInfo.factStmt)} <span class="smtCommentLine">; &rArr; ${vInfo.varName} := ${vInfo.actualValue}</span>`
+    ),
+    ``,
+    `<span class="smtCommentLine">;; 3. Theorem Implication Rule (Symbolic &rarr; Populated)</span>`,
+    `(assert (=&gt; <span class="smtTrackerSym">${trackerId}</span> ${escapeHtmlText(
+      selectedTracker.exprBody
+    )}))`,
+    `<span class="smtCommentLine">;; &rArr; Populated with actual values:</span>`,
+    `<span class="smtCommentLine">;;    (assert (=&gt; true ${escapeHtmlText(
+      selectedTracker.concreteExpr
+    )})) &rArr; (assert ${isUnsat ? "false" : "true"})</span>`,
+    ``,
+    `<span class="smtCommentLine">;; 4. Solver Resolution Under Tracker Assumption</span>`,
+    `(check-sat-assuming (<span class="smtTrackerSym">${trackerId}</span>)) <span class="smtCommentLine">; &rArr; ${
+      isUnsat ? "UNSAT (Added to Unsat Core!)" : "SAT (Constraint Verified!)"
+    }</span>`,
+  ];
+
+  const sourceVisualHtml = buildSourceTextVisualHtml(
+    selectedTracker,
+    verificationResult,
+    assessment,
+    gradeSpec
+  );
+
+  return `
+    <div class="sliceHeaderBar ${isUnsat ? "sliceHeaderUnsat" : "sliceHeaderSat"}">
+      <div class="sliceHeaderTitle">
+        <span class="trackerStatusTag ${isUnsat ? "tagUnsat" : "tagSat"}">
+          ${isUnsat ? "✗ UNSAT CORE CONFLICT" : "✓ PROVEN SAT"}
+        </span>
+        <span>Deep Proof Inspector: <code>${trackerId}</code></span>
+        <span style="font-size:0.8rem;font-weight:500;color:#475569;">(${
+          selectedTracker.categoryLabel
+        })</span>
+      </div>
+      <div class="sliceHeaderSub">
+        Click any tracker card in the matrix above to switch the inspected proof slice
+      </div>
+    </div>
+
+    <div class="sliceBodyGrid">
+      <div class="sliceSectionBox">
+        ${sourceVisualHtml}
+      </div>
+
+      <div class="sliceSectionBox">
+        <div class="sliceSectionHeading">
+          <span>2. Z3 Variable Bindings (Actual Values Populated)</span>
+          <span>${referencedVars.length} bound variable(s)</span>
+        </div>
+        <table class="varBindingTable">
+          <thead>
+            <tr>
+              <th>Z3 Symbol</th>
+              <th>Sort</th>
+              <th>Actual Value</th>
+              <th>SMT Fact Assertion</th>
+            </tr>
+          </thead>
+          <tbody>
+            ${varRowsHtml}
+            <tr>
+              <td class="varSymCell">${trackerId}</td>
+              <td><code>Bool</code></td>
+              <td><span class="varValCell">true</span></td>
+              <td><code>Assumed by assert_and_track</code></td>
+            </tr>
+          </tbody>
+        </table>
+        ${
+          matchingPrescription
+            ? `<div class="prescriptionCard" style="margin:0;">
+                <strong>Z3 Optimizer Repair Prescription:</strong> ${escapeHtmlText(
+                  matchingPrescription.instruction
+                )}
+               </div>`
+            : `<div style="font-size:0.76rem;color:#065f46;font-weight:600;">
+                ✓ Value satisfies the formal theorem bound with zero repair required.
+               </div>`
+        }
+      </div>
+
+      <div class="sliceSectionBox sliceSectionBoxFull">
+        <div class="sliceSectionHeading">
+          <span>3. Step-by-Step Variable Substitution &amp; Modus Ponens Proof</span>
+          <span>How Z3 Evaluates <code>${trackerId}</code></span>
+        </div>
+        <div class="substitutionStepsGrid">
+          <div class="subStepCard">
+            <div class="subStepLabel">Step A &bull; Symbolic Theorem Assertion</div>
+            <div class="subStepCode">
+              (assert (=&gt; <span class="smtTrackerSym">${trackerId}</span> ${escapeHtmlText(
+    selectedTracker.exprBody
+  )}))
+            </div>
+          </div>
+          <div class="subStepCard subStepPopulated">
+            <div class="subStepLabel">Step B &bull; Variables Populated with Actual Values</div>
+            <div class="subStepCode">
+              (assert (=&gt; <span class="populatedValChip">true</span> ${populatedChipExpr}))
+            </div>
+          </div>
+          <div class="subStepCard ${isUnsat ? "subStepResultUnsat" : "subStepResultSat"}">
+            <div class="subStepLabel">Step C &bull; Boolean Reduction &amp; Z3 Verdict</div>
+            <div class="subStepCode">
+              (assert (=&gt; true <strong>${isUnsat ? "false" : "true"}</strong>)) &rArr; ${
+    isUnsat
+      ? "<strong>&perp; CONTRADICTION (UNSAT CORE)</strong>"
+      : "<strong>&#8868; VALID (PROVEN SAT)</strong>"
+  }
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="sliceSectionBox sliceSectionBoxFull">
+        <div class="sliceSectionHeading">
+          <span>4. Complete Isolated SMT-LIB2 Sub-Proof Script (With Populated Values)</span>
+          <span>Self-contained Z3 proof slice for <code>${trackerId}</code></span>
+        </div>
+        <pre class="sliceSmtBlock">${sliceLines.join("\n")}</pre>
+      </div>
+    </div>
+  `;
+}
+
+function renderSmtVisualization(verificationResult, assessmentOverride) {
+  const currentAssessment =
+    assessmentOverride ||
+    (currentIterations[selectedIterationIndex] &&
+      currentIterations[selectedIterationIndex].assessment);
+  const currentGradeSpec = readCurrentGradeSpec();
   const rawStatements = parseSmtStatements(verificationResult.smtLib2Script);
   const unsatSet = new Set(verificationResult.unsatCore || []);
+  const declareTypeMap = {};
   const factBindingsMap = {};
+  const factRawStmtMap = {};
   const trackedList = [];
   const trackedIdsSet = new Set();
   const structuredRows = [];
@@ -264,6 +646,7 @@ function renderSmtVisualization(verificationResult) {
     if (declareMatch) {
       const symName = declareMatch[1];
       const symType = declareMatch[2];
+      declareTypeMap[symName] = symType;
       structuredRows.push({
         lineNumber: idx + 1,
         kind: "declare",
@@ -312,6 +695,7 @@ function renderSmtVisualization(verificationResult) {
       const rawVal = factLeftMatch ? factLeftMatch[2] : factRightMatch[1];
       const cleanVal = formatSmtRationalOrValue(rawVal);
       factBindingsMap[varName] = cleanVal;
+      factRawStmtMap[varName] = stmt;
       structuredRows.push({
         lineNumber: idx + 1,
         kind: "fact",
@@ -330,6 +714,7 @@ function renderSmtVisualization(verificationResult) {
   });
 
   // Substitute measured ground-truth facts into each tracked theorem formula
+  const trackedById = {};
   trackedList.forEach((item) => {
     let concreteExpr = item.exprBody;
     Object.keys(factBindingsMap).forEach((varKey) => {
@@ -343,7 +728,18 @@ function renderSmtVisualization(verificationResult) {
       formatSmtRationalOrValue(fullMatch)
     );
     item.concreteExpr = concreteExpr;
+    trackedById[item.trackerId] = item;
   });
+
+  // Default highlightedTrackerId to first UNSAT tracker (or first tracker if all SAT)
+  if (!highlightedTrackerId || !trackedById[highlightedTrackerId]) {
+    const firstUnsat = trackedList.find((t) => t.isUnsat);
+    highlightedTrackerId = firstUnsat
+      ? firstUnsat.trackerId
+      : trackedList[0]
+      ? trackedList[0].trackerId
+      : null;
+  }
 
   const totalFacts = Object.keys(factBindingsMap).length;
   const totalTracked = trackedList.length;
@@ -462,29 +858,40 @@ function renderSmtVisualization(verificationResult) {
   smtTrackerMatrix.innerHTML = `
     <div class="matrixHeaderRow">
       <h3>Interactive Z3 <code>assert_and_track</code> Proof Matrix</h3>
-      <span class="matrixHint">Click any tracker card to locate &amp; highlight its SMT-LIB2 assertion below</span>
+      <span class="matrixHint">Click any proof item below to inspect its complete isolated proof &amp; populated variables</span>
     </div>
     <div class="categoryGrid">${categoryCardsHtml}</div>
   `;
 
+  // 2b. Render Deep Single-Tracker Proof Slice Inspector
+  const selectedTrackerObj = trackedById[highlightedTrackerId];
+  if (selectedTrackerObj) {
+    smtProofSliceInspector.className = `smtProofSliceInspector ${
+      selectedTrackerObj.isUnsat ? "sliceUnsat" : "sliceSat"
+    }`;
+    smtProofSliceInspector.innerHTML = buildProofSliceInspectorHtml(
+      selectedTrackerObj,
+      declareTypeMap,
+      factBindingsMap,
+      factRawStmtMap,
+      verificationResult,
+      currentAssessment,
+      currentGradeSpec
+    );
+  } else {
+    smtProofSliceInspector.innerHTML = "";
+  }
+
   smtTrackerMatrix.querySelectorAll(".trackerChipBtn").forEach((chipBtn) => {
     chipBtn.addEventListener("click", () => {
       const clickedId = chipBtn.getAttribute("data-tracker-id");
-      highlightedTrackerId = highlightedTrackerId === clickedId ? null : clickedId;
-      activeSmtFilter = "all";
-      renderSmtVisualization(verificationResult);
-      if (highlightedTrackerId) {
-        const targetRow = smtInteractiveViewer.querySelector(
-          `[data-line-tracker="${highlightedTrackerId}"]`
-        );
-        if (targetRow) {
-          targetRow.scrollIntoView({ behavior: "smooth", block: "center" });
-        }
-      }
+      highlightedTrackerId = clickedId;
+      renderSmtVisualization(verificationResult, currentAssessment);
+      smtProofSliceInspector.scrollIntoView({ behavior: "smooth", block: "nearest" });
     });
   });
 
-  // 3. Render Filter Bar & Annotated SMT-LIB2 Code Viewer
+  // 3. Render Filter Bar & Annotated SMT-LIB2 Code Viewer (with Populated Values inline)
   const filterOptions = [
     { id: "all", label: `All SMT Statements (${structuredRows.length})` },
     { id: "unsatOnly", label: `UNSAT Core Conflicts (${totalUnsat})` },
@@ -510,8 +917,7 @@ function renderSmtVisualization(verificationResult) {
   smtFilterBar.querySelectorAll(".smtFilterBtn").forEach((fBtn) => {
     fBtn.addEventListener("click", () => {
       activeSmtFilter = fBtn.getAttribute("data-filter-id");
-      highlightedTrackerId = null;
-      renderSmtVisualization(verificationResult);
+      renderSmtVisualization(verificationResult, currentAssessment);
     });
   });
 
@@ -545,6 +951,7 @@ function renderSmtVisualization(verificationResult) {
       let rowClass = "smtLineRow";
       let badgeHtml = "";
       let trackerAttr = "";
+      let populatedSublineHtml = "";
 
       if (row.kind === "tracked") {
         rowClass += row.isUnsat ? " smtLineUnsat" : " smtLineSat";
@@ -552,14 +959,20 @@ function renderSmtVisualization(verificationResult) {
           rowClass += " smtLineFlash";
         }
         trackerAttr = `data-line-tracker="${row.trackerId}"`;
+        const tItem = trackedById[row.trackerId];
+        if (tItem) {
+          populatedSublineHtml = `<span class="smtPopulatedSubline">&rdsh; Populated values: (assert (=&gt; true ${escapeHtmlText(
+            tItem.concreteExpr
+          )})) &rArr; ${row.isUnsat ? "FALSE (UNSAT)" : "TRUE (SAT)"}</span>`;
+        }
         badgeHtml = row.isUnsat
           ? `<span class="smtLineAnnotation annotUnsat">✗ UNSAT CORE</span>`
           : `<span class="smtLineAnnotation annotSat">✓ SAT</span>`;
       } else if (row.kind === "fact") {
         rowClass += " smtLineFact";
-        badgeHtml = `<span class="smtLineAnnotation annotFact">fact = ${escapeHtmlText(
-          row.cleanVal
-        )}</span>`;
+        badgeHtml = `<span class="smtLineAnnotation annotFact">${escapeHtmlText(
+          row.varName
+        )} := ${escapeHtmlText(row.cleanVal)}</span>`;
       } else if (row.kind === "checkSat") {
         rowClass += " smtLineCheck";
         badgeHtml = `<span class="smtLineAnnotation ${
@@ -572,7 +985,10 @@ function renderSmtVisualization(verificationResult) {
       return `
         <div class="${rowClass}" ${trackerAttr}>
           <span class="smtLineNum">${row.lineNumber}</span>
-          <span class="smtLineCode">${highlightSmtSyntax(row.rawStmt, trackedIdsSet)}</span>
+          <span class="smtLineCode">
+            ${highlightSmtSyntax(row.rawStmt, trackedIdsSet)}
+            ${populatedSublineHtml}
+          </span>
           ${badgeHtml}
         </div>
       `;

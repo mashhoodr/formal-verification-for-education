@@ -318,6 +318,7 @@ def test_api_specs_and_verify_endpoints_return_camel_case():
     assert "Formal Verification" in index_resp.text
     assert "smtPipelineDiagram" in index_resp.text
     assert "smtTrackerMatrix" in index_resp.text
+    assert "smtProofSliceInspector" in index_resp.text
     assert "smtFilterBar" in index_resp.text
     assert "smtInteractiveViewer" in index_resp.text
 
