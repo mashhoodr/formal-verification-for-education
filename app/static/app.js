@@ -227,6 +227,10 @@ function escapeHtmlText(rawStr) {
     .replace(/>/g, "&gt;");
 }
 
+function escapeRegexLiteral(rawStr) {
+  return rawStr.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+}
+
 function highlightSmtSyntax(stmtText, trackedIdsSet) {
   let escaped = escapeHtmlText(stmtText);
   escaped = escaped.replace(
@@ -238,7 +242,7 @@ function highlightSmtSyntax(stmtText, trackedIdsSet) {
     '<span class="smtOp">$1</span>'
   );
   trackedIdsSet.forEach((trackerName) => {
-    const safePattern = new RegExp(`\\b(${trackerName})\\b`, "g");
+    const safePattern = new RegExp(`\\b(${escapeRegexLiteral(trackerName)})\\b`, "g");
     escaped = escaped.replace(
       safePattern,
       '<span class="smtTrackerSym">$1</span>'
@@ -256,7 +260,7 @@ function renderSmtVisualization(verificationResult) {
   const structuredRows = [];
 
   rawStatements.forEach((stmt, idx) => {
-    const declareMatch = stmt.match(/^\(declare-fun\s+([^\s]+)\s+\(\)\s+([^\s)]+)\)$/);
+    const declareMatch = stmt.match(/^\(declare-fun\s+([^\s()]+)\s+\(\)\s+([^\s()]+)\)$/);
     if (declareMatch) {
       const symName = declareMatch[1];
       const symType = declareMatch[2];
@@ -270,7 +274,7 @@ function renderSmtVisualization(verificationResult) {
       return;
     }
 
-    const trackedMatch = stmt.match(/^\(assert\s+\(=>\s+([^\s]+)\s+(.+)\)\)$/);
+    const trackedMatch = stmt.match(/^\(assert\s+\(=>\s+([^\s()]+)\s+(.+)\)\)$/);
     if (trackedMatch) {
       const trackerId = trackedMatch[1];
       const exprBody = trackedMatch[2];
@@ -298,10 +302,14 @@ function renderSmtVisualization(verificationResult) {
       return;
     }
 
-    const factMatch = stmt.match(/^\(assert\s+\(=\s+([^\s]+)\s+(.+)\)\)$/);
-    if (factMatch) {
-      const varName = factMatch[1];
-      const rawVal = factMatch[2];
+    const factLeftMatch = stmt.match(/^\(assert\s+\(=\s+([a-zA-Z_][a-zA-Z0-9_]*)\s+(.+)\)\)$/);
+    const factRightMatch = !factLeftMatch
+      ? stmt.match(/^\(assert\s+\(=\s+(.+)\s+([a-zA-Z_][a-zA-Z0-9_]*)\)\)$/)
+      : null;
+
+    if (factLeftMatch || factRightMatch) {
+      const varName = factLeftMatch ? factLeftMatch[1] : factRightMatch[2];
+      const rawVal = factLeftMatch ? factLeftMatch[2] : factRightMatch[1];
       const cleanVal = formatSmtRationalOrValue(rawVal);
       factBindingsMap[varName] = cleanVal;
       structuredRows.push({
@@ -326,7 +334,10 @@ function renderSmtVisualization(verificationResult) {
     let concreteExpr = item.exprBody;
     Object.keys(factBindingsMap).forEach((varKey) => {
       const valStr = factBindingsMap[varKey];
-      concreteExpr = concreteExpr.replace(new RegExp(`\\b${varKey}\\b`, "g"), valStr);
+      concreteExpr = concreteExpr.replace(
+        new RegExp(`\\b${escapeRegexLiteral(varKey)}\\b`, "g"),
+        valStr
+      );
     });
     concreteExpr = concreteExpr.replace(/\(\/\s+([0-9.]+)\s+([0-9.]+)\)/g, (fullMatch) =>
       formatSmtRationalOrValue(fullMatch)
