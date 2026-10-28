@@ -1,0 +1,341 @@
+:root {
+  --bg-page: #f8fafc;
+  --bg-card: #ffffff;
+  --text-main: #0f172a;
+  --text-muted: #475569;
+  --border-color: #e2e8f0;
+  --accent-blue: #2563eb;
+  --accent-blue-hover: #1d4ed8;
+  --sat-green-bg: #ecfdf5;
+  --sat-green-border: #10b981;
+  --sat-green-text: #065f46;
+  --unsat-red-bg: #fef2f2;
+  --unsat-red-border: #ef4444;
+  --unsat-red-text: #991b1b;
+  --warn-amber-bg: #fffbeb;
+  --warn-amber-border: #f59e0b;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+body {
+  margin: 0;
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+  background: var(--bg-page);
+  color: var(--text-main);
+  line-height: 1.5;
+}
+
+.topHeader {
+  background: #0f172a;
+  color: #ffffff;
+  padding: 1.25rem 2rem;
+  border-bottom: 1px solid #1e293b;
+}
+
+.headerContent {
+  max-width: 1440px;
+  margin: 0 auto;
+}
+
+.badgePill {
+  display: inline-block;
+  background: #1e3a8a;
+  color: #93c5fd;
+  font-size: 0.75rem;
+  font-weight: 600;
+  padding: 0.2rem 0.65rem;
+  border-radius: 999px;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+}
+
+.topHeader h1 {
+  margin: 0.4rem 0 0.25rem;
+  font-size: 1.45rem;
+}
+
+.subtitle {
+  margin: 0;
+  color: #cbd5e1;
+  font-size: 0.92rem;
+}
+
+.mainGrid {
+  max-width: 1440px;
+  margin: 1.5rem auto;
+  padding: 0 1.5rem;
+  display: grid;
+  grid-template-columns: 460px 1fr;
+  gap: 1.5rem;
+  align-items: start;
+}
+
+@media (max-width: 1024px) {
+  .mainGrid {
+    grid-template-columns: 1fr;
+  }
+}
+
+.panelCard {
+  background: var(--bg-card);
+  border: 1px solid var(--border-color);
+  border-radius: 12px;
+  padding: 1.35rem;
+  box-shadow: 0 1px 3px rgba(15, 23, 42, 0.05);
+}
+
+.panelCard h2 {
+  margin-top: 0;
+  font-size: 1.1rem;
+  border-bottom: 1px solid var(--border-color);
+  padding-bottom: 0.6rem;
+}
+
+.fieldGroup {
+  margin-bottom: 1rem;
+}
+
+.fieldGroup label,
+.ruleField label {
+  display: block;
+  font-size: 0.82rem;
+  font-weight: 600;
+  color: var(--text-main);
+  margin-bottom: 0.3rem;
+}
+
+select,
+input[type="text"],
+input[type="number"],
+textarea {
+  width: 100%;
+  padding: 0.5rem 0.65rem;
+  border: 1px solid #cbd5e1;
+  border-radius: 6px;
+  font-size: 0.88rem;
+  background: #fff;
+  color: var(--text-main);
+}
+
+textarea {
+  font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+  font-size: 0.8rem;
+  resize: vertical;
+}
+
+.helperText {
+  margin: 0.35rem 0 0;
+  font-size: 0.8rem;
+  color: var(--text-muted);
+}
+
+.rulesGrid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 0.75rem;
+  margin-bottom: 1rem;
+  background: #f8fafc;
+  padding: 0.85rem;
+  border-radius: 8px;
+  border: 1px solid var(--border-color);
+}
+
+.buttonRow {
+  display: flex;
+  gap: 0.6rem;
+  margin-bottom: 1rem;
+}
+
+.primaryBtn,
+.secondaryBtn {
+  padding: 0.6rem 0.9rem;
+  border-radius: 7px;
+  font-weight: 600;
+  font-size: 0.85rem;
+  cursor: pointer;
+  border: none;
+  transition: background 0.15s ease;
+}
+
+.primaryBtn {
+  flex: 1;
+  background: var(--accent-blue);
+  color: #ffffff;
+}
+
+.primaryBtn:hover {
+  background: var(--accent-blue-hover);
+}
+
+.secondaryBtn {
+  background: #e2e8f0;
+  color: #1e293b;
+}
+
+.secondaryBtn:hover {
+  background: #cbd5e1;
+}
+
+.traceHeader {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+}
+
+.iterationTabs {
+  display: flex;
+  gap: 0.4rem;
+}
+
+.iterStepBtn {
+  padding: 0.35rem 0.7rem;
+  border-radius: 6px;
+  border: 1px solid #cbd5e1;
+  background: #f8fafc;
+  font-size: 0.8rem;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.iterStepBtn.activeIter {
+  border-color: var(--accent-blue);
+  background: #eff6ff;
+  color: var(--accent-blue);
+}
+
+.statusBanner {
+  padding: 0.85rem 1rem;
+  border-radius: 8px;
+  font-weight: 600;
+  margin-bottom: 0.75rem;
+}
+
+.statusSat {
+  background: var(--sat-green-bg);
+  border: 1px solid var(--sat-green-border);
+  color: var(--sat-green-text);
+}
+
+.statusUnsat {
+  background: var(--unsat-red-bg);
+  border: 1px solid var(--unsat-red-border);
+  color: var(--unsat-red-text);
+}
+
+.repairSummaryBox {
+  font-size: 0.86rem;
+  color: var(--text-muted);
+  margin-bottom: 0.9rem;
+  padding: 0.55rem 0.75rem;
+  background: #f1f5f9;
+  border-radius: 6px;
+}
+
+.metricsBar {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 0.6rem;
+  margin-bottom: 1rem;
+}
+
+.metricTile {
+  background: #f8fafc;
+  border: 1px solid var(--border-color);
+  border-radius: 8px;
+  padding: 0.55rem 0.75rem;
+}
+
+.metricLabel {
+  font-size: 0.72rem;
+  color: var(--text-muted);
+  text-transform: uppercase;
+}
+
+.metricValue {
+  font-size: 1.05rem;
+  font-weight: 700;
+}
+
+.viewToggleRow {
+  display: flex;
+  gap: 0.5rem;
+  margin-bottom: 1rem;
+  border-bottom: 1px solid var(--border-color);
+  padding-bottom: 0.5rem;
+}
+
+.tabBtn {
+  background: transparent;
+  border: none;
+  padding: 0.4rem 0.8rem;
+  font-size: 0.85rem;
+  font-weight: 600;
+  color: var(--text-muted);
+  cursor: pointer;
+  border-radius: 6px;
+}
+
+.tabBtn.activeTab {
+  background: #e0e7ff;
+  color: #1d4ed8;
+}
+
+.hiddenPane {
+  display: none;
+}
+
+.prescriptionCard {
+  background: var(--warn-amber-bg);
+  border-left: 4px solid var(--warn-amber-border);
+  padding: 0.7rem 0.9rem;
+  border-radius: 6px;
+  margin-bottom: 0.6rem;
+  font-size: 0.85rem;
+}
+
+.questionCard {
+  border: 1px solid var(--border-color);
+  border-radius: 8px;
+  padding: 0.9rem;
+  margin-bottom: 0.85rem;
+}
+
+.optionItem {
+  padding: 0.35rem 0.6rem;
+  margin: 0.25rem 0;
+  border-radius: 5px;
+  background: #f8fafc;
+  font-size: 0.86rem;
+  display: flex;
+  justify-content: space-between;
+}
+
+.optionCorrect {
+  border-left: 3px solid #10b981;
+  font-weight: 600;
+}
+
+.codePre {
+  background: #0f172a;
+  color: #e2e8f0;
+  padding: 1rem;
+  border-radius: 8px;
+  overflow-x: auto;
+  font-size: 0.78rem;
+  max-height: 460px;
+}
+
+.certificateBox {
+  font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+  font-size: 0.8rem;
+  margin-bottom: 0.6rem;
+  padding: 0.6rem;
+  background: #f1f5f9;
+  border-radius: 6px;
+  word-break: break-all;
+}

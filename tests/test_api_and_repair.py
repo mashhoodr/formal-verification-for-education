@@ -1,5 +1,10 @@
 import pytest
 from app.models import GenerateAndVerifyRequest
+
+pytestmark = pytest.mark.filterwarnings(r"ignore:Using `httpx` with `starlette\.testclient`.*")
+
+
+
 from app.verifier.grade_specs import get_grade_spec
 from app.verifier.repair_orchestrator import (
     DEMO_SCENARIOS,
@@ -258,4 +263,58 @@ def test_deterministic_auto_repair_fallback():
     words = repaired.questions[0].stem.split()
     assert len(words) <= spec.max_words_per_sentence
     assert repaired.questions[0].stem.endswith("?")
+
+
+def test_api_specs_and_verify_endpoints_return_camel_case():
+    from fastapi.testclient import TestClient
+    from app.main import app
+
+    client = TestClient(app)
+
+    specs_resp = client.get("/api/specs")
+    assert specs_resp.status_code == 200
+    specs_json = specs_resp.json()
+    assert "gradeSpecs" in specs_json
+    assert "demoScenarios" in specs_json
+    assert specs_json["gradeSpecs"][0]["gradeBandId"] == "primaryG1G2"
+
+    loop_resp = client.post(
+        "/api/generate-and-verify",
+        json={
+            "scenarioId": "waterCycleG3",
+            "gradeSpec": {
+                **specs_json["gradeSpecs"][1],
+                "topicAllowlist": ["evaporation", "condensation"],
+            },
+            "maxIterations": 3,
+        },
+    )
+    assert loop_resp.status_code == 200
+    loop_json = loop_resp.json()
+    assert loop_json["finalStatus"] == "sat"
+    assert loop_json["iterations"][0]["verificationResult"]["status"] == "unsat"
+    assert loop_json["iterations"][-1]["verificationResult"]["status"] == "sat"
+    assert "smtLib2Script" in loop_json["iterations"][-1]["verificationResult"]
+
+    # Direct /api/verify check on the repaired assessment
+    repaired_assessment = loop_json["iterations"][-1]["assessment"]
+    verify_resp = client.post(
+        "/api/verify",
+        json={
+            "assessment": repaired_assessment,
+            "gradeSpec": {
+                **specs_json["gradeSpecs"][1],
+                "topicAllowlist": ["evaporation", "condensation"],
+            },
+        },
+    )
+    assert verify_resp.status_code == 200
+    verify_json = verify_resp.json()
+    assert verify_json["status"] == "sat"
+    assert verify_json["certificateHash"] is not None
+
+    index_resp = client.get("/")
+    assert index_resp.status_code == 200
+    assert "Formal Verification" in index_resp.text
+
 

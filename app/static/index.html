@@ -1,0 +1,112 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>K-12 Educational Formal Verification Playground (Z3 SMT Kernel)</title>
+  <link rel="stylesheet" href="/static/styles.css" />
+</head>
+<body>
+  <header class="topHeader">
+    <div class="headerContent">
+      <div>
+        <span class="badgePill">Z3 SMT Formal Kernel + Auto-Repair</span>
+        <h1>K-12 Assessment Formal Verification Playground</h1>
+        <p class="subtitle">
+          Plain-English grade theorems compiled into mathematical Z3 assertions (<code>SAT</code> / <code>UNSAT Core</code>) with counterexample-guided LLM repair.
+        </p>
+      </div>
+    </div>
+  </header>
+
+  <main class="mainGrid">
+    <!-- Left Column: Grade Theorem & Input Controls -->
+    <section class="panelCard">
+      <h2>1. Select Scenario & Grade Specification ("Theorem")</h2>
+
+      <div class="fieldGroup">
+        <label for="scenarioSelect">Demo Scenario (Flawed LLM Draft &rarr; Z3 Auto-Repair)</label>
+        <select id="scenarioSelect"></select>
+        <p id="scenarioDescription" class="helperText"></p>
+      </div>
+
+      <div class="fieldGroup">
+        <label for="gradeBandSelect">Target Grade Band</label>
+        <select id="gradeBandSelect"></select>
+      </div>
+
+      <div class="rulesGrid">
+        <div class="ruleField">
+          <label for="maxWordsInput">Max Words / Sentence</label>
+          <input type="number" id="maxWordsInput" min="4" max="40" />
+        </div>
+        <div class="ruleField">
+          <label for="maxSyllablesInput">Max Syllables / Word</label>
+          <input type="number" id="maxSyllablesInput" min="1" max="8" />
+        </div>
+        <div class="ruleField">
+          <label for="fkMinInput">Flesch-Kincaid Min</label>
+          <input type="number" id="fkMinInput" step="0.1" min="0" max="15" />
+        </div>
+        <div class="ruleField">
+          <label for="fkMaxInput">Flesch-Kincaid Max</label>
+          <input type="number" id="fkMaxInput" step="0.1" min="1" max="18" />
+        </div>
+        <div class="ruleField">
+          <label for="optionSpreadInput">Max Option Word Spread</label>
+          <input type="number" id="optionSpreadInput" min="1" max="20" />
+        </div>
+        <div class="ruleField">
+          <label for="quizDurationInput">Quiz Time Budget (min)</label>
+          <input type="number" id="quizDurationInput" min="1" max="60" />
+        </div>
+      </div>
+
+      <div class="fieldGroup">
+        <label for="allowlistInput">Curriculum Topic Allowlist (comma-separated words exempt from syllable cap)</label>
+        <input type="text" id="allowlistInput" placeholder="e.g., evaporation, condensation" />
+      </div>
+
+      <div class="buttonRow">
+        <button id="runRepairBtn" class="primaryBtn">Run Generate &rarr; Z3 Verify &rarr; Auto-Repair Loop</button>
+        <button id="verifyJsonBtn" class="secondaryBtn">Verify Edited JSON Only</button>
+      </div>
+
+      <div class="fieldGroup editorSection">
+        <label for="assessmentJsonEditor">Assessment JSON (Editable for Live Z3 Probing)</label>
+        <textarea id="assessmentJsonEditor" rows="14" spellcheck="false"></textarea>
+      </div>
+    </section>
+
+    <!-- Right Column: Verification Proof & Repair Trace -->
+    <section class="panelCard">
+      <div class="traceHeader">
+        <h2>2. Z3 Formal Verification & Counterexample Trace</h2>
+        <div id="iterationTabs" class="iterationTabs"></div>
+      </div>
+
+      <div id="statusBanner" class="statusBanner"></div>
+      <div id="repairSummaryBox" class="repairSummaryBox"></div>
+
+      <div class="metricsBar" id="metricsBar"></div>
+
+      <div class="viewToggleRow">
+        <button id="tabVisualBtn" class="tabBtn activeTab">Visual Counterexamples & Prescriptions</button>
+        <button id="tabSmtBtn" class="tabBtn">SMT-LIB2 Formal Proof Script</button>
+      </div>
+
+      <div id="visualProofPane">
+        <div id="prescriptionsContainer"></div>
+        <div id="questionsContainer"></div>
+      </div>
+
+      <div id="smtProofPane" class="hiddenPane">
+        <div id="certificateBox" class="certificateBox"></div>
+        <pre id="smtScriptPre" class="codePre"></pre>
+      </div>
+    </section>
+  </main>
+
+  <script src="/static/app.js"></script>
+</body>
+</html>
