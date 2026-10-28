@@ -46,7 +46,21 @@ SYLLABLE_OVERRIDES: dict[str, int] = {
     "vegetables": 3,
 }
 
-ABBREVIATIONS = ("mr.", "mrs.", "ms.", "dr.", "prof.", "sr.", "jr.", "vs.", "e.g.", "i.e.")
+ABBREVIATIONS = (
+    "mr.",
+    "mrs.",
+    "ms.",
+    "dr.",
+    "prof.",
+    "sr.",
+    "jr.",
+    "vs.",
+    "e.g.",
+    "i.e.",
+    "fig.",
+    "vol.",
+    "approx.",
+)
 WORD_RE = re.compile(r"[A-Za-z]+(?:'[A-Za-z]+)?")
 
 
@@ -93,7 +107,7 @@ def split_sentences(text: str) -> list[str]:
         return []
     protected = stripped
     for abbr in ABBREVIATIONS:
-        pattern = re.compile(re.escape(abbr), re.IGNORECASE)
+        pattern = re.compile(r"\b" + re.escape(abbr), re.IGNORECASE)
         protected = pattern.sub(lambda m: m.group(0).replace(".", "<DOT>"), protected)
 
     raw_parts = re.split(r"[.!?]+", protected)

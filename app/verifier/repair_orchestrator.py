@@ -413,7 +413,7 @@ def _call_live_llm_json(prompt: str, llm_config: LlmConfig) -> dict[str, Any]:
 
 
 def _deterministic_auto_repair_fallback(
-    assessment: Assessment, grade_spec: GradeSpec, verification: VerificationResult
+    assessment: Assessment, grade_spec: GradeSpec, _verification: VerificationResult
 ) -> Assessment:
     """Deterministic surgical fallback repair when running custom topics without an external API key."""
     repaired_questions: list[QuestionItem] = []

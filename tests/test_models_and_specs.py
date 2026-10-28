@@ -100,6 +100,17 @@ def test_model_validations():
         )
 
 
+def test_question_item_rejects_out_of_bounds_correct_option_index():
+    with pytest.raises(ValidationError, match="correctOptionIndex.*must be less than options count"):
+        QuestionItem(
+            question_id="q1",
+            stem="Test question stem.",
+            options=["A", "B", "C"],
+            correct_option_index=3,
+        )
+
+
+
 def test_verification_result_and_metrics_camel_case():
     violation = ConstraintViolation(
         tracker_id="track_max_words",

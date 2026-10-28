@@ -23,6 +23,16 @@ def test_split_sentences_handles_abbreviations_and_punctuation():
     assert len(extract_words(sentences[0])) == 5
 
 
+def test_split_sentences_word_boundary_and_new_abbreviations():
+    text = "We hired skilled devs. They wrote tests. See Fig. 2 and Vol. 1 for approx. 50 examples."
+    sentences = split_sentences(text)
+    assert len(sentences) == 3
+    assert sentences[0] == "We hired skilled devs"
+    assert sentences[1] == "They wrote tests"
+    assert sentences[2] == "See Fig. 2 and Vol. 1 for approx. 50 examples"
+
+
+
 def test_analyze_assessment_respects_topic_allowlist():
     spec = get_grade_spec("primaryG3G5")
     spec.topic_allowlist = ["evaporation"]

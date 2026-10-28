@@ -1,5 +1,5 @@
 from typing import Literal, Optional
-from pydantic import BaseModel, ConfigDict, Field
+from pydantic import BaseModel, ConfigDict, Field, model_validator
 from pydantic.alias_generators import to_camel
 
 
@@ -16,6 +16,15 @@ class QuestionItem(CamelModel):
     options: list[str] = Field(..., min_length=2)
     correct_option_index: int = Field(..., ge=0)
     explanation: str = Field(default="")
+
+    @model_validator(mode="after")
+    def validate_correct_option_index(self) -> "QuestionItem":
+        if self.correct_option_index >= len(self.options):
+            raise ValueError(
+                f"correctOptionIndex ({self.correct_option_index}) must be less than options count ({len(self.options)})"
+            )
+        return self
+
 
 
 class Assessment(CamelModel):

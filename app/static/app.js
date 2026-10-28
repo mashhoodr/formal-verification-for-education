@@ -166,22 +166,30 @@ function renderIterationTabs() {
 }
 
 async function executeRepairLoop() {
-  const scenarioId = scenarioSelect.value;
-  const gradeSpec = readCurrentGradeSpec();
-  const response = await fetch("/api/generate-and-verify", {
-    method: "POST",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({
-      scenarioId,
-      gradeSpec,
-      maxIterations: 3,
-    }),
-  });
-  const resultData = await response.json();
-  currentIterations = resultData.iterations;
-  selectedIterationIndex = 0;
-  renderIterationTabs();
-  renderIterationView(currentIterations[0]);
+  try {
+    const scenarioId = scenarioSelect.value;
+    const gradeSpec = readCurrentGradeSpec();
+    const response = await fetch("/api/generate-and-verify", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        scenarioId,
+        gradeSpec,
+        maxIterations: 3,
+      }),
+    });
+    if (!response.ok) {
+      throw new Error(`Server returned status ${response.status}`);
+    }
+    const resultData = await response.json();
+    currentIterations = resultData.iterations;
+    selectedIterationIndex = 0;
+    renderIterationTabs();
+    renderIterationView(currentIterations[0]);
+  } catch (err) {
+    statusBanner.className = "statusBanner statusUnsat";
+    statusBanner.textContent = `Repair Loop Error: ${err.message}`;
+  }
 }
 
 async function executeVerifyEditedJson() {
