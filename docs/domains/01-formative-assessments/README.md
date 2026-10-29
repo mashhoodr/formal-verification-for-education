@@ -24,6 +24,8 @@ Each dimension below has its own dedicated specification and mathematical formul
    - Treating developmental stage (`K-2`, `G3-5`, `G6-8`, `G9-12`) as a hyper-parameter that governs working memory chunk limits ($M_{\max}$), option count caps ($3$ vs. $4\text{--}5$), reading speed ($\text{WPM}$), and concrete vs. abstract reasoning bounds.
 6. **[Dimension 6: Diagnostic Distractors & Multi-Format Item Design (`06-diagnostic-distractors-and-item-types.md`)](06-diagnostic-distractors-and-item-types.md)**
    - Proving **Misconception Bijection** ($\text{Distinct}(m_1, m_2, m_3)$) for MCQ distractors, banning construct-invalid meta-options (*"All of the above"*), and specifying formal invariants for Short Answer, Match-the-Column, and Comprehension sets.
+7. **[Dimension 7: Stage 0 Formal Proof of KC Generation & Epistemic Boundaries (`07-stage0-kc-ontology-proof-and-boundaries.md`)](07-stage0-kc-ontology-proof-and-boundaries.md)**
+   - Proving the 6 Stage 0 Z3 theorems on candidate KC decompositions from the **National Curriculum of Pakistan (NCP)** across Grades $G-1 \to G \to G+1$, and explicitly documenting the **6 epistemic boundaries that are NOT tested by the Stage 0 Z3 proof**.
 
 ---
 

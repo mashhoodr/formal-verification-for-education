@@ -140,3 +140,79 @@ class RepairLoopResponse(CamelModel):
     final_status: Literal["sat", "unverifiedAfterRetries"]
     total_iterations: int
     iterations: list[IterationRecord]
+
+
+class SloClauseItem(CamelModel):
+    clause_id: str
+    slo_code: str
+    grade: int
+    text: str
+
+
+class CandidateKcItem(CamelModel):
+    kc_id: str
+    grade: int
+    title: str
+    operation_code: str
+    mechanism_complexity: int
+    verb_count: int = 1
+    observable_variables_count: int = 1
+    misconceptions: list[str] = Field(default_factory=list)
+    prerequisites: list[str] = Field(default_factory=list)
+    covered_clause_ids: list[str] = Field(default_factory=list)
+
+
+class VerticalTriadSpec(CamelModel):
+    triad_id: str
+    title: str
+    subject: str
+    prior_grade: int
+    target_grade: int
+    next_grade: int
+    slo_clauses: list[SloClauseItem]
+    candidate_kcs: list[CandidateKcItem]
+
+
+class EpistemicBoundaryItem(CamelModel):
+    boundary_id: str
+    title: str
+    why_untested_by_z3: str
+    failure_example: str
+    mitigation_strategy: str
+
+
+class Stage0Metrics(CamelModel):
+    total_kcs: int
+    prior_grade_kcs: int
+    target_grade_kcs: int
+    next_grade_kcs: int
+    total_slo_clauses: int
+    covered_slo_clauses: int
+    total_prerequisite_edges: int
+    total_tracked_theorems: int
+
+
+class Stage0VerificationResult(CamelModel):
+    status: Literal["sat", "unsat"]
+    certificate_hash: Optional[str] = None
+    smt_lib2_script: str
+    unsat_core: list[str]
+    violations: list[ConstraintViolation]
+    prescriptions: list[RepairPrescription]
+    topological_ranks: dict[str, int] = Field(default_factory=dict)
+    metrics: Stage0Metrics
+    untested_epistemic_boundaries: list[EpistemicBoundaryItem] = Field(default_factory=list)
+
+
+class Stage0IterationRecord(CamelModel):
+    iteration_index: int
+    triad_spec: VerticalTriadSpec
+    verification_result: Stage0VerificationResult
+    repair_summary: str
+
+
+class Stage0RepairResponse(CamelModel):
+    final_status: Literal["sat", "unverifiedAfterRetries"]
+    total_iterations: int
+    iterations: list[Stage0IterationRecord]
+
