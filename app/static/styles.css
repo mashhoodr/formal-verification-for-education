@@ -179,62 +179,74 @@ textarea {
   background: #cbd5e1;
 }
 
-.traceHeader {
-  display: flex;
-  justify-content: space-between;
-  align-items: flex-start;
-  flex-wrap: wrap;
-  gap: 0.75rem;
-  margin-bottom: 0.75rem;
+.timelineSidebarCard {
+  background: #f8fafc;
+  border: 1px solid var(--border-color);
+  border-radius: 9px;
+  padding: 0.75rem 0.85rem;
+  margin-bottom: 0.9rem;
 }
 
-.journeySubtext {
-  margin: 0.15rem 0 0;
-  font-size: 0.8rem;
+.timelineSidebarHeader {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  font-size: 0.75rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.03em;
+  color: #475569;
+  margin-bottom: 0.55rem;
+}
+
+.timelineHint {
+  font-size: 0.7rem;
+  font-weight: 500;
+  text-transform: none;
   color: var(--text-muted);
 }
 
-.iterationTabs {
+.iterationTabsVertical {
   display: flex;
-  align-items: center;
-  flex-wrap: wrap;
+  flex-direction: column;
   gap: 0.35rem;
-  background: #f8fafc;
-  padding: 0.4rem 0.55rem;
-  border-radius: 10px;
-  border: 1px solid var(--border-color);
 }
 
 .iterConnector {
   color: #94a3b8;
   font-weight: 700;
-  font-size: 0.85rem;
-  padding: 0 0.1rem;
+  font-size: 0.75rem;
+  line-height: 1;
+  padding-left: 0.85rem;
 }
 
 .iterStepBtn {
-  padding: 0.42rem 0.75rem;
+  width: 100%;
+  padding: 0.5rem 0.75rem;
   border-radius: 7px;
-  border: 1px solid #cbd5e1;
+  border: 1.5px solid #cbd5e1;
   background: #ffffff;
-  font-size: 0.79rem;
+  font-size: 0.8rem;
   font-weight: 700;
   cursor: pointer;
-  display: inline-flex;
+  display: flex;
+  justify-content: space-between;
   align-items: center;
   gap: 0.4rem;
   transition: all 0.15s ease;
+  text-align: left;
 }
 
 .iterStepBtn:hover {
   border-color: #94a3b8;
+  background: #f1f5f9;
 }
 
 .iterStepBtn.activeIter {
   border-color: var(--accent-blue);
   background: #eff6ff;
   color: var(--accent-blue);
-  box-shadow: 0 1px 4px rgba(37, 99, 235, 0.15);
+  box-shadow: 0 1px 4px rgba(37, 99, 235, 0.14);
 }
 
 .statusBanner {
@@ -257,12 +269,14 @@ textarea {
 }
 
 .repairSummaryBox {
-  font-size: 0.86rem;
-  color: var(--text-muted);
-  margin-bottom: 0.9rem;
-  padding: 0.55rem 0.75rem;
-  background: #f1f5f9;
+  font-size: 0.78rem;
+  color: #334155;
+  margin-top: 0.55rem;
+  padding: 0.5rem 0.65rem;
+  background: #ffffff;
+  border: 1px dashed #cbd5e1;
   border-radius: 6px;
+  line-height: 1.4;
 }
 
 .metricsBar {

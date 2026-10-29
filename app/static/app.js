@@ -1768,19 +1768,21 @@ function renderIterationTabs() {
   iterationTabs.innerHTML = "";
   currentIterations.forEach((iterRecord, idx) => {
     if (idx > 0) {
-      const connector = document.createElement("span");
+      const connector = document.createElement("div");
       connector.className = "iterConnector";
       connector.setAttribute("aria-hidden", "true");
-      connector.textContent = "→";
+      connector.textContent = "↓";
       iterationTabs.appendChild(connector);
     }
     const btn = document.createElement("button");
     btn.type = "button";
     const statusBadge = iterRecord.verificationResult.status.toUpperCase();
+    const unsatCount = iterRecord.verificationResult.unsatCore.length;
     const isSatStep = statusBadge === "SAT";
     btn.className = `iterStepBtn ${idx === selectedIterationIndex ? "activeIter" : ""}`;
-    const stepLabel = idx === 0 ? "Draft 0" : `Repair ${idx}`;
-    btn.innerHTML = `<span>${stepLabel}</span> <span class="smtStatusChip ${isSatStep ? "chipSat" : "chipViolated"}" style="padding:0.08rem 0.38rem;font-size:0.68rem;">${statusBadge}</span>`;
+    const stepLabel = idx === 0 ? "Step 0: Initial Draft" : `Step ${idx}: Auto-Repair ${idx}`;
+    const detailBadge = isSatStep ? "SAT (Verified)" : `UNSAT (${unsatCount} issues)`;
+    btn.innerHTML = `<span>${stepLabel}</span> <span class="smtStatusChip ${isSatStep ? "chipSat" : "chipViolated"}" style="padding:0.1rem 0.42rem;font-size:0.68rem;">${detailBadge}</span>`;
     btn.addEventListener("click", () => {
       selectedIterationIndex = idx;
       renderIterationTabs();

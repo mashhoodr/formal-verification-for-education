@@ -4,7 +4,7 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>K-12 Educational Formal Verification Playground (Z3 SMT Kernel)</title>
-  <link rel="stylesheet" href="/static/styles.css?v=8" />
+  <link rel="stylesheet" href="/static/styles.css?v=9" />
 </head>
 <body>
   <header class="topHeader">
@@ -20,9 +20,9 @@
   </header>
 
   <main class="mainGrid">
-    <!-- Left Column: Progressive Disclosure Setup & Controls -->
+    <!-- Left Column: Scenario, Repair Timeline & Spec Controls -->
     <section class="panelCard">
-      <h2>1. Choose Demo Scenario</h2>
+      <h2>1. Scenario &amp; Auto-Repair Timeline</h2>
 
       <div class="fieldGroup">
         <label for="scenarioSelect">Demo Scenario (Flawed LLM Draft &rarr; Z3 Auto-Repair)</label>
@@ -40,6 +40,16 @@
 
       <div class="buttonRow">
         <button type="button" id="runRepairBtn" class="primaryBtn">Run Generate &rarr; Z3 Verify &rarr; Auto-Repair Loop</button>
+      </div>
+
+      <!-- Vertical Auto-Repair Timeline Stepper in Left Sidebar -->
+      <div class="timelineSidebarCard">
+        <div class="timelineSidebarHeader">
+          <span>Z3 Auto-Repair Timeline</span>
+          <span class="timelineHint">Select step to inspect</span>
+        </div>
+        <div id="iterationTabs" class="iterationTabsVertical"></div>
+        <div id="repairSummaryBox" class="repairSummaryBox"></div>
       </div>
 
       <!-- Progressive Disclosure Accordion Group (Modern HTML <details name="...">) -->
@@ -99,23 +109,10 @@
       </div>
     </section>
 
-    <!-- Right Column: Guided Repair Journey & 3-Step Learning Tabs -->
+    <!-- Right Column: Single 3-Step Lens Tab Bar + Active Inspection Workspace -->
     <section class="panelCard">
-      <div class="traceHeader">
-        <div>
-          <h2>2. Z3 Verification &amp; Auto-Repair Journey</h2>
-          <p class="journeySubtext">Click each repair step below to see how Z3 guides the LLM from a flawed draft (<code>UNSAT</code>) to a mathematically verified quiz (<code>SAT</code>).</p>
-        </div>
-        <div id="iterationTabs" class="iterationTabs"></div>
-      </div>
-
-      <div id="statusBanner" class="statusBanner"></div>
-      <div id="repairSummaryBox" class="repairSummaryBox"></div>
-
-      <div class="metricsBar" id="metricsBar"></div>
-
-      <!-- Numbered 3-Step Learning Progression Tabs -->
-      <div class="viewToggleRow" role="tablist" aria-label="Verification Exploration Steps">
+      <!-- Single Top-Level Tab Bar -->
+      <div class="viewToggleRow" role="tablist" aria-label="Verification Exploration Lenses">
         <button type="button" id="tabVisualBtn" class="tabBtn activeTab">
           <span class="tabStepTitle"><span class="tabStepNum">1</span> Quiz &amp; Repair Prescriptions</span>
           <span class="tabStepSub">What failed in the quiz &amp; how Z3 fixes it</span>
@@ -129,6 +126,10 @@
           <span class="tabStepSub">Interactive geometric mental model</span>
         </button>
       </div>
+
+      <!-- Compact Unified Status & Metrics Header -->
+      <div id="statusBanner" class="statusBanner"></div>
+      <div class="metricsBar" id="metricsBar"></div>
 
       <!-- STEP 1 PANE: Quiz & Repair Prescriptions -->
       <div id="visualProofPane">
@@ -238,6 +239,6 @@
     <div id="explainerDialogBody" class="explainerModalBody"></div>
   </dialog>
 
-  <script src="/static/app.js?v=8"></script>
+  <script src="/static/app.js?v=9"></script>
 </body>
 </html>
