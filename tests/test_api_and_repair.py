@@ -320,6 +320,9 @@ def test_api_specs_and_verify_endpoints_return_camel_case():
     assert "smtTrackerMatrix" in index_resp.text
     assert "smtProofSliceInspector" in index_resp.text
     assert "symbolExplainerDialog" in index_resp.text
+    assert "tabFeasibleMapBtn" in index_resp.text
+    assert "feasibleMapPane" in index_resp.text
+    assert "feasibleSpaceSvg" in index_resp.text
     assert "smtFilterBar" in index_resp.text
     assert "smtInteractiveViewer" in index_resp.text
 

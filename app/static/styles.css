@@ -1221,3 +1221,180 @@ dialog::backdrop {
   background: #f1f5f9;
   font-weight: 700;
 }
+
+/* 2D Feasible Proof Space (Why Not if/else?) Tab */
+.feasibleIntroBanner {
+  background: linear-gradient(135deg, #eff6ff 0%, #f0fdf4 100%);
+  border: 1px solid #bfdbfe;
+  border-radius: 10px;
+  padding: 0.95rem 1.15rem;
+  margin-bottom: 1rem;
+}
+
+.feasibleControlsCard {
+  background: #f8fafc;
+  border: 1px solid var(--border-color);
+  border-radius: 10px;
+  padding: 0.9rem 1.1rem;
+  margin-bottom: 1rem;
+}
+
+.feasiblePresetRow {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.45rem;
+  align-items: center;
+  margin-bottom: 0.85rem;
+}
+
+.feasibleSlidersGrid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 1rem;
+}
+
+@media (max-width: 820px) {
+  .feasibleSlidersGrid {
+    grid-template-columns: 1fr;
+  }
+}
+
+.probeSliderBox {
+  background: #ffffff;
+  border: 1px solid #cbd5e1;
+  border-radius: 8px;
+  padding: 0.65rem 0.85rem;
+}
+
+.probeSliderBox label {
+  display: block;
+  font-size: 0.8rem;
+  color: var(--text-main);
+  margin-bottom: 0.35rem;
+}
+
+.probeSliderBox input[type="range"] {
+  width: 100%;
+  accent-color: var(--accent-blue);
+  cursor: pointer;
+}
+
+.feasibleGraphCard {
+  background: #ffffff;
+  border: 1px solid var(--border-color);
+  border-radius: 10px;
+  padding: 0.9rem 1rem;
+  margin-bottom: 1.1rem;
+}
+
+.feasibleVerdictStrip {
+  padding: 0.65rem 0.9rem;
+  border-radius: 8px;
+  font-size: 0.83rem;
+  font-weight: 600;
+  margin-bottom: 0.75rem;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+}
+
+.feasibleSpaceSvg {
+  width: 100%;
+  height: auto;
+  background: #0f172a;
+  border-radius: 8px;
+  border: 1px solid #1e293b;
+  display: block;
+}
+
+.feasibleLegendRow {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 1rem;
+  margin-top: 0.65rem;
+  font-size: 0.76rem;
+  color: #334155;
+  font-weight: 600;
+}
+
+.legendItem {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+}
+
+.legendSwatch {
+  width: 14px;
+  height: 14px;
+  border-radius: 3px;
+  display: inline-block;
+}
+
+.swatchPoly {
+  background: rgba(16, 185, 129, 0.45);
+  border: 2px solid #10b981;
+}
+
+.swatchWallSent {
+  background: transparent;
+  border-left: 3px dashed #f43f5e;
+}
+
+.swatchWallFk {
+  background: transparent;
+  border-bottom: 3px solid #38bdf8;
+}
+
+.swatchProbe {
+  background: #facc15;
+  border: 2px solid #ffffff;
+  border-radius: 999px;
+}
+
+.feasibleMathExplainer {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+}
+
+.mathCardGrid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 0.9rem;
+}
+
+@media (max-width: 900px) {
+  .mathCardGrid {
+    grid-template-columns: 1fr;
+  }
+}
+
+.mathNotationCard {
+  border: 1px solid var(--border-color);
+  border-radius: 9px;
+  padding: 0.9rem 1rem;
+  background: #ffffff;
+}
+
+.mathFormulaBox {
+  background: #0f172a;
+  color: #f8fafc;
+  font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+  font-size: 0.78rem;
+  padding: 0.65rem 0.85rem;
+  border-radius: 6px;
+  margin: 0.45rem 0;
+  overflow-x: auto;
+  border-left: 4px solid #38bdf8;
+}
+
+.mathPlainExplanation {
+  font-size: 0.8rem;
+  color: #334155;
+  background: #f8fafc;
+  padding: 0.55rem 0.75rem;
+  border-radius: 6px;
+  border-left: 3px solid #94a3b8;
+}

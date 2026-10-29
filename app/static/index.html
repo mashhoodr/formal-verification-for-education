@@ -4,7 +4,7 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>K-12 Educational Formal Verification Playground (Z3 SMT Kernel)</title>
-  <link rel="stylesheet" href="/static/styles.css?v=6" />
+  <link rel="stylesheet" href="/static/styles.css?v=7" />
 </head>
 <body>
   <header class="topHeader">
@@ -91,8 +91,9 @@
       <div class="metricsBar" id="metricsBar"></div>
 
       <div class="viewToggleRow">
-        <button id="tabVisualBtn" class="tabBtn activeTab">Visual Counterexamples & Prescriptions</button>
+        <button id="tabVisualBtn" class="tabBtn activeTab">Visual Counterexamples &amp; Prescriptions</button>
         <button id="tabSmtBtn" class="tabBtn">SMT-LIB2 Formal Proof Script</button>
+        <button id="tabFeasibleMapBtn" class="tabBtn">2D Feasible Proof Space (Why Not if/else?)</button>
       </div>
 
       <div id="visualProofPane">
@@ -112,6 +113,58 @@
           <pre id="smtScriptPre" class="codePre"></pre>
         </details>
       </div>
+
+      <div id="feasibleMapPane" class="hiddenPane">
+        <div class="feasibleIntroBanner">
+          <div>
+            <span class="badgePill">Visual Mental Model &bull; Half-Plane Polytope</span>
+            <h3 style="margin:0.35rem 0 0.2rem;font-size:1.05rem;">
+              The Pinhole Flashlight (<code>if/else</code>) vs. The 2D Feasible Proof Space (<code>Z3 SMT</code>)
+            </h3>
+            <p style="margin:0;font-size:0.83rem;color:#334155;">
+              An <code>if/else</code> assertion checks one isolated coordinate at a time in the dark. A Z3 formal proof solves the coupled system of half-plane inequalities to find the <strong>Green Feasible Polytope (&#8473;<sub>SAT</sub>)</strong> where all theorem walls overlap simultaneously.
+            </p>
+          </div>
+        </div>
+
+        <div class="feasibleControlsCard">
+          <div class="feasiblePresetRow">
+            <span style="font-size:0.78rem;font-weight:700;color:#334155;">Interactive Presets:</span>
+            <button type="button" id="presetDraftBtn" class="smtFilterBtn">1. Initial Flawed Draft (Outside Walls)</button>
+            <button type="button" id="presetNaiveBtn" class="smtFilterBtn">2. Naive if/else Fix (Over-Simplified &rarr; Drops Below FK Min!)</button>
+            <button type="button" id="presetSatBtn" class="smtFilterBtn">3. Z3 Repaired Quiz (Inside Green Polytope &#8473;<sub>SAT</sub>)</button>
+            <button type="button" id="presetImpossibleBtn" class="smtFilterBtn">4. Contradictory Spec (&#8473;<sub>SAT</sub> = &empty; Impossible!)</button>
+          </div>
+
+          <div class="feasibleSlidersGrid">
+            <div class="probeSliderBox">
+              <label for="probeWordsSlider">
+                Probe X-Coordinate (<i>x</i> = Words / Sentence): <strong id="probeWordsValLabel">19.0</strong>
+              </label>
+              <input type="range" id="probeWordsSlider" min="3" max="25" step="0.5" value="19" />
+            </div>
+            <div class="probeSliderBox">
+              <label for="probeSyllablesSlider">
+                Probe Y-Coordinate (<i>y</i> = Syllables / Word): <strong id="probeSyllablesValLabel">1.65</strong>
+              </label>
+              <input type="range" id="probeSyllablesSlider" min="1.05" max="2.25" step="0.02" value="1.65" />
+            </div>
+          </div>
+        </div>
+
+        <div class="feasibleGraphCard">
+          <div id="feasibleVerdictStrip" class="feasibleVerdictStrip"></div>
+          <svg id="feasibleSpaceSvg" viewBox="0 0 780 430" class="feasibleSpaceSvg" role="img" aria-label="2D Feasible Proof Space Graph"></svg>
+          <div class="feasibleLegendRow">
+            <span class="legendItem"><span class="legendSwatch swatchPoly"></span> Green Feasible Polytope (&#8473;<sub>SAT</sub>)</span>
+            <span class="legendItem"><span class="legendSwatch swatchWallSent"></span> Sentence Cap Wall (<i>x</i> &le; <i>W</i><sub>max</sub>)</span>
+            <span class="legendItem"><span class="legendSwatch swatchWallFk"></span> Diagonal Flesch-Kincaid Corridor (FK<sub>min</sub> &le; FK(<i>x,y</i>) &le; FK<sub>max</sub>)</span>
+            <span class="legendItem"><span class="legendSwatch swatchProbe"></span> Live Pinhole Probe Point <i>P</i>(<i>x, y</i>)</span>
+          </div>
+        </div>
+
+        <div id="feasibleMathExplainer" class="feasibleMathExplainer"></div>
+      </div>
     </section>
   </main>
 
@@ -128,6 +181,6 @@
     <div id="explainerDialogBody" class="explainerModalBody"></div>
   </dialog>
 
-  <script src="/static/app.js?v=6"></script>
+  <script src="/static/app.js?v=7"></script>
 </body>
 </html>

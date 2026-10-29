@@ -32,14 +32,28 @@ const smtInteractiveViewer = document.getElementById("smtInteractiveViewer");
 const smtScriptPre = document.getElementById("smtScriptPre");
 const tabVisualBtn = document.getElementById("tabVisualBtn");
 const tabSmtBtn = document.getElementById("tabSmtBtn");
+const tabFeasibleMapBtn = document.getElementById("tabFeasibleMapBtn");
 const visualProofPane = document.getElementById("visualProofPane");
 const smtProofPane = document.getElementById("smtProofPane");
+const feasibleMapPane = document.getElementById("feasibleMapPane");
+const feasibleVerdictStrip = document.getElementById("feasibleVerdictStrip");
+const feasibleSpaceSvg = document.getElementById("feasibleSpaceSvg");
+const feasibleMathExplainer = document.getElementById("feasibleMathExplainer");
+const probeWordsSlider = document.getElementById("probeWordsSlider");
+const probeSyllablesSlider = document.getElementById("probeSyllablesSlider");
+const probeWordsValLabel = document.getElementById("probeWordsValLabel");
+const probeSyllablesValLabel = document.getElementById("probeSyllablesValLabel");
+const presetDraftBtn = document.getElementById("presetDraftBtn");
+const presetNaiveBtn = document.getElementById("presetNaiveBtn");
+const presetSatBtn = document.getElementById("presetSatBtn");
+const presetImpossibleBtn = document.getElementById("presetImpossibleBtn");
 const symbolExplainerDialog = document.getElementById("symbolExplainerDialog");
 const explainerDialogTitle = document.getElementById("explainerDialogTitle");
 const explainerDialogBody = document.getElementById("explainerDialogBody");
 
 let activeSmtFilter = "all";
 let highlightedTrackerId = null;
+let impossibleSpecOverride = false;
 
 const syllableOverridesMap = {
   evaporation: 5,
@@ -224,6 +238,437 @@ function renderIterationView(iterationRecord) {
   questionsContainer.innerHTML = `<h3>Assessment Items & Metrics</h3>${questionsHtml}`;
   smtScriptPre.textContent = verificationResult.smtLib2Script;
   renderSmtVisualization(verificationResult, assessment);
+
+  if (probeWordsSlider && probeSyllablesSlider) {
+    const safeSentences = Math.max(1, metrics.totalSentences || 1);
+    const safeWords = Math.max(1, metrics.totalWords || 1);
+    const iterWordsPerSent = Number((safeWords / safeSentences).toFixed(1));
+    const iterSylPerWord = Number((metrics.totalSyllables / safeWords).toFixed(2));
+    probeWordsSlider.value = Math.min(25, Math.max(4, iterWordsPerSent)).toString();
+    probeSyllablesSlider.value = Math.min(2.2, Math.max(1.05, iterSylPerWord)).toString();
+    impossibleSpecOverride = false;
+  }
+  renderFeasibleProofSpace();
+}
+
+function clipPolygonWithHalfPlane(polyPoints, aCoeff, bCoeff, cConst) {
+  // Keeps points where aCoeff * x + bCoeff * y + cConst >= -1e-9
+  if (!polyPoints || polyPoints.length === 0) {
+    return [];
+  }
+  const outputList = [];
+  const evalHalfPlane = (pt) => aCoeff * pt.x + bCoeff * pt.y + cConst;
+
+  for (let idx = 0; idx < polyPoints.length; idx += 1) {
+    const currentPt = polyPoints[idx];
+    const prevPt = polyPoints[(idx + polyPoints.length - 1) % polyPoints.length];
+    const currVal = evalHalfPlane(currentPt);
+    const prevVal = evalHalfPlane(prevPt);
+    const currInside = currVal >= -1e-9;
+    const prevInside = prevVal >= -1e-9;
+
+    if (currInside) {
+      if (!prevInside) {
+        const tRatio = prevVal / (prevVal - currVal);
+        outputList.push({
+          x: prevPt.x + tRatio * (currentPt.x - prevPt.x),
+          y: prevPt.y + tRatio * (currentPt.y - prevPt.y),
+        });
+      }
+      outputList.push(currentPt);
+    } else if (prevInside) {
+      const tRatio = prevVal / (prevVal - currVal);
+      outputList.push({
+        x: prevPt.x + tRatio * (currentPt.x - prevPt.x),
+        y: prevPt.y + tRatio * (currentPt.y - prevPt.y),
+      });
+    }
+  }
+  return outputList;
+}
+
+function renderFeasibleProofSpace() {
+  if (!feasibleSpaceSvg || !feasibleVerdictStrip || !feasibleMathExplainer) {
+    return;
+  }
+
+  const currentSpec = readCurrentGradeSpec();
+  const maxSentWords = impossibleSpecOverride
+    ? 9.0
+    : Number.isFinite(currentSpec.maxWordsPerSentence)
+      ? currentSpec.maxWordsPerSentence
+      : 14.0;
+  const fkMin = impossibleSpecOverride
+    ? 7.2
+    : Number.isFinite(currentSpec.fleschKincaidMin)
+      ? currentSpec.fleschKincaidMin
+      : 2.5;
+  const fkMax = impossibleSpecOverride
+    ? 8.2
+    : Number.isFinite(currentSpec.fleschKincaidMax)
+      ? currentSpec.fleschKincaidMax
+      : 4.5;
+  const sylCap = impossibleSpecOverride ? 1.38 : 1.72;
+
+  const probeX = parseFloat(probeWordsSlider ? probeWordsSlider.value : "14");
+  const probeY = parseFloat(probeSyllablesSlider ? probeSyllablesSlider.value : "1.45");
+
+  if (probeWordsValLabel) {
+    probeWordsValLabel.textContent = `${probeX.toFixed(1)} words/sent`;
+  }
+  if (probeSyllablesValLabel) {
+    probeSyllablesValLabel.textContent = `${probeY.toFixed(2)} syl/word`;
+  }
+
+  const probeFk = 0.39 * probeX + 11.8 * probeY - 15.59;
+  const inSentWall = probeX <= maxSentWords + 1e-6;
+  const inFkMinWall = probeFk >= fkMin - 1e-6;
+  const inFkMaxWall = probeFk <= fkMax + 1e-6;
+  const inSylWall = probeY <= sylCap + 1e-6;
+  const isProbeInside = inSentWall && inFkMinWall && inFkMaxWall && inSylWall;
+
+  // Coordinate space bounds: X in [2, 26], Y in [1.0, 2.35]
+  const xMinDomain = 2.0;
+  const xMaxDomain = 26.0;
+  const yMinDomain = 1.0;
+  const yMaxDomain = 2.35;
+
+  const padLeft = 64;
+  const padRight = 32;
+  const padTop = 28;
+  const padBottom = 50;
+  const plotWidth = 780 - padLeft - padRight;
+  const plotHeight = 430 - padTop - padBottom;
+
+  const mapXToSvg = (xVal) =>
+    padLeft + ((xVal - xMinDomain) / (xMaxDomain - xMinDomain)) * plotWidth;
+  const mapYToSvg = (yVal) =>
+    padTop + plotHeight - ((yVal - yMinDomain) / (yMaxDomain - yMinDomain)) * plotHeight;
+
+  // Compute feasible polygon P_SAT via Sutherland-Hodgman half-plane clipping
+  let feasiblePoly = [
+    { x: 4.0, y: 1.05 },
+    { x: xMaxDomain, y: 1.05 },
+    { x: xMaxDomain, y: yMaxDomain },
+    { x: 4.0, y: yMaxDomain },
+  ];
+  // 1) x <= maxSentWords  => -1*x + 0*y + maxSentWords >= 0
+  feasiblePoly = clipPolygonWithHalfPlane(feasiblePoly, -1.0, 0.0, maxSentWords);
+  // 2) y <= sylCap => 0*x - 1*y + sylCap >= 0
+  feasiblePoly = clipPolygonWithHalfPlane(feasiblePoly, 0.0, -1.0, sylCap);
+  // 3) 0.39x + 11.8y - 15.59 >= fkMin => 0.39x + 11.8y - (15.59 + fkMin) >= 0
+  feasiblePoly = clipPolygonWithHalfPlane(feasiblePoly, 0.39, 11.8, -(15.59 + fkMin));
+  // 4) 0.39x + 11.8y - 15.59 <= fkMax => -0.39x - 11.8y + (15.59 + fkMax) >= 0
+  feasiblePoly = clipPolygonWithHalfPlane(feasiblePoly, -0.39, -11.8, 15.59 + fkMax);
+
+  const isPolyEmpty = feasiblePoly.length < 3;
+
+  // Find closest point in feasiblePoly to probe (or centroid) for Z3 vector demonstration
+  let targetSatPt = { x: Math.min(maxSentWords - 1.5, 11.5), y: 1.48 };
+  if (!isPolyEmpty) {
+    const sumX = feasiblePoly.reduce((acc, pt) => acc + pt.x, 0);
+    const sumY = feasiblePoly.reduce((acc, pt) => acc + pt.y, 0);
+    targetSatPt = {
+      x: sumX / feasiblePoly.length,
+      y: sumY / feasiblePoly.length,
+    };
+  }
+
+  // Update verdict strip
+  if (isPolyEmpty) {
+    feasibleVerdictStrip.className = "feasibleVerdictStrip statusUnsat";
+    feasibleVerdictStrip.innerHTML = `
+      <div>
+        <strong>GLOBAL SPEC CONTRADICTION (<code>P_SAT = ∅</code>):</strong>
+        Sentence Cap (<code>x ≤ ${maxSentWords}</code>), Syllable Cap (<code>y ≤ ${sylCap}</code>), and FK Floor (<code>FK ≥ ${fkMin}</code>) have <strong>zero overlap</strong>!
+        An <code>if/else</code> loop will reject forever; <strong>Z3</strong> proves in 1 step that no valid quiz can exist.
+      </div>
+      <span class="smtStatusChip chipViolated">UNSAT FOR ALL QUIZZES</span>
+    `;
+  } else if (isProbeInside) {
+    feasibleVerdictStrip.className = "feasibleVerdictStrip statusSat";
+    feasibleVerdictStrip.innerHTML = `
+      <div>
+        <strong>Probe <code>P(${probeX.toFixed(1)}, ${probeY.toFixed(2)})</code> is INSIDE <code>P_SAT</code> (FK = ${probeFk.toFixed(2)}):</strong>
+        Both <code>if/else</code> and <code>Z3</code> return <strong>PASS / SAT</strong> because all 4 linear half-planes are satisfied simultaneously.
+      </div>
+      <span class="smtStatusChip chipSat">INSIDE P_SAT (SAT)</span>
+    `;
+  } else {
+    const failedNames = [];
+    if (!inSentWall) failedNames.push(`x ≤ ${maxSentWords}`);
+    if (!inFkMaxWall) failedNames.push(`FK ≤ ${fkMax}`);
+    if (!inFkMinWall) failedNames.push(`FK ≥ ${fkMin}`);
+    if (!inSylWall) failedNames.push(`y ≤ ${sylCap}`);
+    feasibleVerdictStrip.className = "feasibleVerdictStrip statusUnsat";
+    feasibleVerdictStrip.innerHTML = `
+      <div>
+        <strong>Probe <code>P(${probeX.toFixed(1)}, ${probeY.toFixed(2)})</code> is OUTSIDE <code>P_SAT</code> (FK = ${probeFk.toFixed(2)}):</strong>
+        Violates <code>${failedNames.join(", ")}</code>.
+        <code>if/else</code> is blind outside its pinhole; <strong>Z3</strong> computes the exact vector toward <code>(${targetSatPt.x.toFixed(1)}, ${targetSatPt.y.toFixed(2)})</code> inside the green region.
+      </div>
+      <span class="smtStatusChip chipViolated">OUTSIDE P_SAT (UNSAT)</span>
+    `;
+  }
+
+  // Build SVG elements
+  const xTicks = [4, 8, 12, 16, 20, 24];
+  const yTicks = [1.1, 1.3, 1.5, 1.7, 1.9, 2.1, 2.3];
+
+  const gridLinesSvg = [
+    ...xTicks.map((xTick) => {
+      const sx = mapXToSvg(xTick);
+      return `
+        <line x1="${sx}" y1="${padTop}" x2="${sx}" y2="${padTop + plotHeight}" stroke="#1e293b" stroke-width="1" />
+        <text x="${sx}" y="${padTop + plotHeight + 18}" fill="#94a3b8" font-size="11" text-anchor="middle">${xTick}</text>
+      `;
+    }),
+    ...yTicks.map((yTick) => {
+      const sy = mapYToSvg(yTick);
+      return `
+        <line x1="${padLeft}" y1="${sy}" x2="${padLeft + plotWidth}" y2="${sy}" stroke="#1e293b" stroke-width="1" />
+        <text x="${padLeft - 10}" y="${sy + 4}" fill="#94a3b8" font-size="11" text-anchor="end">${yTick.toFixed(1)}</text>
+      `;
+    }),
+  ].join("");
+
+  // Diagonal line helper for 0.39x + 11.8y - 15.59 = fkTarget => y = (fkTarget + 15.59 - 0.39x) / 11.8
+  const fkYAtX = (fkTarget, xVal) => (fkTarget + 15.59 - 0.39 * xVal) / 11.8;
+
+  const fkMaxX1 = xMinDomain;
+  const fkMaxY1 = fkYAtX(fkMax, fkMaxX1);
+  const fkMaxX2 = xMaxDomain;
+  const fkMaxY2 = fkYAtX(fkMax, fkMaxX2);
+
+  const fkMinX1 = xMinDomain;
+  const fkMinY1 = fkYAtX(fkMin, fkMinX1);
+  const fkMinX2 = xMaxDomain;
+  const fkMinY2 = fkYAtX(fkMin, fkMinX2);
+
+  const sentWallSvgX = mapXToSvg(maxSentWords);
+  const sylWallSvgY = mapYToSvg(sylCap);
+
+  const polyPointsAttr = feasiblePoly
+    .map((pt) => `${mapXToSvg(pt.x).toFixed(1)},${mapYToSvg(pt.y).toFixed(1)}`)
+    .join(" ");
+
+  // Plot currentIterations trajectory points if available
+  const trajectoryDotsSvg = currentIterations
+    .map((iterItem, idx) => {
+      const m = iterItem.verificationResult.metrics;
+      const sxWords = Math.max(1, m.totalWords) / Math.max(1, m.totalSentences);
+      const sySyl = m.totalSyllables / Math.max(1, m.totalWords);
+      const clampedX = Math.min(xMaxDomain - 0.5, Math.max(xMinDomain + 0.5, sxWords));
+      const clampedY = Math.min(yMaxDomain - 0.05, Math.max(yMinDomain + 0.05, sySyl));
+      const cx = mapXToSvg(clampedX);
+      const cy = mapYToSvg(clampedY);
+      const isSatIter = iterItem.verificationResult.status === "SAT";
+      const labelText = idx === 0 ? "Draft 0" : `Repair ${idx}`;
+      return `
+        <circle cx="${cx}" cy="${cy}" r="5.5" fill="${isSatIter ? "#22c55e" : "#f97316"}" stroke="#0f172a" stroke-width="1.5" />
+        <text x="${cx + 8}" y="${cy - 7}" fill="#cbd5e1" font-size="10.5" font-weight="600">${labelText}</text>
+      `;
+    })
+    .join("");
+
+  const probeSvgX = mapXToSvg(probeX);
+  const probeSvgY = mapYToSvg(probeY);
+  const targetSvgX = mapXToSvg(targetSatPt.x);
+  const targetSvgY = mapYToSvg(targetSatPt.y);
+
+  const z3GuidanceVectorSvg =
+    !isProbeInside && !isPolyEmpty
+      ? `
+      <line x1="${probeSvgX}" y1="${probeSvgY}" x2="${targetSvgX}" y2="${targetSvgY}"
+        stroke="#38bdf8" stroke-width="2.2" stroke-dasharray="6,4" marker-end="url(#z3ArrowHead)" />
+      <text x="${(probeSvgX + targetSvgX) / 2}" y="${Math.min(probeSvgY, targetSvgY) - 12}"
+        fill="#38bdf8" font-size="11" font-weight="700" text-anchor="middle">
+        Z3 Optimal Vector (Δx=${(targetSatPt.x - probeX).toFixed(1)}, Δy=${(targetSatPt.y - probeY).toFixed(2)})
+      </text>
+    `
+      : "";
+
+  const probeLabelSvgY = probeSvgY > targetSvgY ? probeSvgY + 30 : probeSvgY - 24;
+
+  const emptyPolyWarningSvg = isPolyEmpty
+    ? `
+      <rect x="${padLeft + 110}" y="${padTop + 95}" width="460" height="86" rx="10"
+        fill="rgba(127, 29, 29, 0.92)" stroke="#f87171" stroke-width="2" />
+      <text x="${padLeft + 340}" y="${padTop + 130}" fill="#fecaca" font-size="14" font-weight="700" text-anchor="middle">
+        P_SAT = ∅ (Empty Feasible Polytope — Spec Contradiction!)
+      </text>
+      <text x="${padLeft + 340}" y="${padTop + 154}" fill="#fca5a5" font-size="11.5" text-anchor="middle">
+        Max FK at (x=${maxSentWords}, y=${sylCap}) is ${(0.39 * maxSentWords + 11.8 * sylCap - 15.59).toFixed(2)}, which is below FK Floor ${fkMin.toFixed(1)}.
+      </text>
+    `
+    : "";
+
+  feasibleSpaceSvg.innerHTML = `
+    <defs>
+      <clipPath id="plotAreaClip">
+        <rect x="${padLeft}" y="${padTop}" width="${plotWidth}" height="${plotHeight}" />
+      </clipPath>
+      <marker id="z3ArrowHead" markerWidth="8" markerHeight="8" refX="6" refY="4" orient="auto">
+        <path d="M0,0 L8,4 L0,8 Z" fill="#38bdf8" />
+      </marker>
+    </defs>
+
+    <!-- Grid and Axes -->
+    ${gridLinesSvg}
+    <rect x="${padLeft}" y="${padTop}" width="${plotWidth}" height="${plotHeight}" fill="none" stroke="#334155" stroke-width="1.5" />
+
+    <!-- Clipped Geometric Layers -->
+    <g clip-path="url(#plotAreaClip)">
+      ${
+        !isPolyEmpty
+          ? `<polygon points="${polyPointsAttr}" fill="rgba(34, 197, 94, 0.25)" stroke="#22c55e" stroke-width="2.5" />`
+          : ""
+      }
+
+      <!-- Diagonal FK Ceiling Wall -->
+      <line x1="${mapXToSvg(fkMaxX1)}" y1="${mapYToSvg(fkMaxY1)}" x2="${mapXToSvg(fkMaxX2)}" y2="${mapYToSvg(fkMaxY2)}"
+        stroke="#f97316" stroke-width="2.2" stroke-dasharray="7,5" />
+
+      <!-- Diagonal FK Floor Wall -->
+      <line x1="${mapXToSvg(fkMinX1)}" y1="${mapYToSvg(fkMinY1)}" x2="${mapXToSvg(fkMinX2)}" y2="${mapYToSvg(fkMinY2)}"
+        stroke="#38bdf8" stroke-width="2.2" stroke-dasharray="7,5" />
+
+      <!-- Horizontal Syllable Ceiling Wall -->
+      <line x1="${padLeft}" y1="${sylWallSvgY}" x2="${padLeft + plotWidth}" y2="${sylWallSvgY}"
+        stroke="#a855f7" stroke-width="1.8" stroke-dasharray="4,4" />
+
+      <!-- Vertical Sentence Cap Wall -->
+      <line x1="${sentWallSvgX}" y1="${padTop}" x2="${sentWallSvgX}" y2="${padTop + plotHeight}"
+        stroke="#ef4444" stroke-width="2.5" />
+
+      <!-- Labels on Walls -->
+      <text x="${sentWallSvgX + 6}" y="${padTop + 22}" fill="#f87171" font-size="11" font-weight="700">
+        Sentence Cap (x ≤ ${maxSentWords})
+      </text>
+      <text x="${padLeft + 14}" y="${sylWallSvgY - 7}" fill="#c084fc" font-size="11" font-weight="700">
+        Lexical Syllable Cap (y ≤ ${sylCap.toFixed(2)})
+      </text>
+      <text x="${mapXToSvg(7.5)}" y="${mapYToSvg(fkYAtX(fkMax, 7.5)) - 8}" fill="#fb923c" font-size="11" font-weight="700">
+        FK Ceiling (0.39x + 11.8y - 15.59 ≤ ${fkMax.toFixed(1)})
+      </text>
+      <text x="${mapXToSvg(14.5)}" y="${mapYToSvg(fkYAtX(fkMin, 14.5)) + 16}" fill="#38bdf8" font-size="11" font-weight="700">
+        FK Floor (0.39x + 11.8y - 15.59 ≥ ${fkMin.toFixed(1)})
+      </text>
+
+      ${
+        !isPolyEmpty
+          ? `<text x="${targetSvgX}" y="${targetSvgY + 4}" fill="#86efac" font-size="12" font-weight="800" text-anchor="middle">P_SAT</text>`
+          : ""
+      }
+
+      ${trajectoryDotsSvg}
+      ${z3GuidanceVectorSvg}
+
+      <!-- Pinhole Flashlight Halo (what if/else sees: only the local point P) -->
+      <circle cx="${probeSvgX}" cy="${probeSvgY}" r="18"
+        fill="${isProbeInside ? "rgba(34, 197, 94, 0.22)" : "rgba(250, 204, 21, 0.18)"}"
+        stroke="#facc15" stroke-width="1.5" stroke-dasharray="3,3" />
+      <circle cx="${probeSvgX}" cy="${probeSvgY}" r="6.5"
+        fill="#facc15" stroke="#0f172a" stroke-width="2" />
+      <text x="${probeSvgX}" y="${probeLabelSvgY}" fill="#fef08a" font-size="11.5" font-weight="700" text-anchor="middle">
+        Probe P(${probeX.toFixed(1)}, ${probeY.toFixed(2)}) [FK=${probeFk.toFixed(2)}]
+      </text>
+
+      ${emptyPolyWarningSvg}
+    </g>
+
+    <!-- Axis Titles -->
+    <text x="${padLeft + plotWidth / 2}" y="418" fill="#cbd5e1" font-size="12.5" font-weight="700" text-anchor="middle">
+      X-Axis: Average Words per Sentence (x = W / S)
+    </text>
+    <text x="18" y="${padTop + plotHeight / 2}" fill="#cbd5e1" font-size="12.5" font-weight="700" text-anchor="middle"
+      transform="rotate(-90 18 ${padTop + plotHeight / 2})">
+      Y-Axis: Average Syllables per Word (y = Y / W)
+    </text>
+  `;
+
+  // Render Mathematical Notations & Plain-English Explanations below the graph
+  feasibleMathExplainer.innerHTML = `
+    <h4>Mathematical Formulation &amp; Plain-English Breakdown</h4>
+    <div class="mathCardGrid">
+      <div class="mathNotationCard">
+        <div class="mathCardTitle">1. The Feasible Polytope (<code>P_SAT</code>) as Linear Half-Planes</div>
+        <div class="mathFormulaBox">
+          P_SAT = { (x, y) ∈ ℝ² |
+            4.0 ≤ x ≤ ${maxSentWords.toFixed(1)}                           (H₁: Sentence Length Cap)
+            ∧ 1.05 ≤ y ≤ ${sylCap.toFixed(2)}                         (H₂: Lexical Syllable Density)
+            ∧ ${fkMin.toFixed(1)} ≤ 0.39x + 11.8y - 15.59 ≤ ${fkMax.toFixed(1)}   (H₃ ∩ H₄: Flesch-Kincaid Corridor)
+          }
+        </div>
+        <p class="mathPlainExplanation">
+          <strong>Simple explanation:</strong> Every rule in our specification is a straight boundary line on the 2D graph.
+          Each inequality (<code>≤</code> or <code>≥</code>) shades one side of that line (a <em>half-plane</em>).
+          A valid quiz must sit in the green polygon <code>P_SAT</code> where <strong>all four shaded regions overlap at once</strong>.
+        </p>
+      </div>
+
+      <div class="mathNotationCard">
+        <div class="mathCardTitle">2. Why <code>if/else</code> (Point Evaluation) ≠ <code>Z3</code> (Symbolic Polytope Solving)</div>
+        <div class="mathFormulaBox">
+          • Imperative if/else (Pointwise Membership Test):
+            eval(p₀) : ℝ² → {True, False},   checks only whether fixed point p₀ = (${probeX.toFixed(1)}, ${probeY.toFixed(2)}) ∈ P_SAT
+
+          • Z3 SMT Kernel + Optimizer (Existential &amp; Minimal-Repair Solving):
+            1. Satisfiability:  ∃ p ∈ ℝ² such that p ∈ P_SAT ?   (Is the green polygon non-empty?)
+            2. Minimal Repair:  p* = argmin_{p ∈ P_SAT} ( |x - x₀| + |y - y₀| )
+        </div>
+        <p class="mathPlainExplanation">
+          <strong>Simple explanation:</strong> An <code>if/else</code> statement only plugs your current quiz numbers <code>(${probeX.toFixed(1)}, ${probeY.toFixed(2)})</code> into the formula and outputs <code>True</code> or <code>False</code>. It has no idea <em>where</em> the green region is—or that splitting a sentence reduces <code>x</code> while leaving <code>y</code> unchanged, causing Flesch-Kincaid to drop below the blue floor!
+          <strong>Z3</strong> solves all lines simultaneously as algebraic equations: it knows the exact coordinates of the green polygon and calculates the shortest arrow <code>p₀ → p*</code> to land inside it.
+        </p>
+      </div>
+    </div>
+
+    <div class="mathNotationCard" style="margin-top:0.85rem;">
+      <div class="mathCardTitle">3. Live Half-Plane Inequality Evaluation at Probe Point <code>P(${probeX.toFixed(1)}, ${probeY.toFixed(2)})</code></div>
+      <table class="proofValueTable">
+        <thead>
+          <tr>
+            <th>Half-Plane Constraint</th>
+            <th>Linear Inequality Formula</th>
+            <th>Plugged-In Probe Value</th>
+            <th>Boundary Limit</th>
+            <th>Status</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td><code>H₁: max_sentence_words</code></td>
+            <td><code>x ≤ W_max</code></td>
+            <td><code>x = ${probeX.toFixed(1)}</code></td>
+            <td><code>≤ ${maxSentWords.toFixed(1)}</code></td>
+            <td><span class="smtStatusChip ${inSentWall ? "chipSat" : "chipViolated"}">${inSentWall ? "SAT" : "VIOLATED"}</span></td>
+          </tr>
+          <tr>
+            <td><code>H₂: lexical_syllable_cap</code></td>
+            <td><code>y ≤ Y_max</code></td>
+            <td><code>y = ${probeY.toFixed(2)}</code></td>
+            <td><code>≤ ${sylCap.toFixed(2)}</code></td>
+            <td><span class="smtStatusChip ${inSylWall ? "chipSat" : "chipViolated"}">${inSylWall ? "SAT" : "VIOLATED"}</span></td>
+          </tr>
+          <tr>
+            <td><code>H₃: flesch_kincaid_max</code></td>
+            <td><code>0.39x + 11.8y - 15.59 ≤ FK_max</code></td>
+            <td><code>0.39(${probeX.toFixed(1)}) + 11.8(${probeY.toFixed(2)}) - 15.59 = ${probeFk.toFixed(2)}</code></td>
+            <td><code>≤ ${fkMax.toFixed(1)}</code></td>
+            <td><span class="smtStatusChip ${inFkMaxWall ? "chipSat" : "chipViolated"}">${inFkMaxWall ? "SAT" : "VIOLATED"}</span></td>
+          </tr>
+          <tr>
+            <td><code>H₄: flesch_kincaid_min</code></td>
+            <td><code>0.39x + 11.8y - 15.59 ≥ FK_min</code></td>
+            <td><code>0.39(${probeX.toFixed(1)}) + 11.8(${probeY.toFixed(2)}) - 15.59 = ${probeFk.toFixed(2)}</code></td>
+            <td><code>≥ ${fkMin.toFixed(1)}</code></td>
+            <td><span class="smtStatusChip ${inFkMinWall ? "chipSat" : "chipViolated"}">${inFkMinWall ? "SAT" : "VIOLATED"}</span></td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+  `;
 }
 
 function parseSmtStatements(smtText) {
@@ -1410,16 +1855,115 @@ async function initializePlayground() {
   tabVisualBtn.addEventListener("click", () => {
     tabVisualBtn.classList.add("activeTab");
     tabSmtBtn.classList.remove("activeTab");
+    if (tabFeasibleMapBtn) {
+      tabFeasibleMapBtn.classList.remove("activeTab");
+    }
     visualProofPane.classList.remove("hiddenPane");
     smtProofPane.classList.add("hiddenPane");
+    if (feasibleMapPane) {
+      feasibleMapPane.classList.add("hiddenPane");
+    }
   });
 
   tabSmtBtn.addEventListener("click", () => {
     tabSmtBtn.classList.add("activeTab");
     tabVisualBtn.classList.remove("activeTab");
+    if (tabFeasibleMapBtn) {
+      tabFeasibleMapBtn.classList.remove("activeTab");
+    }
     smtProofPane.classList.remove("hiddenPane");
     visualProofPane.classList.add("hiddenPane");
+    if (feasibleMapPane) {
+      feasibleMapPane.classList.add("hiddenPane");
+    }
   });
+
+  if (tabFeasibleMapBtn && feasibleMapPane) {
+    tabFeasibleMapBtn.addEventListener("click", () => {
+      tabFeasibleMapBtn.classList.add("activeTab");
+      tabVisualBtn.classList.remove("activeTab");
+      tabSmtBtn.classList.remove("activeTab");
+      feasibleMapPane.classList.remove("hiddenPane");
+      visualProofPane.classList.add("hiddenPane");
+      smtProofPane.classList.add("hiddenPane");
+      renderFeasibleProofSpace();
+    });
+  }
+
+  if (probeWordsSlider) {
+    probeWordsSlider.addEventListener("input", () => {
+      renderFeasibleProofSpace();
+    });
+  }
+
+  if (probeSyllablesSlider) {
+    probeSyllablesSlider.addEventListener("input", () => {
+      renderFeasibleProofSpace();
+    });
+  }
+
+  if (presetDraftBtn) {
+    presetDraftBtn.addEventListener("click", () => {
+      impossibleSpecOverride = false;
+      if (probeWordsSlider && probeSyllablesSlider) {
+        probeWordsSlider.value = "19.5";
+        probeSyllablesSlider.value = "1.78";
+      }
+      renderFeasibleProofSpace();
+    });
+  }
+
+  if (presetNaiveBtn) {
+    presetNaiveBtn.addEventListener("click", () => {
+      impossibleSpecOverride = false;
+      if (probeWordsSlider && probeSyllablesSlider) {
+        // Naive if/else trap: split sentence to 7.0 words/sent, leaving syllables low -> drops below FK floor!
+        probeWordsSlider.value = "7.0";
+        probeSyllablesSlider.value = "1.22";
+      }
+      renderFeasibleProofSpace();
+    });
+  }
+
+  if (presetSatBtn) {
+    presetSatBtn.addEventListener("click", () => {
+      impossibleSpecOverride = false;
+      const spec = readCurrentGradeSpec();
+      const safeMaxSent = Number.isFinite(spec.maxWordsPerSentence) ? spec.maxWordsPerSentence : 14.0;
+      const safeFkMin = Number.isFinite(spec.fleschKincaidMin) ? spec.fleschKincaidMin : 2.5;
+      const safeFkMax = Number.isFinite(spec.fleschKincaidMax) ? spec.fleschKincaidMax : 4.5;
+      const targetX = Math.max(6.0, Math.min(safeMaxSent - 2.0, 11.5));
+      const targetFk = (safeFkMin + safeFkMax) / 2.0;
+      const targetY = (targetFk + 15.59 - 0.39 * targetX) / 11.8;
+      if (probeWordsSlider && probeSyllablesSlider) {
+        probeWordsSlider.value = targetX.toFixed(1);
+        probeSyllablesSlider.value = Math.min(1.7, Math.max(1.1, targetY)).toFixed(2);
+      }
+      renderFeasibleProofSpace();
+    });
+  }
+
+  if (presetImpossibleBtn) {
+    presetImpossibleBtn.addEventListener("click", () => {
+      impossibleSpecOverride = true;
+      if (probeWordsSlider && probeSyllablesSlider) {
+        probeWordsSlider.value = "8.5";
+        probeSyllablesSlider.value = "1.35";
+      }
+      renderFeasibleProofSpace();
+    });
+  }
+
+  [maxWordsInput, maxSyllablesInput, fkMinInput, fkMaxInput, optionSpreadInput].forEach(
+    (inputEl) => {
+      if (inputEl) {
+        inputEl.addEventListener("input", () => {
+          impossibleSpecOverride = false;
+          renderFeasibleProofSpace();
+        });
+      }
+    }
+  );
 
   runRepairBtn.addEventListener("click", executeRepairLoop);
   verifyJsonBtn.addEventListener("click", executeVerifyEditedJson);

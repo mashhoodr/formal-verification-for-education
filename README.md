@@ -93,6 +93,34 @@ After counterexample-guided auto-repair balances all four options to **5 words e
 
 ---
 
+### 5. 2D Feasible Proof Space: Why Formal Verification (`Z3 SMT`) Is More Rigorous Than `if/else`
+
+A common question when first inspecting SMT assertions is: *"Doesn't a proof just act like an `if/else` statement with `assert`s?"*
+
+The **2D Feasible Proof Space (`Why Not if/else?`)** tab in the Playground (and our deep-dive guide in [`docs/formal-verification-vs-if-else.md`](docs/formal-verification-vs-if-else.md)) illustrates the geometric and mathematical difference using **Visual Mental Model 1 (The Pinhole Flashlight vs. The 2D Feasible Polytope)**:
+
+![2D Feasible Proof Space — Pinhole Flashlight vs. Z3 Polytope](docs/screenshots/feasible-proof-space-2d.png)
+
+#### Mathematical Formulation & Simple Plain-English Explanations
+
+1. **The Feasible Polytope ($\mathcal{P}_{\text{SAT}}$) as an Intersection of Linear Half-Planes:**
+
+$$\mathcal{P}_{\text{SAT}} = \left\{\, (x, y) \in \mathbb{R}^2 \;\middle|\; 4.0 \le x \le W_{\max} \;\land\; 1.05 \le y \le Y_{\max} \;\land\; \text{FK}_{\min} \le 0.39x + 11.8y - 15.59 \le \text{FK}_{\max} \,\right\}$$
+
+   - **Simple explanation:** On our 2D graph where the X-axis is **Words per Sentence ($x = W/S$)** and the Y-axis is **Syllables per Word ($y = Y/W$)**, every rule in the specification draws a straight boundary wall and shades one side of it (a *half-plane*). Because Flesch-Kincaid ($\text{FK}(x,y) = 0.39x + 11.8y - 15.59$)couples $x$ and $y$ linearly, the Flesch-Kincaid floor and ceiling form **slanted diagonal walls**. A valid quiz must sit inside the **shaded green polygon $\mathcal{P}_{\text{SAT}}$** where all four half-planes overlap simultaneously.
+
+2. **Pointwise Membership (`if/else`) vs. Symbolic Polytope Solving (`Z3 SMT` + `Optimize`):**
+
+$$\text{Imperative if/else:} \quad \text{eval}(p_0) : \mathbb{R}^2 \to \{\text{True}, \text{False}\}, \quad \text{checks only whether fixed point } p_0 = (x_0, y_0) \in \mathcal{P}_{\text{SAT}}$$
+
+$$\text{Z3 Satisfiability & Optimal Repair:} \quad \exists\, p \in \mathcal{P}_{\text{SAT}} \quad \text{and} \quad p^* = \arg\min_{p \in \mathcal{P}_{\text{SAT}}} \left( |x - x_0| + |y - y_0| \right)$$
+
+   - **Simple explanation:**
+     - **Why `if/else` falls into the Whack-a-Mole Trap:** An `if/else` check is like a **pinhole flashlight**—it only sees the single coordinate $p_0 = (x_0, y_0)$ of your current draft. If a sentence is too long ($x = 19 > 14$) and a naive `if/else` fix splits it in half to $x = 7.0$ while $y = 1.23$, the Flesch-Kincaid grade drops to $1.65$—crashing right through the blue $\text{FK}_{\min} = 2.5$ floor!
+     - **Why Z3 succeeds:** Z3 solves all boundary walls simultaneously as algebraic equations. It knows the exact coordinates of the green polygon $\mathcal{P}_{\text{SAT}}$, proves immediately if a teacher's specification is self-contradictory ($\mathcal{P}_{\text{SAT}} = \emptyset$), and computes the shortest repair vector $\Delta = (\Delta x, \Delta y)$ to land inside the green region on the next step.
+
+---
+
 ## Quick Start
 
 ```bash
