@@ -1,14 +1,20 @@
-# Dimension 7: Stage 0 Formal Proof of KC Generation & What the Proof Does *Not* Test
+# Dimension 7: Stage 1 Formal Proof of Curriculum Graph & Ontology (and Epistemic Boundaries)
+
+> [!NOTE]
+> **3-Stage Pipeline Context:**
+> - **Stage 0 (Grounding & Ingestion):** Audits raw Pakistan NCP curriculum text, verifies the 8 generative junctions, derives complexity from mathematical ASTs, and eliminates "proof theater" shortcuts.
+> - **Stage 1 (Curriculum Graph Proof - This Document):** Proves that candidate KCs form a certified, acyclic, monotonic DAG spanning vertical grades.
+> - **Stage 2 (Formative Assessment Proof):** Proves that classroom quizzes derived from certified KCs satisfy psychometric corridors and distractor fairness.
 
 ## 1. Purpose: Proving the Generated KCs Before Generating Any Quiz
 
 When applying formal verification to a national curriculum—such as the **National Curriculum of Pakistan (NCP 2022–23)** for **Mathematics** and **English**—the curriculum documents provide **Student Learning Outcomes (SLOs)** across Grades 1–12, not Atomic Knowledge Components (KCs).
 
-If an LLM decomposes a vertical triad of official SLOs $\langle \text{SLO}_{G-1}, \text{SLO}_G, \text{SLO}_{G+1} \rangle$ into candidate Atomic KCs, **Stage 0 Verification (`app/verifier/kc_ontology_kernel.py`)** proves that the generated KC Graph satisfies **6 mathematical ontology & boundary theorems** in Z3 (`SAT`) before Stage 1 ever generates an assessment item.
+If an LLM decomposes a vertical triad of official SLOs $\langle \text{SLO}_{G-1}, \text{SLO}_G, \text{SLO}_{G+1} \rangle$ into candidate Atomic KCs, **Stage 1 Verification (`app/verifier/kc_ontology_kernel.py`)** proves that the generated KC Graph satisfies **6 mathematical ontology & boundary theorems** in Z3 (`SAT`) before Stage 2 ever generates an assessment item.
 
 ---
 
-## 2. The 6 Theorems Proven by the Stage 0 Z3 Kernel
+## 2. The 6 Theorems Proven by the Stage 1 Z3 Kernel
 
 Given a Vertical Curriculum Triad across adjacent grades $G-1$ (Prior Floor), $G$ (Target Grade), and $G+1$ (Forbidden Upper Ceiling):
 

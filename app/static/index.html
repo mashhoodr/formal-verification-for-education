@@ -4,7 +4,7 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>K-12 Educational Formal Verification Playground (Z3 SMT Kernel)</title>
-  <link rel="stylesheet" href="/static/styles.css?v=11" />
+  <link rel="stylesheet" href="/static/styles.css?v=12" />
 </head>
 <body>
   <header class="topHeader">
@@ -17,15 +17,20 @@
         </p>
       </div>
 
-      <!-- Top-Level Stage Switcher Nav Bar -->
+      <!-- Top-Level Stage Switcher Nav Bar (3-Stage Formal Verification Pipeline) -->
       <nav class="stageSwitcherBar" aria-label="Formal Verification Stage Switcher">
         <button type="button" id="stage0ToggleBtn" class="stageNavBtn activeStage">
-          <span class="stageBadge">Stage 0 &bull; Curriculum Root of Trust</span>
-          <span class="stageTitle">SLO &rarr; Atomic KC Graph Proof</span>
-          <span class="stageSub">Pakistan NCP 2022&ndash;23 (Maths &amp; English) &bull; 6 Theorems &bull; 6 Epistemic Boundaries</span>
+          <span class="stageBadge">Stage 0 &bull; Grounding &amp; Ingestion</span>
+          <span class="stageTitle">Raw NCP Standard &rarr; Audited KCs</span>
+          <span class="stageSub">Pre-Proof Rigor Gate &bull; 8 Generative Junctions &bull; Anti-Proof Theater</span>
         </button>
         <button type="button" id="stage1ToggleBtn" class="stageNavBtn">
-          <span class="stageBadge">Stage 1 &bull; Assessment Generation</span>
+          <span class="stageBadge">Stage 1 &bull; Curriculum Graph Proof</span>
+          <span class="stageTitle">KC Triad DAG &amp; Invariants</span>
+          <span class="stageSub">Pakistan NCP 2022&ndash;23 (Maths &amp; English) &bull; 6 SMT Theorems &bull; 6 Epistemic Boundaries</span>
+        </button>
+        <button type="button" id="stage2ToggleBtn" class="stageNavBtn">
+          <span class="stageBadge">Stage 2 &bull; Formative Assessment Proof</span>
           <span class="stageTitle">Formative Quiz Formal Proof</span>
           <span class="stageSub">Linguistic &bull; Flesch-Kincaid &bull; Distractor SMT Verification</span>
         </button>
@@ -33,8 +38,153 @@
     </div>
   </header>
 
-  <!-- ==================== STAGE 0: CURRICULUM KC ONTOLOGY PROOF ==================== -->
+  <!-- ==================== STAGE 0: GROUNDING & INGESTION (ANTI-PROOF THEATER GATE) ==================== -->
   <div id="stage0Container" class="mainGrid">
+    <!-- Left Column: Raw NCP Standard, Clause Extraction & Grounding Health -->
+    <section class="panelCard">
+      <h2>1. Official Pakistan NCP Curriculum &amp; Clause Extraction</h2>
+
+      <div class="groundingHeaderCard">
+        <div class="groundingHeaderTop">
+          <span class="badgePill">NCP 2022&ndash;23 Grounding Source</span>
+          <span id="groundingStatusBadge" class="statusPill statusSat">Grounded &bull; Zero Theater</span>
+        </div>
+        <p class="groundingHeaderDesc">
+          Verifies 100% lexical, verb, and domain noun grounding against the official National Curriculum of Pakistan (NCP 2022&ndash;23) Progression Grid before any SMT solver runs.
+        </p>
+      </div>
+
+      <!-- Raw Standard Text Panel with Focus on M-04-A-01 & M-05-A-01 -->
+      <div class="fieldGroup">
+        <label>Official Pakistan NCP Standards (Raw Excerpt &amp; Standards M-04-A-01 / M-05-A-01)</label>
+        <div class="standardsHighlightBox">
+          <div class="standardHighlightItem">
+            <div class="standardHighlightHeader">
+              <span class="standardCodeBadge">M-04-A-01</span>
+              <span class="standardGradePill">Grade 4 &bull; Fractions</span>
+            </div>
+            <div class="standardContent">
+              <p class="standardText"><strong>Standard:</strong> Convert improper fractions to mixed numbers and vice versa.</p>
+              <span class="standardVerbTag">Action Verb: <code>Convert</code></span>
+            </div>
+          </div>
+          <div class="standardHighlightItem">
+            <div class="standardHighlightHeader">
+              <span class="standardCodeBadge">M-05-A-01</span>
+              <span class="standardGradePill">Grade 5 &bull; Fractions</span>
+            </div>
+            <div class="standardContent">
+              <p class="standardText"><strong>Standard:</strong> Multiply two fractions and/or mixed numbers and express the answer in its simplest form.</p>
+              <span class="standardVerbTag">Action Verbs: <code>Multiply</code>, <code>Express</code></span>
+            </div>
+          </div>
+        </div>
+
+        <details class="sidebarDisclosure" open style="margin-top:0.75rem;">
+          <summary>Full NCP Progression Grid Excerpt (Grades 2&ndash;5 Excerpt)</summary>
+          <div class="disclosureBody">
+            <pre id="stage0RawSnippet" class="codePre ncpSnippetPre"></pre>
+          </div>
+        </details>
+      </div>
+
+      <!-- Extracted Atomic Clauses -->
+      <div class="fieldGroup">
+        <div class="sectionSubHeader">
+          <label>Extracted Atomic Clauses (Deterministic Verb &amp; Scope Segmentation)</label>
+          <span id="clauseCountBadge" class="miniBadge">8 Clauses</span>
+        </div>
+        <div id="stage0ExtractedClauses" class="stage0ClausesList"></div>
+      </div>
+
+      <!-- Verb Coverage & Misconception Catalog Binding Disclosures -->
+      <div class="sidebarDisclosures">
+        <details class="sidebarDisclosure" open>
+          <summary>Bi-directional Verb Coverage Audit (100% Verified)</summary>
+          <div class="disclosureBody">
+            <div id="stage0VerbAuditDetails" class="verbAuditBox"></div>
+          </div>
+        </details>
+
+        <details class="sidebarDisclosure" open>
+          <summary>Accredited Cognitive Misconceptions (Brown &amp; Burton 1978 / Siegler 2013)</summary>
+          <div class="disclosureBody">
+            <p class="helperText" style="margin-bottom:0.5rem;">
+              9 peer-reviewed procedural error operators loaded from empirical literature. LLMs cannot hallucinate unaccredited synthetic bugs.
+            </p>
+            <div id="stage0MisconceptionsList" class="misconceptionsListCompact"></div>
+          </div>
+        </details>
+      </div>
+    </section>
+
+    <!-- Right Column: Interactive Cheat Simulator & 8 Generative Junctions -->
+    <section class="panelCard">
+      <!-- Section 1: Anti-Proof Theater Cheat Simulator -->
+      <div class="cheatSimulatorSection">
+        <div class="sectionHeaderWithBadge">
+          <div>
+            <span class="badgePill" style="background:#7f1d1d;color:#fca5a5;">Interactive Rigor Verification</span>
+            <h2 style="border:none;padding:0;margin:0.25rem 0 0.15rem;">Anti-Proof Theater Cheat Simulator</h2>
+          </div>
+          <span class="statusPill statusWarn">Interactive Prober</span>
+        </div>
+        <p class="sectionExplainerText">
+          A proof that merely verifies a self-fulfilling tautology is <strong>"Proof Theater"</strong>. Select a classic LLM lazy shortcut to see how a naïve SMT checker produces a false green <code>SAT</code>, while Stage 0 mathematical grounding catches the violation with a hard <code>UNSAT</code> refutation.
+        </p>
+
+        <!-- 4 Interactive Cheat Buttons -->
+        <div class="cheatButtonsGrid" role="group" aria-label="Anti-Proof Theater Cheat Selectors">
+          <button type="button" class="cheatSelectBtn activeCheatBtn" data-cheat="renumberingCheat">
+            <span class="cheatNum">Cheat 1</span>
+            <span class="cheatBtnTitle">The Renumbering Cheat</span>
+            <span class="cheatBtnSub">Integer 2 &rarr; 4 label override</span>
+          </button>
+          <button type="button" class="cheatSelectBtn" data-cheat="labelLie">
+            <span class="cheatNum">Cheat 2</span>
+            <span class="cheatBtnTitle">The Label Lie</span>
+            <span class="cheatBtnSub">False M-03-A-21 topic tag</span>
+          </button>
+          <button type="button" class="cheatSelectBtn" data-cheat="conjoinedTwinBlob">
+            <span class="cheatNum">Cheat 3</span>
+            <span class="cheatBtnTitle">Conjoined Twin Blob</span>
+            <span class="cheatBtnSub">Multi-verb skill bundled as 1</span>
+          </button>
+          <button type="button" class="cheatSelectBtn" data-cheat="hallucinatedBug">
+            <span class="cheatNum">Cheat 4</span>
+            <span class="cheatBtnTitle">Hallucinated Bug</span>
+            <span class="cheatBtnSub">Fake error vs Brown &amp; Burton</span>
+          </button>
+        </div>
+
+        <!-- Live Simulation Comparison Display Card -->
+        <div id="cheatSimulationDisplay" class="cheatSimulationDisplay">
+          <!-- Populated by JS runCheatSimulation() -->
+        </div>
+      </div>
+
+      <!-- Section 2: The 8 Generative Junctions -->
+      <div class="junctionsSection" style="margin-top:1.5rem;">
+        <div class="sectionHeaderWithBadge">
+          <div>
+            <span class="badgePill">Mathematical Rigor Architecture</span>
+            <h2 style="border:none;padding:0;margin:0.25rem 0 0.15rem;">The 8 Generative Junctions (Pre-Flight Audit)</h2>
+          </div>
+          <span class="statusPill statusSat">8 / 8 Audited &bull; Zero Theater</span>
+        </div>
+        <p class="sectionExplainerText">
+          Every curriculum standard decomposition must be validated against all 8 generative junctions. If any junction fails deterministic derivation or catalog binding, generation is blocked before reaching the Stage 1 Z3 Graph Solver.
+        </p>
+
+        <div id="stage0JunctionsGrid" class="stage0JunctionsGrid">
+          <!-- Populated by JS loadStage0Report() -->
+        </div>
+      </div>
+    </section>
+  </div>
+
+  <!-- ==================== STAGE 1: CURRICULUM KC ONTOLOGY PROOF ==================== -->
+  <div id="stage1Container" class="mainGrid hiddenPane">
     <!-- Left Column: Stage 0 Scenario, Triad Controls & Timeline -->
     <section class="panelCard">
       <h2>1. Curriculum Triad &amp; KC Auto-Repair Timeline</h2>
@@ -160,8 +310,8 @@
     </section>
   </div>
 
-  <!-- ==================== STAGE 1: FORMATIVE ASSESSMENT PROOF ==================== -->
-  <div id="stage1Container" class="mainGrid hiddenPane">
+  <!-- ==================== STAGE 2: FORMATIVE ASSESSMENT PROOF ==================== -->
+  <div id="stage2Container" class="mainGrid hiddenPane">
     <!-- Left Column: Scenario, Repair Timeline & Spec Controls -->
     <section class="panelCard">
       <h2>1. Scenario &amp; Auto-Repair Timeline</h2>
@@ -381,6 +531,6 @@
     <div id="explainerDialogBody" class="explainerModalBody"></div>
   </dialog>
 
-  <script src="/static/app.js?v=11"></script>
+  <script src="/static/app.js?v=12"></script>
 </body>
 </html>

@@ -224,3 +224,54 @@ class Stage0RepairRequest(CamelModel):
 class Stage0VerifyRequest(CamelModel):
     triad_spec: VerticalTriadSpec
 
+
+class CognitiveBugItem(CamelModel):
+    bug_id: str
+    subject: str
+    domain: str
+    name: str
+    formal_operator: str
+    grades: list[int]
+    primary_citation: str
+    empirical_prevalence: float
+    description: str
+
+
+class JunctionAuditItem(CamelModel):
+    junction_id: str
+    junction_number: int
+    name: str
+    status: Literal["proven", "grounded", "proofTheaterRisk"]
+    status_label: str
+    cheat_risk_description: str
+    rigorous_proof_solution: str
+    audit_passed: bool
+    audit_details: str
+
+
+class Stage0GroundingReport(CamelModel):
+    triad_id: str
+    raw_pdf_text_snippet: str
+    total_official_clauses: int
+    verb_audit_passed: bool
+    verb_audit_details: str
+    junction_audits: list[JunctionAuditItem]
+    accredited_bugs_used: list[CognitiveBugItem]
+    overall_grounding_status: Literal["grounded", "unverifiedCheatDetected"]
+
+
+class CheatSimulationRequest(CamelModel):
+    cheat_type: Literal["renumberingCheat", "labelLie", "conjoinedTwinBlob", "hallucinatedBug"]
+
+
+class CheatSimulationResponse(CamelModel):
+    cheat_type: str
+    title: str
+    what_lazy_ai_did: str
+    naive_checker_verdict: str
+    stage0_grounding_verdict: str
+    caught: bool = True
+    caught_by_audit: str
+    mathematical_proof_explanation: str
+    pedagogical_significance: str
+

@@ -1851,19 +1851,263 @@ async function executeVerifyEditedJson() {
 }
 
 // ============================================================================
-// STAGE 0: CURRICULUM SLO -> ATOMIC KC ONTOLOGY PROOF CONTROLLER
+// 3-STAGE PIPELINE: STAGE 0 (GROUNDING), STAGE 1 (GRAPH), STAGE 2 (QUIZ)
 // ============================================================================
-let currentStage = 0; // 0 for Stage 0, 1 for Stage 1
+let currentStage = 0; // 0 for Stage 0, 1 for Stage 1, 2 for Stage 2
+
+const stage0ToggleBtn = document.getElementById("stage0ToggleBtn");
+const stage1ToggleBtn = document.getElementById("stage1ToggleBtn");
+const stage2ToggleBtn = document.getElementById("stage2ToggleBtn");
+
+const stage0Container = document.getElementById("stage0Container");
+const stage1Container = document.getElementById("stage1Container");
+const stage2Container = document.getElementById("stage2Container");
+
+// ============================================================================
+// STAGE 0: CURRICULUM GROUNDING & ANTI-PROOF-THEATER CONTROLLER
+// ============================================================================
+let stage0GroundingReport = null;
+let activeCheatType = "renumberingCheat";
+let currentCheatSimulation = null;
+
+const stage0RawSnippet = document.getElementById("stage0RawSnippet");
+const stage0ExtractedClauses = document.getElementById("stage0ExtractedClauses");
+const stage0VerbAuditDetails = document.getElementById("stage0VerbAuditDetails");
+const stage0MisconceptionsList = document.getElementById("stage0MisconceptionsList");
+const cheatSimulationDisplay = document.getElementById("cheatSimulationDisplay");
+const stage0JunctionsGrid = document.getElementById("stage0JunctionsGrid");
+const clauseCountBadge = document.getElementById("clauseCountBadge");
+const groundingStatusBadge = document.getElementById("groundingStatusBadge");
+
+function switchStage(stageNum) {
+  currentStage = stageNum;
+  if (stage0ToggleBtn) stage0ToggleBtn.classList.toggle("activeStage", stageNum === 0);
+  if (stage1ToggleBtn) stage1ToggleBtn.classList.toggle("activeStage", stageNum === 1);
+  if (stage2ToggleBtn) stage2ToggleBtn.classList.toggle("activeStage", stageNum === 2);
+
+  if (stage0Container) stage0Container.classList.toggle("hiddenPane", stageNum !== 0);
+  if (stage1Container) stage1Container.classList.toggle("hiddenPane", stageNum !== 1);
+  if (stage2Container) stage2Container.classList.toggle("hiddenPane", stageNum !== 2);
+}
+
+async function loadStage0Report() {
+  try {
+    const resp = await fetch("/api/stage0/grounding-report");
+    const data = await resp.json();
+    stage0GroundingReport = data;
+    renderStage0Report(data);
+  } catch (err) {
+    console.error("Failed to load Stage 0 grounding report:", err);
+  }
+}
+
+function renderStage0Report(report) {
+  if (!report) return;
+
+  if (stage0RawSnippet) {
+    stage0RawSnippet.textContent = report.rawPdfTextSnippet || "";
+  }
+
+  if (clauseCountBadge) {
+    clauseCountBadge.textContent = `${report.totalOfficialClauses || 0} Clauses`;
+  }
+
+  if (groundingStatusBadge) {
+    const isGrounded = report.overallGroundingStatus === "grounded";
+    groundingStatusBadge.className = `statusPill ${isGrounded ? "statusSat" : "statusUnsat"}`;
+    groundingStatusBadge.textContent = isGrounded ? "Grounded • Zero Theater" : "Unverified Cheat Detected";
+  }
+
+  // Render Verb Audit
+  if (stage0VerbAuditDetails) {
+    stage0VerbAuditDetails.innerHTML = `
+      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:0.35rem;">
+        <strong style="color:#047857;">Audit Status: ${report.verbAuditPassed ? "PASSED (100% Action Verb Coverage)" : "FAILED"}</strong>
+        <span class="statusPill statusSat">Bi-directional 1:1</span>
+      </div>
+      <p style="margin:0;">${escapeHtmlText(report.verbAuditDetails || "")}</p>
+    `;
+  }
+
+  // Render Extracted Atomic Clauses
+  if (stage0ExtractedClauses) {
+    stage0ExtractedClauses.innerHTML = "";
+    const officialClauses = [
+      { code: "M-02-A-30.c1", grade: 2, verb: "Identify", text: "Identify unit and like fractions of a discrete set of objects using pictorial representations.", nouns: ["unit fraction", "like fraction", "discrete set", "pictorial representation"] },
+      { code: "M-02-A-32.c1", grade: 2, verb: "Add / Subtract", text: "Add and subtract like fractions within one whole.", nouns: ["like fraction", "whole"] },
+      { code: "M-03-A-20.c1", grade: 3, verb: "Recognise", text: "Recognise among proper fractions, improper fractions, and mixed numbers.", nouns: ["proper fraction", "improper fraction", "mixed number"] },
+      { code: "M-03-A-21.c1", grade: 3, verb: "Identify", text: "Identify equivalent fractions and show families of equivalent fractions.", nouns: ["equivalent fraction", "fraction family"] },
+      { code: "M-03-A-22.c1", grade: 3, verb: "Simplify", text: "Simplify fractions to the lowest term.", nouns: ["fraction", "lowest term"] },
+      { code: "M-03-A-24.c1", grade: 3, verb: "Add / Subtract", text: "Add and subtract like and unlike fractions with denominators that are multiples of the same number.", nouns: ["unlike fraction", "multiple denominator"] },
+      { code: "M-04-A-01.c1", grade: 4, verb: "Convert", text: "Convert improper fractions to mixed numbers and vice versa.", nouns: ["improper fraction", "mixed number"] },
+      { code: "M-05-A-01.c1", grade: 5, verb: "Multiply", text: "Multiply two fractions and/or mixed numbers and express the answer in its simplest form.", nouns: ["two fractions", "simplest form"] },
+    ];
+
+    officialClauses.forEach((c) => {
+      const card = document.createElement("div");
+      card.className = "clauseItemCard";
+      card.innerHTML = `
+        <div class="clauseItemHeader">
+          <span class="clauseItemCode">${escapeHtmlText(c.code)}</span>
+          <span class="clauseItemGrade">Grade ${c.grade}</span>
+        </div>
+        <div class="clauseItemText">${escapeHtmlText(c.text)}</div>
+        <div class="clauseItemMeta">
+          <span class="clauseVerbTag">Verb: ${escapeHtmlText(c.verb)}</span>
+          ${c.nouns.map((n) => `<span class="prereqChip">${escapeHtmlText(n)}</span>`).join("")}
+        </div>
+      `;
+      stage0ExtractedClauses.appendChild(card);
+    });
+  }
+
+  // Render Misconceptions Catalog
+  if (stage0MisconceptionsList) {
+    stage0MisconceptionsList.innerHTML = "";
+    const bugs = report.accreditedBugsUsed || [];
+    bugs.forEach((b) => {
+      const bCard = document.createElement("div");
+      bCard.className = "misconceptionMiniItem";
+      bCard.innerHTML = `
+        <div class="misconceptionMiniHeader">
+          <span class="misconceptionMiniCode">${escapeHtmlText(b.bugId)}</span>
+          <span class="miniBadge">Grades ${b.grades.join(", ")} &bull; Prev: ${Math.round(b.empiricalPrevalence * 100)}%</span>
+        </div>
+        <div style="font-weight:600;color:#0f172a;margin-bottom:0.15rem;">${escapeHtmlText(b.name)}</div>
+        <div class="misconceptionMiniCitation">${escapeHtmlText(b.primaryCitation)}</div>
+        <div class="misconceptionMiniOperator"><code>${escapeHtmlText(b.formalOperator)}</code></div>
+      `;
+      stage0MisconceptionsList.appendChild(bCard);
+    });
+  }
+
+  // Render 8 Generative Junctions
+  if (stage0JunctionsGrid) {
+    stage0JunctionsGrid.innerHTML = "";
+    const junctions = report.junctionAudits || [];
+    junctions.forEach((j) => {
+      let statusClass = "statusProven";
+      if (j.status === "grounded") statusClass = "statusGrounded";
+      if (j.status === "proofTheaterRisk") statusClass = "statusRisk";
+
+      const jCard = document.createElement("div");
+      jCard.className = "junctionCard";
+      jCard.innerHTML = `
+        <div class="junctionCardHeader">
+          <div class="junctionTitleRow">
+            <span class="junctionNumBadge">J${j.junctionNumber}</span>
+            <span class="junctionName">${escapeHtmlText(j.name)}</span>
+          </div>
+          <span class="junctionStatusPill ${statusClass}">${escapeHtmlText(j.statusLabel)}</span>
+        </div>
+        <div class="junctionBody">
+          <div class="junctionField riskField">
+            <span class="junctionFieldLabel">Cheat Risk (Lazy AI Vulnerability)</span>
+            <span>${escapeHtmlText(j.cheatRiskDescription)}</span>
+          </div>
+          <div class="junctionField solutionField">
+            <span class="junctionFieldLabel">Stage 0 Rigorous Mathematical Solution</span>
+            <span>${escapeHtmlText(j.rigorousProofSolution)}</span>
+          </div>
+          <div class="junctionField auditField">
+            <span class="junctionFieldLabel">Live Audit Result (${j.auditPassed ? "VERIFIED PASS ✓" : "FAIL ❌"})</span>
+            <span>${escapeHtmlText(j.auditDetails)}</span>
+          </div>
+        </div>
+      `;
+      stage0JunctionsGrid.appendChild(jCard);
+    });
+  }
+}
+
+async function runCheatSimulation(cheatType) {
+  activeCheatType = cheatType;
+
+  // Update button active states
+  const buttons = document.querySelectorAll(".cheatSelectBtn");
+  buttons.forEach((btn) => {
+    btn.classList.toggle("activeCheatBtn", btn.getAttribute("data-cheat") === cheatType);
+  });
+
+  if (cheatSimulationDisplay) {
+    cheatSimulationDisplay.innerHTML = `<div style="padding:1.5rem;text-align:center;color:#64748b;font-size:0.85rem;">Probing Stage 0 Anti-Proof Theater Verifier...</div>`;
+  }
+
+  try {
+    const resp = await fetch("/api/stage0/simulate-cheat", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ cheatType }),
+    });
+    const sim = await resp.json();
+    currentCheatSimulation = sim;
+    renderCheatSimulation(sim);
+  } catch (err) {
+    console.error("Cheat simulation failed:", err);
+    if (cheatSimulationDisplay) {
+      cheatSimulationDisplay.innerHTML = `<div style="color:#b91c1c;padding:1rem;">Failed to run cheat simulation: ${escapeHtmlText(err.message)}</div>`;
+    }
+  }
+}
+
+function renderCheatSimulation(sim) {
+  if (!cheatSimulationDisplay || !sim) return;
+
+  cheatSimulationDisplay.innerHTML = `
+    <div class="cheatBanner">
+      <div class="cheatBannerTitle">${escapeHtmlText(sim.title)}</div>
+      <div class="cheatBannerDesc"><strong>What Lazy AI Attempted:</strong> ${escapeHtmlText(sim.whatLazyAiDid)}</div>
+    </div>
+
+    <div class="cheatComparisonRow">
+      <!-- Naive Checker (Fooled by Proof Theater) -->
+      <div class="cheatCard naiveCard">
+        <div class="cheatCardHeader">
+          <span class="cheatCardTitle">Na&iuml;ve SMT Check (Proof Theater)</span>
+          <span class="cheatVerdictBadge badgeGreen">GREEN SAT</span>
+        </div>
+        <div class="cheatCardVerdict">${escapeHtmlText(sim.naiveCheckerVerdict)}</div>
+        <p class="cheatCardText">
+          Solvers that assert self-reported integers (e.g. <code>c == 4</code>) or check superficial array lengths produce self-fulfilling green checks without verifying true mathematical invariants.
+        </p>
+      </div>
+
+      <!-- Stage 0 Grounding Check (Caught and Refuted) -->
+      <div class="cheatCard groundedCard">
+        <div class="cheatCardHeader">
+          <span class="cheatCardTitle">Stage 0 Rigor Grounding Check</span>
+          <span class="cheatVerdictBadge badgeRed">REFUTED UNSAT</span>
+        </div>
+        <div class="cheatCardVerdict">${escapeHtmlText(sim.stage0GroundingVerdict)}</div>
+        <p class="cheatCardText">
+          Stage 0 derives metrics deterministically from AST structures and validates against peer-reviewed catalogs, instantly blocking fake solutions.
+        </p>
+      </div>
+    </div>
+
+    <div class="cheatAuditBanner">
+      Audit Defense: ${escapeHtmlText(sim.caughtByAudit)}
+    </div>
+
+    <div class="cheatMathExplanation">
+      <div class="cheatMathHeader">Stage 0 Mathematical Invariant &amp; Refutation Trace</div>
+      <pre class="cheatMathText"><code>${escapeHtmlText(sim.mathematicalProofExplanation)}</code></pre>
+    </div>
+
+    <div class="cheatPedagogyBox">
+      <strong>Pedagogical Consequence in Real Classrooms:</strong> ${escapeHtmlText(sim.pedagogicalSignificance)}
+    </div>
+  `;
+}
+
+// ============================================================================
+// STAGE 1: CURRICULUM SLO -> ATOMIC KC ONTOLOGY PROOF CONTROLLER
+// ============================================================================
 let stage0ScenariosList = [];
 let currentStage0Iterations = [];
 let selectedStage0IterationIndex = 0;
 let stage0ActiveView = "kcs"; // "kcs" | "smt" | "boundaries"
 let highlightedStage0TrackerId = null;
-
-const stage0ToggleBtn = document.getElementById("stage0ToggleBtn");
-const stage1ToggleBtn = document.getElementById("stage1ToggleBtn");
-const stage0Container = document.getElementById("stage0Container");
-const stage1Container = document.getElementById("stage1Container");
 
 const scenarioSelectStage0 = document.getElementById("scenarioSelectStage0");
 const scenarioDescriptionStage0 = document.getElementById("scenarioDescriptionStage0");
@@ -1897,21 +2141,6 @@ const stage0SmtInteractiveViewer = document.getElementById("stage0SmtInteractive
 const stage0SmtScriptPre = document.getElementById("stage0SmtScriptPre");
 const stage0SmtScriptCode = document.getElementById("stage0SmtScriptCode");
 const epistemicBoundariesList = document.getElementById("epistemicBoundariesList");
-
-function switchStage(stageNum) {
-  currentStage = stageNum;
-  if (stageNum === 0) {
-    stage0ToggleBtn.classList.add("activeStage");
-    stage1ToggleBtn.classList.remove("activeStage");
-    stage0Container.classList.remove("hiddenPane");
-    stage1Container.classList.add("hiddenPane");
-  } else {
-    stage0ToggleBtn.classList.remove("activeStage");
-    stage1ToggleBtn.classList.add("activeStage");
-    stage0Container.classList.add("hiddenPane");
-    stage1Container.classList.remove("hiddenPane");
-  }
-}
 
 function switchStage0View(viewName) {
   stage0ActiveView = viewName;
@@ -2657,9 +2886,21 @@ async function initializePlayground() {
   scenarioSelect.value = demoScenariosList[0].scenarioId;
   scenarioSelect.dispatchEvent(new Event("change"));
 
-  // Stage 0 wiring
-  stage0ToggleBtn.addEventListener("click", () => switchStage(0));
-  stage1ToggleBtn.addEventListener("click", () => switchStage(1));
+  // Stage 0 / 1 / 2 navigation wiring
+  if (stage0ToggleBtn) stage0ToggleBtn.addEventListener("click", () => switchStage(0));
+  if (stage1ToggleBtn) stage1ToggleBtn.addEventListener("click", () => switchStage(1));
+  if (stage2ToggleBtn) stage2ToggleBtn.addEventListener("click", () => switchStage(2));
+
+  // Wire cheat simulator buttons
+  const cheatButtons = document.querySelectorAll(".cheatSelectBtn");
+  cheatButtons.forEach((btn) => {
+    btn.addEventListener("click", () => {
+      const cheat = btn.getAttribute("data-cheat");
+      if (cheat) {
+        runCheatSimulation(cheat);
+      }
+    });
+  });
 
   tabStage0KcsBtn.addEventListener("click", () => switchStage0View("kcs"));
   tabStage0SmtBtn.addEventListener("click", () => switchStage0View("smt"));
@@ -2697,7 +2938,15 @@ async function initializePlayground() {
     }
   });
 
+  // Load Stage 0 Grounding report & initial cheat simulation
+  await loadStage0Report();
+  await runCheatSimulation("renumberingCheat");
+
+  // Load Stage 1 scenarios
   await loadStage0Scenarios();
+
+  // Set Stage 0 active by default
+  switchStage(0);
 }
 
 initializePlayground();

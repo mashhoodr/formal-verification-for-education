@@ -1596,9 +1596,15 @@ dialog::backdrop {
 /* ==================== STAGE SWITCHER ==================== */
 .stageSwitcherBar {
   display: grid;
-  grid-template-columns: 1fr 1fr;
+  grid-template-columns: repeat(3, 1fr);
   gap: 1rem;
   margin-top: 1rem;
+}
+
+@media (max-width: 1024px) {
+  .stageSwitcherBar {
+    grid-template-columns: 1fr;
+  }
 }
 
 .stageNavBtn {
@@ -1926,4 +1932,617 @@ dialog::backdrop {
   font-family: monospace;
   font-weight: 700;
   color: #1e3a8a;
+}
+
+/* ==================== STAGE 0 GROUNDING & INGESTION STYLES ==================== */
+.groundingHeaderCard {
+  background: #f0fdf4;
+  border: 1px solid #bbf7d0;
+  border-radius: 10px;
+  padding: 1rem 1.15rem;
+  margin-bottom: 1rem;
+}
+
+.groundingHeaderTop {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 0.4rem;
+}
+
+.groundingHeaderDesc {
+  font-size: 0.82rem;
+  color: #166534;
+  margin: 0;
+  line-height: 1.45;
+}
+
+.standardsHighlightBox {
+  display: flex;
+  flex-direction: column;
+  gap: 0.65rem;
+  margin: 0.5rem 0;
+}
+
+.standardHighlightItem {
+  background: #ffffff;
+  border: 1px solid #cbd5e1;
+  border-left: 4px solid #2563eb;
+  border-radius: 8px;
+  padding: 0.75rem 0.9rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.35rem;
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.03);
+}
+
+.standardHighlightHeader {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.standardCodeBadge {
+  font-family: monospace;
+  font-weight: 700;
+  font-size: 0.85rem;
+  background: #0f172a;
+  color: #38bdf8;
+  padding: 0.15rem 0.5rem;
+  border-radius: 4px;
+}
+
+.standardGradePill {
+  font-size: 0.75rem;
+  font-weight: 600;
+  color: #475569;
+  background: #f1f5f9;
+  padding: 0.15rem 0.5rem;
+  border-radius: 999px;
+}
+
+.standardContent {
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+}
+
+.standardText {
+  font-size: 0.84rem;
+  color: #0f172a;
+  margin: 0;
+  line-height: 1.4;
+}
+
+.standardVerbTag {
+  font-size: 0.74rem;
+  color: #2563eb;
+  font-weight: 600;
+}
+
+.ncpSnippetPre {
+  max-height: 180px;
+  overflow-y: auto;
+  font-size: 0.74rem;
+  background: #0f172a;
+  color: #e2e8f0;
+  padding: 0.75rem;
+  border-radius: 6px;
+  line-height: 1.45;
+  white-space: pre-wrap;
+  word-break: break-word;
+}
+
+.sectionSubHeader {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 0.4rem;
+}
+
+.miniBadge {
+  font-size: 0.7rem;
+  font-weight: 700;
+  background: #e2e8f0;
+  color: #334155;
+  padding: 0.1rem 0.45rem;
+  border-radius: 999px;
+}
+
+.stage0ClausesList {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+  max-height: 280px;
+  overflow-y: auto;
+  padding-right: 0.25rem;
+}
+
+.clauseItemCard {
+  background: #ffffff;
+  border: 1px solid #e2e8f0;
+  border-radius: 6px;
+  padding: 0.6rem 0.75rem;
+  font-size: 0.79rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+}
+
+.clauseItemHeader {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.clauseItemCode {
+  font-family: monospace;
+  font-weight: 700;
+  color: #1e40af;
+  font-size: 0.78rem;
+}
+
+.clauseItemGrade {
+  font-size: 0.7rem;
+  font-weight: 600;
+  background: #f1f5f9;
+  color: #475569;
+  padding: 0.1rem 0.4rem;
+  border-radius: 4px;
+}
+
+.clauseItemText {
+  color: #1e293b;
+  line-height: 1.35;
+}
+
+.clauseItemMeta {
+  display: flex;
+  gap: 0.4rem;
+  align-items: center;
+  flex-wrap: wrap;
+  font-size: 0.72rem;
+}
+
+.clauseVerbTag {
+  background: #eff6ff;
+  border: 1px solid #bfdbfe;
+  color: #1d4ed8;
+  padding: 0.05rem 0.35rem;
+  border-radius: 3px;
+  font-weight: 600;
+}
+
+.verbAuditBox {
+  background: #ecfdf5;
+  border: 1px solid #a7f3d0;
+  border-radius: 6px;
+  padding: 0.75rem;
+  font-size: 0.82rem;
+  color: #065f46;
+  line-height: 1.45;
+}
+
+.misconceptionsListCompact {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+  max-height: 240px;
+  overflow-y: auto;
+}
+
+.misconceptionMiniItem {
+  background: #ffffff;
+  border: 1px solid #e2e8f0;
+  border-left: 3px solid #ef4444;
+  border-radius: 6px;
+  padding: 0.5rem 0.65rem;
+  font-size: 0.76rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.2rem;
+}
+
+.misconceptionMiniHeader {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.misconceptionMiniCode {
+  font-family: monospace;
+  font-weight: 700;
+  color: #991b1b;
+}
+
+.misconceptionMiniCitation {
+  font-size: 0.7rem;
+  color: #64748b;
+  font-style: italic;
+}
+
+.misconceptionMiniOperator {
+  font-family: monospace;
+  background: #f8fafc;
+  padding: 0.2rem 0.4rem;
+  border-radius: 4px;
+  border: 1px solid #e2e8f0;
+  color: #0f172a;
+}
+
+/* ==================== CHEAT SIMULATOR STYLES ==================== */
+.cheatSimulatorSection {
+  background: #f8fafc;
+  border: 1px solid #e2e8f0;
+  border-radius: 10px;
+  padding: 1.25rem;
+  margin-bottom: 1.5rem;
+}
+
+.sectionHeaderWithBadge {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 0.4rem;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+}
+
+.sectionExplainerText {
+  font-size: 0.82rem;
+  color: #475569;
+  margin: 0 0 1rem 0;
+  line-height: 1.45;
+}
+
+.cheatButtonsGrid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 0.75rem;
+  margin-bottom: 1.25rem;
+}
+
+@media (max-width: 640px) {
+  .cheatButtonsGrid {
+    grid-template-columns: 1fr;
+  }
+}
+
+.cheatSelectBtn {
+  background: #ffffff;
+  border: 2px solid #cbd5e1;
+  border-radius: 8px;
+  padding: 0.75rem 0.85rem;
+  cursor: pointer;
+  text-align: left;
+  display: flex;
+  flex-direction: column;
+  gap: 0.15rem;
+  transition: all 0.2s ease;
+}
+
+.cheatSelectBtn:hover {
+  border-color: #94a3b8;
+  background: #f1f5f9;
+}
+
+.cheatSelectBtn.activeCheatBtn {
+  border-color: #dc2626;
+  background: #fef2f2;
+  box-shadow: 0 0 0 1px #dc2626, 0 2px 8px rgba(220, 38, 38, 0.15);
+}
+
+.cheatSelectBtn .cheatNum {
+  font-size: 0.68rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  color: #ef4444;
+  letter-spacing: 0.05em;
+}
+
+.cheatSelectBtn.activeCheatBtn .cheatNum {
+  color: #b91c1c;
+}
+
+.cheatSelectBtn .cheatBtnTitle {
+  font-size: 0.88rem;
+  font-weight: 700;
+  color: #0f172a;
+}
+
+.cheatSelectBtn .cheatBtnSub {
+  font-size: 0.74rem;
+  color: #64748b;
+}
+
+.cheatSimulationDisplay {
+  display: flex;
+  flex-direction: column;
+  gap: 0.9rem;
+}
+
+.cheatBanner {
+  background: #ffffff;
+  border: 1px solid #e2e8f0;
+  border-radius: 8px;
+  padding: 0.85rem 1rem;
+}
+
+.cheatBannerTitle {
+  font-size: 0.95rem;
+  font-weight: 700;
+  color: #0f172a;
+  margin: 0 0 0.35rem 0;
+}
+
+.cheatBannerDesc {
+  font-size: 0.82rem;
+  color: #334155;
+  margin: 0;
+  line-height: 1.45;
+}
+
+.cheatComparisonRow {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 1rem;
+}
+
+@media (max-width: 768px) {
+  .cheatComparisonRow {
+    grid-template-columns: 1fr;
+  }
+}
+
+.cheatCard {
+  border-radius: 8px;
+  padding: 0.85rem 1rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.4rem;
+}
+
+.cheatCard.naiveCard {
+  background: #ecfdf5;
+  border: 1px solid #a7f3d0;
+}
+
+.cheatCard.groundedCard {
+  background: #fef2f2;
+  border: 1px solid #fecaca;
+}
+
+.cheatCardHeader {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.cheatCardTitle {
+  font-size: 0.78rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+}
+
+.naiveCard .cheatCardTitle {
+  color: #047857;
+}
+
+.groundedCard .cheatCardTitle {
+  color: #b91c1c;
+}
+
+.cheatVerdictBadge {
+  font-size: 0.75rem;
+  font-weight: 800;
+  padding: 0.2rem 0.5rem;
+  border-radius: 4px;
+}
+
+.cheatVerdictBadge.badgeGreen {
+  background: #10b981;
+  color: #ffffff;
+}
+
+.cheatVerdictBadge.badgeRed {
+  background: #ef4444;
+  color: #ffffff;
+}
+
+.cheatCardVerdict {
+  font-size: 0.85rem;
+  font-weight: 700;
+}
+
+.naiveCard .cheatCardVerdict {
+  color: #065f46;
+}
+
+.groundedCard .cheatCardVerdict {
+  color: #991b1b;
+}
+
+.cheatCardText {
+  font-size: 0.8rem;
+  color: #334155;
+  line-height: 1.4;
+  margin: 0;
+}
+
+.cheatAuditBanner {
+  background: #f1f5f9;
+  border: 1px solid #cbd5e1;
+  border-left: 4px solid #dc2626;
+  border-radius: 6px;
+  padding: 0.65rem 0.85rem;
+  font-size: 0.82rem;
+  color: #0f172a;
+  font-weight: 600;
+}
+
+.cheatMathExplanation {
+  background: #ffffff;
+  border: 1px solid #e2e8f0;
+  border-radius: 8px;
+  padding: 0.85rem 1rem;
+}
+
+.cheatMathHeader {
+  font-size: 0.75rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  color: #2563eb;
+  margin-bottom: 0.35rem;
+}
+
+.cheatMathText {
+  font-family: monospace;
+  font-size: 0.78rem;
+  color: #1e293b;
+  line-height: 1.45;
+  margin: 0;
+  background: #f8fafc;
+  padding: 0.5rem 0.65rem;
+  border-radius: 4px;
+  border: 1px solid #e2e8f0;
+  white-space: pre-wrap;
+}
+
+.cheatPedagogyBox {
+  background: #eff6ff;
+  border: 1px solid #bfdbfe;
+  border-radius: 8px;
+  padding: 0.75rem 1rem;
+  font-size: 0.8rem;
+  color: #1e40af;
+  line-height: 1.4;
+}
+
+/* ==================== 8 GENERATIVE JUNCTIONS STYLES ==================== */
+.stage0JunctionsGrid {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+}
+
+.junctionCard {
+  background: #ffffff;
+  border: 1px solid #e2e8f0;
+  border-radius: 8px;
+  padding: 0.85rem 1rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.03);
+}
+
+.junctionCardHeader {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 0.4rem;
+}
+
+.junctionTitleRow {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.junctionNumBadge {
+  font-size: 0.72rem;
+  font-weight: 800;
+  background: #0f172a;
+  color: #38bdf8;
+  padding: 0.15rem 0.45rem;
+  border-radius: 4px;
+}
+
+.junctionName {
+  font-size: 0.88rem;
+  font-weight: 700;
+  color: #0f172a;
+}
+
+.junctionStatusPill {
+  font-size: 0.7rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  padding: 0.2rem 0.55rem;
+  border-radius: 999px;
+}
+
+.junctionStatusPill.statusProven {
+  background: #dcfce7;
+  color: #15803d;
+  border: 1px solid #86efac;
+}
+
+.junctionStatusPill.statusGrounded {
+  background: #dbeafe;
+  color: #1d4ed8;
+  border: 1px solid #93c5fd;
+}
+
+.junctionStatusPill.statusRisk {
+  background: #fef3c7;
+  color: #b45309;
+  border: 1px solid #fcd34d;
+}
+
+.junctionBody {
+  display: flex;
+  flex-direction: column;
+  gap: 0.45rem;
+  font-size: 0.8rem;
+}
+
+.junctionField {
+  padding: 0.45rem 0.65rem;
+  border-radius: 6px;
+  font-size: 0.78rem;
+  line-height: 1.4;
+}
+
+.junctionField.riskField {
+  background: #fffbeb;
+  border: 1px solid #fde68a;
+  color: #92400e;
+}
+
+.junctionField.solutionField {
+  background: #f0fdf4;
+  border: 1px solid #bbf7d0;
+  color: #166534;
+}
+
+.junctionField.auditField {
+  background: #f8fafc;
+  border: 1px solid #e2e8f0;
+  color: #334155;
+}
+
+.junctionFieldLabel {
+  font-weight: 700;
+  font-size: 0.72rem;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  display: block;
+  margin-bottom: 0.15rem;
+}
+
+.riskField .junctionFieldLabel {
+  color: #b45309;
+}
+
+.solutionField .junctionFieldLabel {
+  color: #15803d;
+}
+
+.auditField .junctionFieldLabel {
+  color: #475569;
 }
