@@ -26,6 +26,8 @@ Each dimension below has its own dedicated specification and mathematical formul
    - Proving **Misconception Bijection** ($\text{Distinct}(m_1, m_2, m_3)$) for MCQ distractors, banning construct-invalid meta-options (*"All of the above"*), and specifying formal invariants for Short Answer, Match-the-Column, and Comprehension sets.
 7. **[Dimension 7: Stage 0 Formal Proof of KC Generation & Epistemic Boundaries (`07-stage0-kc-ontology-proof-and-boundaries.md`)](07-stage0-kc-ontology-proof-and-boundaries.md)**
    - Proving the 6 Stage 0 Z3 theorems on candidate KC decompositions from the **National Curriculum of Pakistan (NCP)** across Grades $G-1 \to G \to G+1$, and explicitly documenting the **6 epistemic boundaries that are NOT tested by the Stage 0 Z3 proof**.
+8. **[Dimension 8: Generative Junctions, Anti-"Proof Theater" Rigor & Missing Proofs (`08-generative-junctions-and-missing-proofs.md`)](08-generative-junctions-and-missing-proofs.md)**
+   - Systematic inventory of the **8 generative junctions** where LLMs or heuristic algorithms generate content, the specific "proof theater" vulnerabilities of each, and the **5 missing proofs** required for complete neuro-symbolic ground truth.
 
 ---
 
