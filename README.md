@@ -121,6 +121,26 @@ $$\text{Z3 Satisfiability & Optimal Repair:} \quad \exists\, p \in \mathcal{P}_{
 
 ---
 
+## Pedagogical Formal Verification Knowledge Base (`docs/`)
+
+To support progressive disclosure across **K–12 Formative Assessments** (active focus) as well as **Lesson Planning**, **Teacher Coaching/Evaluation**, and **Foundational Literacy (EGRA)**, the full pedagogical and mathematical architecture is organized in [`docs/README.md`](docs/README.md):
+
+- **[Master Progressive Disclosure Index (`docs/README.md`)](docs/README.md)**
+- **[Neuro-Symbolic Pedagogical IR Architecture (`docs/architecture/neuro-symbolic-pedagogical-ir.md`)](docs/architecture/neuro-symbolic-pedagogical-ir.md)** — Where LLM/linguistic extraction ends and Z3 formal proof begins.
+- **[Pillar 1: K–12 Formative Assessment Verification (`docs/domains/01-formative-assessments/README.md`)](docs/domains/01-formative-assessments/README.md)**
+  1. **[SLOs, Atomic KCs & Item Sufficiency](docs/domains/01-formative-assessments/01-slo-and-atomic-kc-mastery.md)** (`Domain → SLO → Sub-SLO → Atomic KC` DAG, Q-Matrix guessing bounds, and sufficiency math across `MCQ`, `Short Answer`, `Match`, `Comprehension`, and `Long Answer`)
+  2. **[Cognitive Rigor: Bloom's Taxonomy $\times$ Webb's DoK](docs/domains/01-formative-assessments/02-cognitive-rigor-bloom-dok.md)** (2D Hess Cognitive Rigor Matrix, non-decreasing scaffolding, and thinking-time floors)
+  3. **[Classroom Alignment: "Seen vs. Unseen" Transfer](docs/domains/01-formative-assessments/03-seen-vs-unseen-transfer.md)** (`workedExamplesSeen` vs. `UNSEEN` transfer and the Transfer Collapse Law)
+  4. **[Language Load vs. Cognitive Load](docs/domains/01-formative-assessments/04-language-vs-cognitive-load.md)** (Eliminating Construct-Irrelevant Variance in Math/Science assessments)
+  5. **[K–12 Developmental Stage Guardrails](docs/domains/01-formative-assessments/05-k12-developmental-stages.md)** (Stage hyper-parameters for `K-2`, `G3-5`, `G6-8`, `G9-12`: working memory chunks & option caps)
+  6. **[Diagnostic Distractors & Multi-Format Item Design](docs/domains/01-formative-assessments/06-diagnostic-distractors-and-item-types.md)** (Misconception bijection `Distinct(m1, m2, m3)` and non-MCQ structural proofs)
+- **Future Verification Pillars (Charters):**
+  - **[Pillar 2: Lesson Planning & Instructional Design](docs/domains/02-lesson-planning/README.md)**
+  - **[Pillar 3: Teacher Training, Coaching & Evaluation](docs/domains/03-teacher-coaching-and-evaluation/README.md)**
+  - **[Pillar 4: Foundational Literacy & Numeracy (EGRA)](docs/domains/04-foundational-literacy-egra/README.md)**
+
+---
+
 ## Quick Start
 
 ```bash
