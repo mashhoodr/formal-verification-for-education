@@ -1,0 +1,179 @@
+import re
+import json
+
+def parse_fractions_vertical_progression():
+    """
+    Extracts the official Fractions progression from NCP Mathematics PG (1-12)
+    across Grades 1, 2, 3, 4, 5, and 6/7.
+    """
+    with open("data/curriculum/pakistan/extracted/mathematics_pg_1-12.txt", "r", encoding="utf-8") as f:
+        text = f.read()
+
+    # We target the exact Progression Grid entries from pages 20-22
+    # which specify the spiral progression of Fractions.
+    fractions_strand = {
+        "curriculum": "National Curriculum of Pakistan (NCP 2022-23)",
+        "subject": "Mathematics",
+        "domain": "Domain A: Numbers and Operations",
+        "subdomain": "Fractions and Decimals",
+        "verticalGrades": {
+            "Grade 1": {
+                "gradeLevel": 1,
+                "slos": [
+                    {
+                        "sloCode": "M-01-A-21",
+                        "title": "Recognise, find, name and write fractions of a length, shape, set of objects or quantity",
+                        "text": "Recognise, find, name and write fractions: half (1/2), quarter (1/4), two-quarters (2/4), three-quarters (3/4) of a length, shape, set of objects or quantity using pictorial representations.",
+                        "allowedDenominators": [2, 4],
+                        "mechanismLevel": "concrete_pictorial_shapes_and_quantities"
+                    }
+                ]
+            },
+            "Grade 2": {
+                "gradeLevel": 2,
+                "slos": [
+                    {
+                        "sloCode": "M-02-A-30",
+                        "title": "Identify, name and write unit, non-unit, like and unlike fractions",
+                        "text": "Identify, name and write: unit fractions, non-unit fractions, like fractions, unlike fractions of a discrete set of objects using pictorial representations.",
+                        "allowedDenominators": [2, 3, 4, 5, 6, 8, 10],
+                        "mechanismLevel": "unit_and_like_fractions_pictorial"
+                    },
+                    {
+                        "sloCode": "M-02-A-31",
+                        "title": "Compare and order unit fractions and like fractions",
+                        "text": "Compare and order unit fractions and like fractions (with denominators up to 10) using <, > and = signs.",
+                        "allowedDenominators": [2, 3, 4, 5, 6, 8, 10],
+                        "mechanismLevel": "comparing_unit_and_like_fractions"
+                    },
+                    {
+                        "sloCode": "M-02-A-32",
+                        "title": "Add and subtract like fractions within one whole",
+                        "text": "Add and subtract like fractions within one whole (e.g., 1/4 + 3/4 = 4/4 = 1).",
+                        "allowedDenominators": [2, 3, 4, 5, 6, 8, 10],
+                        "mechanismLevel": "like_fractions_sum_within_one"
+                    }
+                ]
+            },
+            "Grade 3": {
+                "gradeLevel": 3,
+                "slos": [
+                    {
+                        "sloCode": "M-03-A-20",
+                        "title": "Recognise proper, improper fractions and mixed numbers",
+                        "text": "Recognise among: proper fractions, improper fractions, mixed numbers.",
+                        "mechanismLevel": "fraction_type_classification"
+                    },
+                    {
+                        "sloCode": "M-03-A-21",
+                        "title": "Identify equivalent fractions and families",
+                        "text": "Identify equivalent fractions and show families of equivalent fractions.",
+                        "mechanismLevel": "equivalent_fractions_multiplicative"
+                    },
+                    {
+                        "sloCode": "M-03-A-22",
+                        "title": "Simplify fractions to lowest terms",
+                        "text": "Simplify fractions to the lowest term.",
+                        "mechanismLevel": "fraction_reduction_simplest_form"
+                    },
+                    {
+                        "sloCode": "M-03-A-23",
+                        "title": "Compare and order like fractions using symbols",
+                        "text": "Compare and order like fractions using symbols <, > and =.",
+                        "mechanismLevel": "order_like_fractions_symbolic"
+                    },
+                    {
+                        "sloCode": "M-03-A-24",
+                        "title": "Add and subtract like and unlike fractions with common multiple denominators",
+                        "text": "Add and subtract like and unlike fractions (with denominators that are multiples of the same number).",
+                        "allowedDenominatorsRelation": "multiples_of_same_number",
+                        "mechanismLevel": "unlike_fractions_related_denominators"
+                    }
+                ]
+            },
+            "Grade 4": {
+                "gradeLevel": 4,
+                "slos": [
+                    {
+                        "sloCode": "M-04-A-20",
+                        "title": "Differentiate proper, improper fractions and mixed numbers",
+                        "text": "Differentiate among: proper fractions, improper fractions, mixed numbers.",
+                        "mechanismLevel": "fraction_classification_and_conversion"
+                    },
+                    {
+                        "sloCode": "M-04-A-21",
+                        "title": "Convert improper fractions to mixed numbers and vice versa",
+                        "text": "Convert improper fractions to mixed numbers and vice versa.",
+                        "mechanismLevel": "improper_mixed_conversion"
+                    },
+                    {
+                        "sloCode": "M-04-A-22",
+                        "title": "Compare and order unlike fractions and mixed numbers",
+                        "text": "Compare and order unlike fractions, proper, improper fractions and mixed numbers in ascending and descending order.",
+                        "mechanismLevel": "order_unlike_and_mixed_fractions"
+                    },
+                    {
+                        "sloCode": "M-04-A-23",
+                        "title": "Add and subtract like and unlike fractions expressing answer as mixed numbers",
+                        "text": "Add and subtract like and unlike fractions (with denominators that are multiples of the same number) and write the answer in mixed numbers (if applicable).",
+                        "mechanismLevel": "add_subtract_related_denominators_mixed_output"
+                    },
+                    {
+                        "sloCode": "M-04-A-24",
+                        "title": "Multiply and divide fractions by a whole number",
+                        "text": "Multiply and divide proper, improper fractions and mixed numbers by a whole number.",
+                        "mechanismLevel": "fraction_whole_number_multiplication_division"
+                    },
+                    {
+                        "sloCode": "M-04-A-25",
+                        "title": "Multiply two fractions and/or mixed numbers",
+                        "text": "Multiply two fractions and/or mixed numbers and express the answer in its simplest form.",
+                        "mechanismLevel": "fraction_multiplication_simplest_form"
+                    },
+                    {
+                        "sloCode": "M-04-A-26",
+                        "title": "Solve real-world word problems involving fractions",
+                        "text": "Solve real-world word problems involving fractions by identifying appropriate operations.",
+                        "mechanismLevel": "real_world_fraction_word_problems"
+                    }
+                ]
+            },
+            "Grade 5": {
+                "gradeLevel": 5,
+                "slos": [
+                    {
+                        "sloCode": "M-05-A-16",
+                        "title": "Compare and order fractions and decimals",
+                        "text": "Compare and order whole numbers, fractions and decimals.",
+                        "mechanismLevel": "cross_representation_ordering"
+                    },
+                    {
+                        "sloCode": "M-05-A-17",
+                        "title": "Add and subtract two or three unlike fractions and mixed numbers",
+                        "text": "Add and subtract two or three unlike fractions and mixed numbers.",
+                        "allowedDenominatorsRelation": "arbitrary_unlike_denominators",
+                        "mechanismLevel": "arbitrary_unlike_denominators_lcm"
+                    },
+                    {
+                        "sloCode": "M-05-A-18",
+                        "title": "Multiply and divide proper, improper fractions and mixed numbers",
+                        "text": "Multiply and divide proper, improper fractions and mixed numbers and express the answer in its simplest form (if applicable).",
+                        "mechanismLevel": "fraction_division_by_fraction_invert_and_multiply"
+                    },
+                    {
+                        "sloCode": "M-05-A-19",
+                        "title": "Solve real-world word problems involving fractions and decimals",
+                        "text": "Solve real-world word problems involving fractions.",
+                        "mechanismLevel": "multi_step_fraction_word_problems"
+                    }
+                ]
+            }
+        }
+    }
+
+    with open("data/curriculum/pakistan/extracted/mathematics_fractions_progression_g1_g5.json", "w", encoding="utf-8") as f:
+        json.dump(fractions_strand, f, indent=2)
+    print("Saved data/curriculum/pakistan/extracted/mathematics_fractions_progression_g1_g5.json")
+
+if __name__ == "__main__":
+    parse_fractions_vertical_progression()
