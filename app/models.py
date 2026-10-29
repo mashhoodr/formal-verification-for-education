@@ -216,3 +216,11 @@ class Stage0RepairResponse(CamelModel):
     total_iterations: int
     iterations: list[Stage0IterationRecord]
 
+
+class Stage0RepairRequest(CamelModel):
+    scenario_id: str = "ncpMathFractionsG2G4"
+
+
+class Stage0VerifyRequest(CamelModel):
+    triad_spec: VerticalTriadSpec
+

@@ -1,5 +1,7 @@
 import pytest
 from app.models import GenerateAndVerifyRequest
+from fastapi.testclient import TestClient
+from app.main import app
 
 pytestmark = pytest.mark.filterwarnings(r"ignore:Using `httpx` with `starlette\.testclient`.*")
 
@@ -331,6 +333,48 @@ def test_api_specs_and_verify_endpoints_return_camel_case():
     assert "feasibleMathDetails" in index_resp.text
     assert "smtFilterBar" in index_resp.text
     assert "smtInteractiveViewer" in index_resp.text
+
+
+def test_stage0_api_scenarios_and_repair_loop():
+    client = TestClient(app)
+    # 1. Scenarios endpoint
+    scen_resp = client.get("/api/stage0/scenarios")
+    assert scen_resp.status_code == 200
+    scen_data = scen_resp.json()
+    assert "scenarios" in scen_data
+    assert len(scen_data["scenarios"]) == 2
+    scen_ids = [s["scenarioId"] for s in scen_data["scenarios"]]
+    assert "ncpMathFractionsG2G4" in scen_ids
+    assert "ncpEnglishReadingG2G4" in scen_ids
+
+    # 2. Stage 0 repair loop endpoint for Math Fractions
+    repair_resp = client.post(
+        "/api/stage0/repair-loop",
+        json={"scenarioId": "ncpMathFractionsG2G4"},
+    )
+    assert repair_resp.status_code == 200
+    repair_data = repair_resp.json()
+    assert repair_data["finalStatus"] == "sat"
+    assert repair_data["totalIterations"] == 3
+    # Step 0 is flawed LLM draft (unsat)
+    assert repair_data["iterations"][0]["verificationResult"]["status"] == "unsat"
+    assert len(repair_data["iterations"][0]["verificationResult"]["unsatCore"]) > 0
+    # Step 2 is Z3 verified SAT
+    final_iter = repair_data["iterations"][-1]
+    assert final_iter["verificationResult"]["status"] == "sat"
+    assert final_iter["verificationResult"]["certificateHash"] is not None
+    assert len(final_iter["verificationResult"]["topologicalRanks"]) > 0
+    assert len(final_iter["verificationResult"]["untestedEpistemicBoundaries"]) == 6
+
+    # 3. Direct Stage 0 verify endpoint
+    direct_resp = client.post(
+        "/api/stage0/verify",
+        json={"triadSpec": final_iter["triadSpec"]},
+    )
+    assert direct_resp.status_code == 200
+    direct_data = direct_resp.json()
+    assert direct_data["status"] == "sat"
+    assert direct_data["certificateHash"] is not None
 
 
 

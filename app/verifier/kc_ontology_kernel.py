@@ -14,6 +14,7 @@ Proves 6 symbolic SMT theorems over a candidate decomposition of a Vertical Curr
 import hashlib
 import json
 import z3
+from app.verifier.z3_lock import Z3_MUTEX
 from app.models import (
     SloClauseItem,
     CandidateKcItem,
@@ -148,6 +149,11 @@ def _min_misconceptions_for_grade(grade: int) -> int:
 
 
 def verify_kc_ontology(triad_spec: VerticalTriadSpec) -> Stage0VerificationResult:
+    with Z3_MUTEX:
+        return _verify_kc_ontology_internal(triad_spec)
+
+
+def _verify_kc_ontology_internal(triad_spec: VerticalTriadSpec) -> Stage0VerificationResult:
     """
     Compiles a VerticalTriadSpec into a Z3 SMT-LIB2 system with tracked assertions,
     proves all 6 Stage 0 ontology & cross-grade boundary theorems, and generates
@@ -895,6 +901,7 @@ def list_stage0_scenarios() -> list[dict]:
             "scenarioId": item["scenarioId"],
             "title": item["title"],
             "description": item["description"],
+            "initialDraft": item["steps"][0][0].model_dump(by_alias=True),
         }
         for item in data.values()
     ]

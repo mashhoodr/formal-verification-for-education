@@ -764,7 +764,8 @@ function classifyTrackerCategory(trackerId) {
 }
 
 function escapeHtmlText(rawStr) {
-  return rawStr
+  if (rawStr === null || rawStr === undefined) return "";
+  return String(rawStr)
     .replace(/&/g, "&amp;")
     .replace(/</g, "&lt;")
     .replace(/>/g, "&gt;");
@@ -1849,6 +1850,615 @@ async function executeVerifyEditedJson() {
   }
 }
 
+// ============================================================================
+// STAGE 0: CURRICULUM SLO -> ATOMIC KC ONTOLOGY PROOF CONTROLLER
+// ============================================================================
+let currentStage = 0; // 0 for Stage 0, 1 for Stage 1
+let stage0ScenariosList = [];
+let currentStage0Iterations = [];
+let selectedStage0IterationIndex = 0;
+let stage0ActiveView = "kcs"; // "kcs" | "smt" | "boundaries"
+let highlightedStage0TrackerId = null;
+
+const stage0ToggleBtn = document.getElementById("stage0ToggleBtn");
+const stage1ToggleBtn = document.getElementById("stage1ToggleBtn");
+const stage0Container = document.getElementById("stage0Container");
+const stage1Container = document.getElementById("stage1Container");
+
+const scenarioSelectStage0 = document.getElementById("scenarioSelectStage0");
+const scenarioDescriptionStage0 = document.getElementById("scenarioDescriptionStage0");
+const triadSummaryCardStage0 = document.getElementById("triadSummaryCardStage0");
+const triadGradeBandBadgeStage0 = document.getElementById("triadGradeBandBadgeStage0");
+const triadSummaryPillsStage0 = document.getElementById("triadSummaryPillsStage0");
+const runStage0RepairBtn = document.getElementById("runStage0RepairBtn");
+const iterationTabsStage0 = document.getElementById("iterationTabsStage0");
+const repairSummaryBoxStage0 = document.getElementById("repairSummaryBoxStage0");
+const sloClausesContainerStage0 = document.getElementById("sloClausesContainerStage0");
+const stage0JsonEditor = document.getElementById("stage0JsonEditor");
+const verifyStage0JsonBtn = document.getElementById("verifyStage0JsonBtn");
+
+const tabStage0KcsBtn = document.getElementById("tabStage0KcsBtn");
+const tabStage0SmtBtn = document.getElementById("tabStage0SmtBtn");
+const tabStage0BoundariesBtn = document.getElementById("tabStage0BoundariesBtn");
+
+const statusBannerStage0 = document.getElementById("statusBannerStage0");
+const metricsBarStage0 = document.getElementById("metricsBarStage0");
+const stage0KcsPane = document.getElementById("stage0KcsPane");
+const stage0SmtPane = document.getElementById("stage0SmtPane");
+const stage0BoundariesPane = document.getElementById("stage0BoundariesPane");
+const kcPrescriptionsContainerStage0 = document.getElementById("kcPrescriptionsContainerStage0");
+const stage0KcsGrid = document.getElementById("stage0KcsGrid");
+const certificateBoxStage0 = document.getElementById("certificateBoxStage0");
+const smtTrackerMatrixStage0 = document.getElementById("smtTrackerMatrixStage0");
+const smtProofSliceInspectorStage0 = document.getElementById("smtProofSliceInspectorStage0");
+const stage0PipelineDiagram = document.getElementById("stage0PipelineDiagram");
+const stage0SmtFilterBar = document.getElementById("stage0SmtFilterBar");
+const stage0SmtInteractiveViewer = document.getElementById("stage0SmtInteractiveViewer");
+const stage0SmtScriptPre = document.getElementById("stage0SmtScriptPre");
+const stage0SmtScriptCode = document.getElementById("stage0SmtScriptCode");
+const epistemicBoundariesList = document.getElementById("epistemicBoundariesList");
+
+function switchStage(stageNum) {
+  currentStage = stageNum;
+  if (stageNum === 0) {
+    stage0ToggleBtn.classList.add("activeStage");
+    stage1ToggleBtn.classList.remove("activeStage");
+    stage0Container.classList.remove("hiddenPane");
+    stage1Container.classList.add("hiddenPane");
+  } else {
+    stage0ToggleBtn.classList.remove("activeStage");
+    stage1ToggleBtn.classList.add("activeStage");
+    stage0Container.classList.add("hiddenPane");
+    stage1Container.classList.remove("hiddenPane");
+  }
+}
+
+function switchStage0View(viewName) {
+  stage0ActiveView = viewName;
+  tabStage0KcsBtn.classList.toggle("activeTab", viewName === "kcs");
+  tabStage0SmtBtn.classList.toggle("activeTab", viewName === "smt");
+  tabStage0BoundariesBtn.classList.toggle("activeTab", viewName === "boundaries");
+
+  stage0KcsPane.classList.toggle("hiddenPane", viewName !== "kcs");
+  stage0SmtPane.classList.toggle("hiddenPane", viewName !== "smt");
+  stage0BoundariesPane.classList.toggle("hiddenPane", viewName !== "boundaries");
+}
+
+async function loadStage0Scenarios() {
+  try {
+    const resp = await fetch("/api/stage0/scenarios");
+    const data = await resp.json();
+    stage0ScenariosList = data.scenarios || [];
+
+    scenarioSelectStage0.innerHTML = "";
+    stage0ScenariosList.forEach((scen) => {
+      const opt = document.createElement("option");
+      opt.value = scen.scenarioId;
+      opt.textContent = scen.title;
+      scenarioSelectStage0.appendChild(opt);
+    });
+
+    if (stage0ScenariosList.length > 0) {
+      scenarioSelectStage0.value = stage0ScenariosList[0].scenarioId;
+      await runStage0Repair(stage0ScenariosList[0].scenarioId);
+    }
+  } catch (err) {
+    console.error("Failed to load Stage 0 scenarios:", err);
+  }
+}
+
+async function runStage0Repair(scenarioId) {
+  runStage0RepairBtn.disabled = true;
+  runStage0RepairBtn.textContent = "Solving Stage 0 SMT Proofs & Repairing...";
+
+  try {
+    const resp = await fetch("/api/stage0/repair-loop", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ scenarioId }),
+    });
+    const data = await resp.json();
+    currentStage0Iterations = data.iterations || [];
+
+    const scenMeta = stage0ScenariosList.find((s) => s.scenarioId === scenarioId);
+    if (scenMeta) {
+      scenarioDescriptionStage0.textContent = scenMeta.description;
+    }
+
+    renderStage0TimelineTabs();
+    selectStage0Iteration(0); // Start at Step 0 to show flawed LLM draft first
+  } catch (err) {
+    console.error("Stage 0 repair loop failed:", err);
+  } finally {
+    runStage0RepairBtn.disabled = false;
+    runStage0RepairBtn.textContent = "Run Stage 0 Z3 Auto-Repair Loop";
+  }
+}
+
+function renderStage0TimelineTabs() {
+  iterationTabsStage0.innerHTML = "";
+  currentStage0Iterations.forEach((iter, idx) => {
+    const tab = document.createElement("button");
+    tab.type = "button";
+    tab.className = `iterationTabVertical ${idx === selectedStage0IterationIndex ? "active" : ""}`;
+    const status = iter.verificationResult.status;
+    const isSat = status === "sat";
+    const statusBadge = isSat
+      ? '<span class="iterBadge sat">SAT &#10003;</span>'
+      : `<span class="iterBadge unsat">UNSAT (${iter.verificationResult.unsatCore.length})</span>`;
+
+    tab.innerHTML = `
+      <div class="iterTabTitleRow">
+        <span class="iterTabTitle">Step ${idx}</span>
+        ${statusBadge}
+      </div>
+      <div class="iterTabSummary">${escapeHtmlText(iter.repairSummary.slice(0, 95))}...</div>
+    `;
+    tab.addEventListener("click", () => selectStage0Iteration(idx));
+    iterationTabsStage0.appendChild(tab);
+  });
+}
+
+function selectStage0Iteration(index) {
+  selectedStage0IterationIndex = index;
+  renderStage0TimelineTabs();
+
+  const iter = currentStage0Iterations[index];
+  if (!iter) return;
+
+  repairSummaryBoxStage0.innerHTML = `
+    <strong>Step ${index} Repair Log:</strong> ${escapeHtmlText(iter.repairSummary)}
+  `;
+
+  renderStage0IterationView(iter);
+}
+
+function renderStage0IterationView(iteration) {
+  const spec = iteration.triadSpec;
+  const ver = iteration.verificationResult;
+
+  // Triad summary header
+  triadGradeBandBadgeStage0.textContent = `Grades ${spec.priorGrade} -> ${spec.targetGrade} -> ${spec.nextGrade}`;
+  triadSummaryPillsStage0.innerHTML = `
+    <span class="specPill">Subject: <strong>${escapeHtmlText(spec.subject)}</strong></span>
+    <span class="specPill">Official SLO Clauses: <strong>${spec.sloClauses.length}</strong></span>
+    <span class="specPill">Candidate KCs: <strong>${spec.candidateKcs.length}</strong></span>
+  `;
+
+  // Status banner
+  const isSat = ver.status === "sat";
+  statusBannerStage0.className = `statusBanner ${isSat ? "statusSat" : "statusUnsat"}`;
+  statusBannerStage0.innerHTML = `
+    <div class="statusTitleRow">
+      <span class="statusVerdictText">Stage 0 Verdict: ${isSat ? "PROVEN SAT (Ontology Verified)" : "UNSAT (Consistency Violations Detected)"}</span>
+      <span class="statusBadgeTag ${isSat ? "tagSat" : "tagUnsat"}">${isSat ? "FORMALLY PROVEN" : "UNSAT CORE ACTIVE"}</span>
+    </div>
+    <p class="statusExplainText">
+      ${
+        isSat
+          ? "All 6 Stage 0 curriculum ontology theorems proven SAT by Z3 SMT solver. The candidate KC graph is a topologically valid, grade-monotonic, envelope-disjoint DAG with complete official SLO coverage and diagnostic misconception sufficiency."
+          : `Z3 refuted the candidate KC ontology with ${ver.unsatCore.length} unsatisfiable core trackers. Topological rank assignment, vertical bridge continuity, or envelope boundaries failed.`
+      }
+    </p>
+  `;
+
+  // Metrics Bar
+  const metrics = ver.metrics || {};
+  metricsBarStage0.innerHTML = `
+    <div class="metricCard">
+      <span class="metricLabel">Candidate KCs</span>
+      <span class="metricValue">${metrics.totalCandidateKcs || spec.candidateKcs.length}</span>
+    </div>
+    <div class="metricCard">
+      <span class="metricLabel">SLO Clause Coverage</span>
+      <span class="metricValue">${metrics.clauseCoverageRatio ? Math.round(metrics.clauseCoverageRatio * 100) : 100}%</span>
+    </div>
+    <div class="metricCard">
+      <span class="metricLabel">Prerequisite Edges</span>
+      <span class="metricValue">${metrics.totalPrerequisiteEdges || 0}</span>
+    </div>
+    <div class="metricCard">
+      <span class="metricLabel">Tracked Theorems</span>
+      <span class="metricValue">${metrics.totalTrackedTheorems || 0}</span>
+    </div>
+    <div class="metricCard">
+      <span class="metricLabel">Epistemic Boundaries</span>
+      <span class="metricValue">6 Documented</span>
+    </div>
+  `;
+
+  // SLO Clauses Container
+  renderStage0SloClauses(spec.sloClauses);
+
+  // JSON Editor
+  stage0JsonEditor.value = JSON.stringify(spec, null, 2);
+
+  // Render KCs
+  renderStage0Kcs(spec, ver);
+
+  // Render SMT tracker matrix & certificate
+  renderStage0SmtMatrix(ver);
+
+  // Render Epistemic Boundaries
+  renderStage0EpistemicBoundaries(ver.untestedEpistemicBoundaries || []);
+}
+
+function renderStage0SloClauses(clauses) {
+  sloClausesContainerStage0.innerHTML = "";
+  clauses.forEach((c) => {
+    const div = document.createElement("div");
+    div.className = "sloClauseItemBox";
+    div.innerHTML = `
+      <div class="sloClauseHeader">
+        <span class="sloClauseCode">${escapeHtmlText(c.clauseId)}</span>
+        <span class="specBandBadge">Grade ${c.grade}</span>
+      </div>
+      <div style="color:#334155;line-height:1.35;">${escapeHtmlText(c.text)}</div>
+    `;
+    sloClausesContainerStage0.appendChild(div);
+  });
+}
+
+function renderStage0Kcs(spec, ver) {
+  // Render Prescriptions if any
+  kcPrescriptionsContainerStage0.innerHTML = "";
+  if (ver.prescriptions && ver.prescriptions.length > 0) {
+    const rxBox = document.createElement("div");
+    rxBox.className = "prescriptionsBox";
+    rxBox.innerHTML = `
+      <h3 style="margin:0 0 0.5rem;font-size:0.92rem;color:#991b1b;">
+        Z3 SMT Prescriptions for LLM Repair (${ver.prescriptions.length}):
+      </h3>
+      <ul style="margin:0;padding-left:1.2rem;font-size:0.82rem;color:#7f1d1d;">
+        ${ver.prescriptions.map((p) => `<li><strong>[${escapeHtmlText(p.trackerId || p.targetMetric)}]:</strong> ${escapeHtmlText(p.instruction || p.action)} &mdash; <em>Target: ${escapeHtmlText(p.location || p.targetElement)}</em></li>`).join("")}
+      </ul>
+    `;
+    kcPrescriptionsContainerStage0.appendChild(rxBox);
+  }
+
+  // Partition KCs by Grade
+  const grades = [spec.priorGrade, spec.targetGrade, spec.nextGrade];
+  const gradeLabels = {
+    [spec.priorGrade]: `Prior Grade (${spec.priorGrade}) &bull; Foundational Envelopes`,
+    [spec.targetGrade]: `Target Grade (${spec.targetGrade}) &bull; Active Instruction SLO Decomposition`,
+    [spec.nextGrade]: `Next Grade (${spec.nextGrade}) &bull; Vertical Spiral Bridges`,
+  };
+
+  stage0KcsGrid.innerHTML = "";
+
+  grades.forEach((gradeNum) => {
+    const kcsInGrade = spec.candidateKcs.filter((kc) => kc.grade === gradeNum);
+    const section = document.createElement("div");
+    section.className = "kcGradeSection";
+
+    section.innerHTML = `
+      <div class="kcGradeSectionHeader">
+        <span class="kcGradeTitle">
+          <span class="specBandBadge">Grade ${gradeNum}</span>
+          ${gradeLabels[gradeNum] || `Grade ${gradeNum}`}
+        </span>
+        <span style="font-size:0.78rem;color:#64748b;font-weight:600;">${kcsInGrade.length} Candidate KCs</span>
+      </div>
+      <div class="kcCardsGrid" id="kcCardsGrid_g${gradeNum}"></div>
+    `;
+    stage0KcsGrid.appendChild(section);
+
+    const cardsContainer = section.querySelector(`#kcCardsGrid_g${gradeNum}`);
+    kcsInGrade.forEach((kc) => {
+      const card = renderSingleKcCard(kc, spec, ver);
+      cardsContainer.appendChild(card);
+    });
+  });
+}
+
+function renderSingleKcCard(kc, spec, ver) {
+  const card = document.createElement("div");
+  const isViolated = ver.violations && ver.violations.some((v) => v.targetElement === kc.kcId || (v.details && v.details.includes(kc.kcId)));
+  card.className = `kcCard ${isViolated ? "kcViolation" : ""}`;
+
+  const topRank = ver.topologicalRanks && ver.topologicalRanks[kc.kcId] !== undefined ? ver.topologicalRanks[kc.kcId] : null;
+
+  const isVerbAtomic = kc.verbCount === 1;
+  const verbPill = isVerbAtomic
+    ? `<span class="kcMetaPill kcMetaGood">&#10003; 1 Verb (Atomic)</span>`
+    : `<span class="kcMetaPill kcMetaWarn">&#9888; ${kc.verbCount} Verbs (Composite Blob!)</span>`;
+
+  const minMis = kc.grade <= 2 ? 2 : 3;
+  const hasEnoughMis = kc.misconceptions.length >= minMis;
+  const misPill = hasEnoughMis
+    ? `<span class="kcMetaPill kcMetaGood">&#10003; ${kc.misconceptions.length} Misconceptions (&ge;${minMis})</span>`
+    : `<span class="kcMetaPill kcMetaWarn">&#9888; ${kc.misconceptions.length} Misconceptions (Needs &ge;${minMis})</span>`;
+
+  const rankBadge = topRank !== null
+    ? `<span class="kcMetaPill" style="background:#f3e8ff;color:#6b21a8;font-weight:700;">Topological Rank: ${topRank}</span>`
+    : "";
+
+  card.innerHTML = `
+    <div class="kcCardHeader">
+      <div>
+        <span class="kcIdBadge">${escapeHtmlText(kc.kcId)}</span>
+        <span class="specBandBadge" style="margin-left:0.35rem;">Grade ${kc.grade}</span>
+      </div>
+      ${isViolated ? '<span class="statusBadgeTag tagUnsat">VIOLATION</span>' : '<span class="statusBadgeTag tagSat">SAT</span>'}
+    </div>
+
+    <h4 class="kcTitle">${escapeHtmlText(kc.title)}</h4>
+
+    <div class="kcMetaRow">
+      <span class="kcMetaPill">Op: <strong>${escapeHtmlText(kc.operationCode)}</strong></span>
+      <span class="kcMetaPill">Complexity: <strong>${kc.mechanismComplexity}</strong></span>
+      ${verbPill}
+      ${misPill}
+      <span class="kcMetaPill">Vars: <strong>${kc.observableVariablesCount}</strong></span>
+      ${rankBadge}
+    </div>
+
+    <div class="kcDetailSection">
+      <span class="kcDetailLabel">Prerequisites (${kc.prerequisites.length}):</span>
+      <div class="kcChipRow">
+        ${
+          kc.prerequisites.length > 0
+            ? kc.prerequisites.map((pId) => {
+                const targetKc = spec.candidateKcs.find((k) => k.kcId === pId);
+                const isCross = targetKc && targetKc.grade < kc.grade;
+                return `<span class="prereqChip ${isCross ? "prereqCrossGrade" : ""}">${escapeHtmlText(pId)} ${isCross ? `(G${targetKc.grade} Spiral Bridge)` : ""}</span>`;
+              }).join("")
+            : '<span style="font-size:0.75rem;color:#94a3b8;font-style:italic;">None (Foundational Root)</span>'
+        }
+      </div>
+    </div>
+
+    <div class="kcDetailSection">
+      <span class="kcDetailLabel">Covered Official NCP SLO Clauses (${kc.coveredClauseIds.length}):</span>
+      <div class="kcChipRow">
+        ${
+          kc.coveredClauseIds.length > 0
+            ? kc.coveredClauseIds.map((cId) => `<span class="sloCoverageChip">${escapeHtmlText(cId)}</span>`).join("")
+            : '<span style="font-size:0.75rem;color:#ef4444;font-weight:700;">Zero Coverage (Orphan Hallucination!)</span>'
+        }
+      </div>
+    </div>
+
+    <div class="kcDetailSection">
+      <span class="kcDetailLabel">Diagnostic Misconceptions (${kc.misconceptions.length}):</span>
+      <ul class="kcMisconceptionsList">
+        ${kc.misconceptions.map((m) => `<li>${escapeHtmlText(m)}</li>`).join("")}
+      </ul>
+    </div>
+  `;
+
+  return card;
+}
+
+function renderStage0SmtMatrix(ver) {
+  if (ver.status === "sat" && ver.certificateHash) {
+    certificateBoxStage0.className = "certificateBox certValid";
+    certificateBoxStage0.innerHTML = `
+      <div class="certHeader">
+        <span class="certTitle">&#10003; Stage 0 Formal Ontology Proof Certificate (SHA-256)</span>
+        <span class="certBadge">Z3 v4.15 &bull; UNSAT Core Swept</span>
+      </div>
+      <div class="certHash">${escapeHtmlText(ver.certificateHash)}</div>
+      <p class="certNote">
+        Cryptographically verifies that candidate KCs form a strictly acyclic, grade-monotonic DAG satisfying 6 curriculum SMT theorems.
+      </p>
+    `;
+  } else {
+    certificateBoxStage0.className = "certificateBox certInvalid";
+    certificateBoxStage0.innerHTML = `
+      <div class="certHeader">
+        <span class="certTitle">&#9888; Stage 0 Verification Failed: No Certificate Generated</span>
+        <span class="certBadge">UNSAT (${ver.unsatCore.length} Core Assertions)</span>
+      </div>
+      <div class="certHash">Proof Refuted &mdash; Unsatisfiable Core Active</div>
+      <p class="certNote">
+        The candidate KC decomposition contains structural contradictions refuted by Z3. Click the red tracker chips below to inspect the mathematical unsat core slice.
+      </p>
+    `;
+  }
+
+  const theoremGroups = [
+    {
+      id: "th01",
+      name: "Theorem 0.1: Prerequisite DAG Acyclicity",
+      sub: "rank(u) < rank(v) for all edges (Symbolic Topological Rank)",
+      prefix: "kc_dag_acyclicity_",
+    },
+    {
+      id: "th02",
+      name: "Theorem 0.2: Vertical Grade Monotonicity & Spiral Bridge",
+      sub: "grade(u) <= grade(v) and at least 1 edge connects adjacent grades",
+      prefix: "kc_vertical_",
+    },
+    {
+      id: "th03",
+      name: "Theorem 0.3: Cross-Grade Envelope Disjointness & Complexity Progression",
+      sub: "Disjoint operation/complexity envelopes + gradeDelta > 0",
+      prefix: "kc_boundary_disjoint_",
+    },
+    {
+      id: "th04",
+      name: "Theorem 0.4: Cognitive Atomicity & Working Memory Cap",
+      sub: "verbCount == 1 and observableVariables <= cap",
+      prefix: "kc_atomicity_",
+    },
+    {
+      id: "th05",
+      name: "Theorem 0.5: Diagnostic Misconception Sufficiency",
+      sub: "misconceptions >= 2 (G1-2) or >= 3 (G3-12) distinct error rules",
+      prefix: "kc_misconceptions_min_",
+    },
+    {
+      id: "th06",
+      name: "Theorem 0.6: Complete Bipartite SLO Clause Coverage",
+      sub: "Every official clause covered >= 1 KC, zero orphan KCs",
+      prefix: "clause_covered_",
+    },
+  ];
+
+  smtTrackerMatrixStage0.innerHTML = "";
+  theoremGroups.forEach((grp) => {
+    const card = document.createElement("div");
+    card.className = "trackerGroupCard";
+
+    const isViolatedInCore = ver.unsatCore.some(
+      (tid) => tid.startsWith(grp.prefix) || (grp.id === "th03" && tid.startsWith("kc_grade_delta")) || (grp.id === "th06" && tid.startsWith("no_orphan"))
+    );
+
+    const statusPill = isViolatedInCore
+      ? '<span class="statusBadgeTag tagUnsat">UNSAT CORE</span>'
+      : '<span class="statusBadgeTag tagSat">SAT (PROVEN)</span>';
+
+    card.innerHTML = `
+      <div class="trackerGroupHeader" style="cursor:pointer;">
+        <div>
+          <span style="font-weight:700;font-size:0.86rem;color:#0f172a;">${escapeHtmlText(grp.name)}</span>
+          <div style="font-size:0.75rem;color:#64748b;">${escapeHtmlText(grp.sub)}</div>
+        </div>
+        ${statusPill}
+      </div>
+      <div class="trackerChipRow" id="chips_${grp.id}"></div>
+    `;
+
+    smtTrackerMatrixStage0.appendChild(card);
+
+    const chipRow = card.querySelector(`#chips_${grp.id}`);
+    renderStage0TrackerChips(grp, ver, chipRow);
+  });
+
+  stage0PipelineDiagram.innerHTML = `
+    <div class="pipelineStageCard">
+      <span class="pipelineStageNum">1</span>
+      <h4>NCP Curriculum Extraction</h4>
+      <p>Official Pakistan Progression Grids parsed into Atomic SLO Clauses with Grade metadata.</p>
+    </div>
+    <div class="pipelineStageCard">
+      <span class="pipelineStageNum">2</span>
+      <h4>6 Symbolic SMT Theorems</h4>
+      <p>Z3 proves DAG acyclicity via symbolic topological ranks + vertical grade monotonicity + envelope disjointness.</p>
+    </div>
+    <div class="pipelineStageCard">
+      <span class="pipelineStageNum">3</span>
+      <h4>UNSAT Core Auto-Repair</h4>
+      <p>Refutations pinpoint minimal contradiction sets to guide multi-step LLM decomposition repair.</p>
+    </div>
+  `;
+
+  stage0SmtScriptCode.textContent = ver.smtLib2Script || ";; No SMT-LIB2 script generated";
+}
+
+function renderStage0TrackerChips(grp, ver, container) {
+  const matchingCore = ver.unsatCore.filter(
+    (tid) => tid.startsWith(grp.prefix) || (grp.id === "th03" && tid.startsWith("kc_grade_delta")) || (grp.id === "th06" && tid.startsWith("no_orphan"))
+  );
+
+  if (matchingCore.length > 0) {
+    matchingCore.forEach((tid) => {
+      const chip = document.createElement("button");
+      chip.type = "button";
+      chip.className = "trackerChip chipUnsat";
+      chip.innerHTML = `&#9888; ${escapeHtmlText(tid)}`;
+      chip.addEventListener("click", () => inspectStage0ProofSlice(tid, grp, ver, true));
+      container.appendChild(chip);
+    });
+  } else {
+    const chip = document.createElement("button");
+    chip.type = "button";
+    chip.className = "trackerChip chipSat";
+    chip.innerHTML = `&#10003; ${escapeHtmlText(grp.prefix)}* (SAT)`;
+    chip.addEventListener("click", () => inspectStage0ProofSlice(grp.prefix, grp, ver, false));
+    container.appendChild(chip);
+  }
+}
+
+function inspectStage0ProofSlice(trackerId, grp, ver, isUnsat) {
+  smtProofSliceInspectorStage0.innerHTML = `
+    <div class="sliceHeader">
+      <div>
+        <span class="badgePill">${isUnsat ? "UNSAT Core Slice" : "Satisfied SMT Assertion"}</span>
+        <h3 style="margin:0.25rem 0 0.1rem;font-size:0.98rem;">
+          Theorem Slice: <code>${escapeHtmlText(trackerId)}</code>
+        </h3>
+        <span style="font-size:0.78rem;color:#64748b;">${escapeHtmlText(grp.name)}</span>
+      </div>
+      <span class="statusBadgeTag ${isUnsat ? "tagUnsat" : "tagSat"}">${isUnsat ? "REFUTED" : "PROVEN SAT"}</span>
+    </div>
+
+    <div class="sliceBody" style="padding:0.75rem 0.95rem;font-size:0.82rem;">
+      <div style="margin-bottom:0.6rem;">
+        <strong>Formal Specification:</strong>
+        <p style="margin:0.2rem 0;color:#334155;">${escapeHtmlText(grp.sub)}</p>
+      </div>
+
+      <div style="margin-bottom:0.6rem;">
+        <strong>Pedagogical Significance:</strong>
+        <p style="margin:0.2rem 0;color:#334155;">
+          ${
+            isUnsat
+              ? "This assertion was violated in the candidate KC decomposition. Z3 could not satisfy the joint system of curriculum constraints without retracting this assertion or repairing the prerequisite/envelope structure."
+              : "Formally satisfied. Z3 verified that this constraint holds consistently with all other curriculum theorems."
+          }
+        </p>
+      </div>
+
+      <div>
+        <strong>Related SMT-LIB2 Assertions in Script:</strong>
+        <pre class="codePre" style="max-height:160px;margin-top:0.35rem;font-size:0.75rem;"><code>${escapeHtmlText(extractSmtLinesForTracker(ver.smtLib2Script, trackerId))}</code></pre>
+      </div>
+    </div>
+  `;
+  smtProofSliceInspectorStage0.scrollIntoView({ behavior: "smooth", block: "nearest" });
+}
+
+function extractSmtLinesForTracker(script, trackerId) {
+  if (!script) return ";; No script available";
+  const cleanId = trackerId.replace(/\*$/, "");
+  const lines = script.split("\n");
+  const matched = lines.filter((line) => line.includes(cleanId) || (line.includes("assert") && line.includes(cleanId.slice(0, 15))));
+  if (matched.length > 0) {
+    return matched.join("\n");
+  }
+  return lines.slice(0, 15).join("\n") + "\n;; ... (full script contains complete formulation)";
+}
+
+function renderStage0EpistemicBoundaries(boundaries) {
+  epistemicBoundariesList.innerHTML = "";
+  if (!boundaries || boundaries.length === 0) {
+    epistemicBoundariesList.innerHTML = "<p style='color:#64748b;font-size:0.85rem;'>No boundary metadata available.</p>";
+    return;
+  }
+
+  boundaries.forEach((b) => {
+    const card = document.createElement("div");
+    card.className = "epistemicBoundaryCard";
+
+    card.innerHTML = `
+      <div class="boundaryCardHeader">
+        <h4 class="boundaryTitle">${escapeHtmlText(b.title)}</h4>
+        <span class="statusBadgeTag tagUnsat" style="background:#fffbeb;border-color:#f59e0b;color:#b45309;">OUTSIDE Z3 SCOPE</span>
+      </div>
+      <div class="boundaryBody">
+        <div class="boundaryField">
+          <span class="boundaryFieldLabel">Why Untested by Z3 SMT Solver:</span>
+          <div>${escapeHtmlText(b.whyUntestedByZ3)}</div>
+        </div>
+
+        <div class="boundaryField failureEx">
+          <span class="boundaryFieldLabel">&#9888; Concrete Failure Scenario If Left Unchecked:</span>
+          <div>${escapeHtmlText(b.failureExample)}</div>
+        </div>
+
+        <div class="boundaryField mitigationPlan">
+          <span class="boundaryFieldLabel">&#10003; Recommended Pedagogical Mitigation Strategy:</span>
+          <div>${escapeHtmlText(b.mitigationStrategy)}</div>
+        </div>
+      </div>
+    `;
+
+    epistemicBoundariesList.appendChild(card);
+  });
+}
+
 async function initializePlayground() {
   const response = await fetch("/api/specs");
   const specData = await response.json();
@@ -2046,6 +2656,48 @@ async function initializePlayground() {
   // Trigger initial scenario load
   scenarioSelect.value = demoScenariosList[0].scenarioId;
   scenarioSelect.dispatchEvent(new Event("change"));
+
+  // Stage 0 wiring
+  stage0ToggleBtn.addEventListener("click", () => switchStage(0));
+  stage1ToggleBtn.addEventListener("click", () => switchStage(1));
+
+  tabStage0KcsBtn.addEventListener("click", () => switchStage0View("kcs"));
+  tabStage0SmtBtn.addEventListener("click", () => switchStage0View("smt"));
+  tabStage0BoundariesBtn.addEventListener("click", () => switchStage0View("boundaries"));
+
+  scenarioSelectStage0.addEventListener("change", () => {
+    runStage0Repair(scenarioSelectStage0.value);
+  });
+
+  runStage0RepairBtn.addEventListener("click", () => {
+    runStage0Repair(scenarioSelectStage0.value);
+  });
+
+  verifyStage0JsonBtn.addEventListener("click", async () => {
+    try {
+      const parsed = JSON.parse(stage0JsonEditor.value);
+      const resp = await fetch("/api/stage0/verify", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ triadSpec: parsed }),
+      });
+      const ver = await resp.json();
+      const customIter = {
+        iterationIndex: currentStage0Iterations.length,
+        triadSpec: parsed,
+        verificationResult: ver,
+        repairSummary: "Direct Custom Triad JSON Live Verification Probe",
+      };
+      currentStage0Iterations.push(customIter);
+      selectedStage0IterationIndex = currentStage0Iterations.length - 1;
+      renderStage0TimelineTabs();
+      renderStage0IterationView(customIter);
+    } catch (e) {
+      alert("Invalid JSON: " + e.message);
+    }
+  });
+
+  await loadStage0Scenarios();
 }
 
 initializePlayground();

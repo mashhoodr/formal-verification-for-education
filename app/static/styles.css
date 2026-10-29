@@ -1592,3 +1592,338 @@ dialog::backdrop {
 .disclosureBody {
   padding: 0.85rem 0.95rem;
 }
+
+/* ==================== STAGE SWITCHER ==================== */
+.stageSwitcherBar {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 1rem;
+  margin-top: 1rem;
+}
+
+.stageNavBtn {
+  background: #1e293b;
+  border: 2px solid #334155;
+  border-radius: 10px;
+  padding: 0.75rem 1rem;
+  text-align: left;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  display: flex;
+  flex-direction: column;
+  gap: 0.2rem;
+  color: #e2e8f0;
+}
+
+.stageNavBtn:hover {
+  background: #334155;
+  border-color: #64748b;
+}
+
+.stageNavBtn.activeStage {
+  background: #1e3a8a;
+  border-color: #3b82f6;
+  box-shadow: 0 0 0 1px #3b82f6, 0 4px 12px rgba(37, 99, 235, 0.25);
+}
+
+.stageNavBtn .stageBadge {
+  font-size: 0.7rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: #93c5fd;
+}
+
+.stageNavBtn.activeStage .stageBadge {
+  color: #60a5fa;
+}
+
+.stageNavBtn .stageTitle {
+  font-size: 0.95rem;
+  font-weight: 700;
+  color: #ffffff;
+}
+
+.stageNavBtn .stageSub {
+  font-size: 0.76rem;
+  color: #94a3b8;
+}
+
+.stageNavBtn.activeStage .stageSub {
+  color: #bfdbfe;
+}
+
+/* ==================== STAGE 0 COMPONENTS ==================== */
+.stage0KcsGrid {
+  display: flex;
+  flex-direction: column;
+  gap: 1.25rem;
+  margin-top: 1rem;
+}
+
+.kcGradeSection {
+  background: #f8fafc;
+  border: 1px solid var(--border-color);
+  border-radius: 10px;
+  padding: 1rem;
+}
+
+.kcGradeSectionHeader {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 0.75rem;
+  padding-bottom: 0.5rem;
+  border-bottom: 1px solid #e2e8f0;
+}
+
+.kcGradeTitle {
+  font-size: 0.95rem;
+  font-weight: 700;
+  color: #0f172a;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.kcCardsGrid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(340px, 1fr));
+  gap: 0.85rem;
+}
+
+.kcCard {
+  background: #ffffff;
+  border: 1px solid #e2e8f0;
+  border-radius: 8px;
+  padding: 0.85rem;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.04);
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.kcCard.kcViolation {
+  border-color: #f87171;
+  background: #fffafa;
+}
+
+.kcCardHeader {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: 0.5rem;
+}
+
+.kcIdBadge {
+  font-family: monospace;
+  font-size: 0.75rem;
+  font-weight: 700;
+  background: #eff6ff;
+  color: #1d4ed8;
+  padding: 0.15rem 0.45rem;
+  border-radius: 4px;
+  border: 1px solid #bfdbfe;
+}
+
+.kcTitle {
+  font-size: 0.86rem;
+  font-weight: 600;
+  color: #1e293b;
+  margin: 0;
+}
+
+.kcMetaRow {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.4rem;
+  font-size: 0.75rem;
+}
+
+.kcMetaPill {
+  background: #f1f5f9;
+  color: #475569;
+  padding: 0.15rem 0.45rem;
+  border-radius: 4px;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.25rem;
+}
+
+.kcMetaPill.kcMetaWarn {
+  background: #fef2f2;
+  color: #991b1b;
+  font-weight: 600;
+}
+
+.kcMetaPill.kcMetaGood {
+  background: #ecfdf5;
+  color: #065f46;
+}
+
+.kcDetailSection {
+  font-size: 0.78rem;
+  border-top: 1px dashed #e2e8f0;
+  padding-top: 0.4rem;
+}
+
+.kcDetailLabel {
+  font-weight: 700;
+  color: #64748b;
+  margin-bottom: 0.2rem;
+  display: block;
+}
+
+.kcMisconceptionsList {
+  margin: 0;
+  padding-left: 1.1rem;
+  color: #334155;
+  font-size: 0.76rem;
+}
+
+.kcMisconceptionsList li {
+  margin-bottom: 0.2rem;
+}
+
+.kcChipRow {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.35rem;
+}
+
+.prereqChip {
+  font-family: monospace;
+  font-size: 0.72rem;
+  background: #f8fafc;
+  border: 1px solid #cbd5e1;
+  padding: 0.1rem 0.4rem;
+  border-radius: 4px;
+}
+
+.prereqChip.prereqCrossGrade {
+  background: #f5f3ff;
+  border-color: #c4b5fd;
+  color: #6d28d9;
+  font-weight: 600;
+}
+
+.sloCoverageChip {
+  font-family: monospace;
+  font-size: 0.72rem;
+  background: #ecfdf5;
+  border: 1px solid #a7f3d0;
+  color: #065f46;
+  padding: 0.1rem 0.4rem;
+  border-radius: 4px;
+}
+
+/* ==================== EPISTEMIC BOUNDARIES ==================== */
+.boundariesIntroBanner {
+  background: #eff6ff;
+  border: 1px solid #bfdbfe;
+  border-radius: 10px;
+  padding: 1rem 1.25rem;
+  margin-bottom: 1.25rem;
+}
+
+.epistemicBoundariesList {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+}
+
+.epistemicBoundaryCard {
+  background: #ffffff;
+  border: 1px solid #e2e8f0;
+  border-left: 4px solid #f59e0b;
+  border-radius: 8px;
+  padding: 1rem;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.04);
+}
+
+.boundaryCardHeader {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 0.5rem;
+}
+
+.boundaryTitle {
+  font-size: 0.92rem;
+  font-weight: 700;
+  color: #0f172a;
+  margin: 0;
+}
+
+.boundaryBody {
+  font-size: 0.82rem;
+  color: #334155;
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.boundaryField {
+  background: #f8fafc;
+  border: 1px solid #e2e8f0;
+  border-radius: 6px;
+  padding: 0.5rem 0.75rem;
+}
+
+.boundaryFieldLabel {
+  font-weight: 700;
+  font-size: 0.74rem;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  color: #64748b;
+  margin-bottom: 0.15rem;
+  display: block;
+}
+
+.boundaryField.failureEx {
+  background: #fef2f2;
+  border-color: #fee2e2;
+  color: #991b1b;
+}
+
+.boundaryField.failureEx .boundaryFieldLabel {
+  color: #b91c1c;
+}
+
+.boundaryField.mitigationPlan {
+  background: #ecfdf5;
+  border-color: #d1fae5;
+  color: #065f46;
+}
+
+.boundaryField.mitigationPlan .boundaryFieldLabel {
+  color: #047857;
+}
+
+/* ==================== SLO CLAUSES LIST ==================== */
+.sloClausesList {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.sloClauseItemBox {
+  background: #ffffff;
+  border: 1px solid #e2e8f0;
+  border-radius: 6px;
+  padding: 0.5rem 0.75rem;
+  font-size: 0.78rem;
+}
+
+.sloClauseHeader {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 0.25rem;
+}
+
+.sloClauseCode {
+  font-family: monospace;
+  font-weight: 700;
+  color: #1e3a8a;
+}

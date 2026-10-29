@@ -16,9 +16,70 @@ Instead of relying on probabilistic "LLM-as-a-judge" checks, this system pairs a
    - Student reading & thinking time budget (`quizDurationMinutes` at grade `readingSpeedWpm`)
 3. **Counterexample-Guided Auto-Repair (`UNSAT Core` + `z3.Optimize`):** When an assessment fails verification (`UNSAT`), Z3 extracts the minimal unsatisfiable core and solves for the exact target word/syllable bounds needed to guide automatic LLM self-repair until `SAT` (100% verified) is achieved.
 
+## Two-Stage Formal Verification Architecture
+
+The playground implements a rigorous **2-Stage Neuro-Symbolic Pipeline**:
+
+```
+[Official Pakistan Curriculum (NCP 2022-23)]
+                 │
+                 ▼
+┌─────────────────────────────────────────────────────────────┐
+│ STAGE 0: Curriculum SLO -> Atomic KC Ontology Proof         │
+│ (Vertical Triad: G-1 -> G -> G+1 • 6 SMT Theorems)          │
+│ • Prerequisite DAG Acyclicity (Topological Rank Integers)   │
+│ • Vertical Grade Monotonicity & Inter-Grade Spiral Bridges  │
+│ • Cross-Grade Complexity Envelope Disjointness              │
+│ • Cognitive Atomicity (Single Verb Rule & Working Memory)   │
+│ • Diagnostic Misconception Minimums                         │
+│ • Complete Bipartite SLO Clause Coverage (Zero Orphans)     │
+└──────────────────────────────┬──────────────────────────────┘
+                               │ Verified Atomic KCs
+                               ▼
+┌─────────────────────────────────────────────────────────────┐
+│ STAGE 1: Formative Assessment Generation & Proof            │
+│ (Candidate Quiz Items • 6 SMT Assessment Theorems)          │
+│ • Sentence Length Upper Bounds                              │
+│ • Syllable Complexity & Curriculum Allowlists               │
+│ • Flesch-Kincaid Grade Level Corridor (Coupled Polytope)    │
+│ • Distractor Word Spread Balance                            │
+│ • Progressive Question Scaffolding                          │
+│ • Student Reading & Thinking Time Budget                    │
+└─────────────────────────────────────────────────────────────┘
+```
+
 ---
 
 ## Interactive Playground & Proof Visualizations
+
+### 0. Stage 0: Curriculum KC Ontology Verification & Auto-Repair (Pakistan NCP)
+
+Before generating formative quizzes, Stage 0 verifies that the underlying **Atomic Knowledge Components (KCs)** decomposed from official curriculum standards form a mathematically sound, pedagogically monotonic ontology:
+
+![Stage 0 KC Ontology Verification SAT](docs/screenshots/stage0-kc-ontology-verified-sat.png)
+
+1. **Pakistan NCP 2022–23 Grounding:** Grounded in official Progression Grids for **Mathematics (Grades 1–12)** and **English (Grades 1–12)** downloaded from `ncc.gov.pk`.
+2. **Vertical Triad Envelopes ($G-1 \to G \to G+1$):** Verifies candidate KCs across Prior Grade ($G-1$), Target Grade ($G$), and Next Grade ($G+1$) to ensure no cognitive leaps and complete spiral continuity.
+3. **Existential Proof (Topological Rank Integers):** For Theorem 0.1 (DAG Acyclicity), Z3 solves an existential integer programming problem: finding integer values $\text{rank}(u) < \text{rank}(v)$ for every prerequisite edge. Any cycle produces $\text{rank}(u) < \text{rank}(u)$, immediately refuting the candidate graph into an `UNSAT Core`.
+
+---
+
+### 0.1 The 6 Epistemic Boundaries (What Z3 Does NOT Test)
+
+Formal SMT verification provides an unshakeable mathematical **Root of Trust** for structural integrity. However, pedagogy requires transparently recognizing what mathematical syntax alone **cannot** verify without empirical classroom data and external groundings:
+
+![The 6 Epistemic Boundaries Outside Z3](docs/screenshots/stage0-epistemic-boundaries.png)
+
+| Epistemic Boundary | Why Untested by Z3 SMT | Failure Scenario If Left Unchecked | Pedagogical Mitigation Strategy |
+| :--- | :--- | :--- | :--- |
+| **1. Semantic Coverage Truth** | Z3 proves $\ge 1$ bipartite edge per clause, operating over symbolic IDs, not prose meaning. | A KC titled *"Measure length in cm"* is falsely tagged to cover *"Equivalent Fractions"*. | Pre-proof deterministic lexical anchor check verifying domain noun/verb overlap. |
+| **2. Empirical Misconception Reality** | Z3 verifies distinct non-empty strings, not that real children make those errors. | LLM invents an error rule (*"Cube denominator and subtract 7"*) never seen in children. | Ground error IDs in published psychometric catalogs + distractor pick-rate validation. |
+| **3. Numerical Non-Degeneracy** | Abstract KC ontology verified before specific numbers are chosen for a quiz. | Distinct error rules collide to identical numerical answers on degenerate inputs (e.g., $2/2$). | Stage 1 Instance-Level Distractor Distinctness Proof: $\text{Distinct}(\text{key}, d_1, d_2, d_3)$. |
+| **4. Empirical Cognitive Transfer** | Z3 proves the DAG is acyclic and grade-monotonic, not causal learning transfer. | Edge $A \to B$ is valid, yet mastering $A$ does not reduce error rates on $B$. | Post-assessment Cognitive Diagnostic Modeling (DINA / BKT psychometrics). |
+| **5. SLO Sentence Segmentation** | Z3 proves 100% coverage of input clauses; cannot detect unparsed clauses in the PDF. | Official SLO says *"Compare, order, and round"*, but parser only extracted *"compare"* and *"order"*. | Deterministic verb-phrase and conjunction splitter auditing clause counts against NCP text. |
+| **6. Upstream Annotation Honesty** | Z3 checks integer labels; cannot prove labels were assigned truthfully by the generator. | LLM fixes a boundary collision by renumbering `complexity` without changing KC content. | Deterministic metric derivation from KC titles and diffing label changes across iterations. |
+
+---
 
 ### 1. Counterexample Detection & Z3 Optimizer Prescriptions (`Draft: UNSAT`)
 

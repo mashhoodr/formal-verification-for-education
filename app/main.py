@@ -2,8 +2,18 @@ from pathlib import Path
 from fastapi import FastAPI
 from fastapi.responses import FileResponse, JSONResponse
 from fastapi.staticfiles import StaticFiles
-from app.models import GenerateAndVerifyRequest, VerifyRequest
+from app.models import (
+    GenerateAndVerifyRequest,
+    VerifyRequest,
+    Stage0RepairRequest,
+    Stage0VerifyRequest,
+)
 from app.verifier.grade_specs import list_grade_specs
+from app.verifier.kc_ontology_kernel import (
+    list_stage0_scenarios,
+    run_stage0_repair_loop,
+    verify_kc_ontology,
+)
 from app.verifier.repair_orchestrator import (
     DEMO_SCENARIOS,
     list_demo_scenarios,
@@ -51,3 +61,21 @@ def verify_endpoint(payload: VerifyRequest) -> JSONResponse:
 def generate_and_verify_endpoint(payload: GenerateAndVerifyRequest) -> JSONResponse:
     response = run_generate_and_verify_loop(payload)
     return JSONResponse(content=response.model_dump(by_alias=True))
+
+
+@app.get("/api/stage0/scenarios")
+def get_stage0_scenarios_endpoint() -> JSONResponse:
+    scenarios = list_stage0_scenarios()
+    return JSONResponse(content={"scenarios": scenarios})
+
+
+@app.post("/api/stage0/repair-loop")
+def stage0_repair_loop_endpoint(payload: Stage0RepairRequest) -> JSONResponse:
+    response = run_stage0_repair_loop(payload.scenario_id)
+    return JSONResponse(content=response.model_dump(by_alias=True))
+
+
+@app.post("/api/stage0/verify")
+def stage0_verify_endpoint(payload: Stage0VerifyRequest) -> JSONResponse:
+    result = verify_kc_ontology(payload.triad_spec)
+    return JSONResponse(content=result.model_dump(by_alias=True))

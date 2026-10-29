@@ -4,22 +4,164 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>K-12 Educational Formal Verification Playground (Z3 SMT Kernel)</title>
-  <link rel="stylesheet" href="/static/styles.css?v=9" />
+  <link rel="stylesheet" href="/static/styles.css?v=11" />
 </head>
 <body>
   <header class="topHeader">
     <div class="headerContent">
       <div>
-        <span class="badgePill">Z3 SMT Formal Kernel + Auto-Repair</span>
-        <h1>K-12 Assessment Formal Verification Playground</h1>
+        <span class="badgePill">Z3 SMT Formal Kernel + Multi-Stage Auto-Repair</span>
+        <h1>K-12 Pedagogical Content Formal Verification Playground</h1>
         <p class="subtitle">
-          Plain-English grade theorems compiled into mathematical Z3 assertions (<code>SAT</code> / <code>UNSAT Core</code>) with counterexample-guided LLM repair.
+          Plain-English curriculum theorems compiled into mathematical Z3 assertions (<code>SAT</code> / <code>UNSAT Core</code>) with counterexample-guided repair. Grounded in the <strong>National Curriculum of Pakistan (NCP 2022&ndash;23)</strong>.
         </p>
       </div>
+
+      <!-- Top-Level Stage Switcher Nav Bar -->
+      <nav class="stageSwitcherBar" aria-label="Formal Verification Stage Switcher">
+        <button type="button" id="stage0ToggleBtn" class="stageNavBtn activeStage">
+          <span class="stageBadge">Stage 0 &bull; Curriculum Root of Trust</span>
+          <span class="stageTitle">SLO &rarr; Atomic KC Graph Proof</span>
+          <span class="stageSub">Pakistan NCP 2022&ndash;23 (Maths &amp; English) &bull; 6 Theorems &bull; 6 Epistemic Boundaries</span>
+        </button>
+        <button type="button" id="stage1ToggleBtn" class="stageNavBtn">
+          <span class="stageBadge">Stage 1 &bull; Assessment Generation</span>
+          <span class="stageTitle">Formative Quiz Formal Proof</span>
+          <span class="stageSub">Linguistic &bull; Flesch-Kincaid &bull; Distractor SMT Verification</span>
+        </button>
+      </nav>
     </div>
   </header>
 
-  <main class="mainGrid">
+  <!-- ==================== STAGE 0: CURRICULUM KC ONTOLOGY PROOF ==================== -->
+  <div id="stage0Container" class="mainGrid">
+    <!-- Left Column: Stage 0 Scenario, Triad Controls & Timeline -->
+    <section class="panelCard">
+      <h2>1. Curriculum Triad &amp; KC Auto-Repair Timeline</h2>
+
+      <div class="fieldGroup">
+        <label for="scenarioSelectStage0">Curriculum Progression Triad (Pakistan NCP 2022&ndash;23)</label>
+        <select id="scenarioSelectStage0"></select>
+        <p id="scenarioDescriptionStage0" class="helperText"></p>
+      </div>
+
+      <div class="specSummaryCard" id="triadSummaryCardStage0">
+        <div class="specSummaryHeader">
+          <span>Vertical Grade Triad Envelope</span>
+          <span id="triadGradeBandBadgeStage0" class="specBandBadge">Grades 2 &rarr; 3 &rarr; 4</span>
+        </div>
+        <div id="triadSummaryPillsStage0" class="specSummaryPills"></div>
+      </div>
+
+      <div class="buttonRow">
+        <button type="button" id="runStage0RepairBtn" class="primaryBtn">Run Stage 0 Z3 Auto-Repair Loop</button>
+      </div>
+
+      <!-- Vertical Auto-Repair Timeline Stepper -->
+      <div class="timelineSidebarCard">
+        <div class="timelineSidebarHeader">
+          <span>Stage 0 Z3 KC Auto-Repair Timeline</span>
+          <span class="timelineHint">Select step to inspect</span>
+        </div>
+        <div id="iterationTabsStage0" class="iterationTabsVertical"></div>
+        <div id="repairSummaryBoxStage0" class="repairSummaryBox"></div>
+      </div>
+
+      <!-- Progressive Disclosures for Stage 0 -->
+      <div class="sidebarDisclosures">
+        <details id="sloClausesDetailsStage0" class="sidebarDisclosure" name="stage0SidebarDrawers" open>
+          <summary>Official Pakistan NCP SLO Clauses (Bipartite Targets)</summary>
+          <div class="disclosureBody">
+            <div id="sloClausesContainerStage0" class="sloClausesList"></div>
+          </div>
+        </details>
+
+        <details id="stage0JsonEditorDetails" class="sidebarDisclosure" name="stage0SidebarDrawers">
+          <summary>Advanced: Edit Candidate KC Triad JSON</summary>
+          <div class="disclosureBody">
+            <div class="fieldGroup" style="margin-bottom:0.65rem;">
+              <label for="stage0JsonEditor">Candidate Triad JSON (Editable for Live Z3 Probing)</label>
+              <textarea id="stage0JsonEditor" rows="12" spellcheck="false"></textarea>
+            </div>
+            <button type="button" id="verifyStage0JsonBtn" class="secondaryBtn" style="width:100%;">Verify Edited Triad JSON Only</button>
+          </div>
+        </details>
+      </div>
+    </section>
+
+    <!-- Right Column: Stage 0 Exploration Lenses & Active Inspection Workspace -->
+    <section class="panelCard">
+      <div class="viewToggleRow" role="tablist" aria-label="Stage 0 Exploration Lenses">
+        <button type="button" id="tabStage0KcsBtn" class="tabBtn activeTab">
+          <span class="tabStepTitle"><span class="tabStepNum">1</span> Candidate KCs &amp; Progression Graph</span>
+          <span class="tabStepSub">Atomic decomposition across Prior, Target &amp; Next grades</span>
+        </button>
+        <button type="button" id="tabStage0SmtBtn" class="tabBtn">
+          <span class="tabStepTitle"><span class="tabStepNum">2</span> Inside the Stage 0 Z3 Proof</span>
+          <span class="tabStepSub">6 symbolic theorems &bull; click chips to slice proof</span>
+        </button>
+        <button type="button" id="tabStage0BoundariesBtn" class="tabBtn">
+          <span class="tabStepTitle"><span class="tabStepNum">3</span> Epistemic Boundaries (What Z3 Does NOT Test)</span>
+          <span class="tabStepSub">6 pedagogical dimensions outside SMT syntax</span>
+        </button>
+      </div>
+
+      <!-- Compact Unified Status & Metrics Header for Stage 0 -->
+      <div id="statusBannerStage0" class="statusBanner"></div>
+      <div class="metricsBar" id="metricsBarStage0"></div>
+
+      <!-- TAB 1 PANE: Candidate KCs & Progression Graph -->
+      <div id="stage0KcsPane">
+        <div id="kcPrescriptionsContainerStage0"></div>
+        <div id="stage0KcsGrid" class="stage0KcsGrid"></div>
+      </div>
+
+      <!-- TAB 2 PANE: Inside the Stage 0 Z3 Proof -->
+      <div id="stage0SmtPane" class="hiddenPane">
+        <div id="certificateBoxStage0" class="certificateBox"></div>
+        <div id="smtTrackerMatrixStage0" class="smtTrackerMatrix"></div>
+        <div id="smtProofSliceInspectorStage0" class="smtProofSliceInspector"></div>
+
+        <div class="smtDeepDisclosures">
+          <details id="stage0PipelineDetails" class="smtDisclosureCard" name="stage0SmtDrawers">
+            <summary>Stage 0 Mathematical Architecture (6 SMT Theorems)</summary>
+            <div class="disclosureBody">
+              <div id="stage0PipelineDiagram" class="smtPipelineDiagram" style="margin-bottom:0;"></div>
+            </div>
+          </details>
+
+          <details id="stage0FullSmtScriptDetails" class="smtDisclosureCard" name="stage0SmtDrawers">
+            <summary>Explore Full Stage 0 SMT-LIB2 Script</summary>
+            <div class="disclosureBody">
+              <div id="stage0SmtFilterBar" class="smtFilterBar"></div>
+              <div id="stage0SmtInteractiveViewer" class="smtInteractiveViewer"></div>
+              <details class="rawSmtDetails">
+                <summary>View Raw Unformatted Stage 0 SMT-LIB2 Text</summary>
+                <pre id="stage0SmtScriptPre" class="codePre" tabindex="0"><code id="stage0SmtScriptCode"></code></pre>
+              </details>
+            </div>
+          </details>
+        </div>
+      </div>
+
+      <!-- TAB 3 PANE: Epistemic Boundaries Outside Z3 -->
+      <div id="stage0BoundariesPane" class="hiddenPane">
+        <div class="boundariesIntroBanner">
+          <span class="badgePill">Epistemic Reality Check &bull; Root of Trust vs Full Pedagogy</span>
+          <h3 style="margin:0.35rem 0 0.2rem;font-size:1.05rem;">
+            What Formal SMT Proves vs. What Lies Outside Z3's Reach
+          </h3>
+          <p style="margin:0;font-size:0.83rem;color:#334155;">
+            SMT solvers provide a mathematical <strong>Root of Trust</strong> for structural integrity (acyclicity, envelope boundaries, verb atomicity, bipartite coverage). However, pedagogical validity requires acknowledging <strong>6 critical epistemic boundaries</strong> that mathematical syntax alone cannot verify without empirical classroom data and semantic grounding.
+          </p>
+        </div>
+        <div id="epistemicBoundariesList" class="epistemicBoundariesList"></div>
+      </div>
+    </section>
+  </div>
+
+  <!-- ==================== STAGE 1: FORMATIVE ASSESSMENT PROOF ==================== -->
+  <div id="stage1Container" class="mainGrid hiddenPane">
     <!-- Left Column: Scenario, Repair Timeline & Spec Controls -->
     <section class="panelCard">
       <h2>1. Scenario &amp; Auto-Repair Timeline</h2>
@@ -224,7 +366,7 @@
         </details>
       </div>
     </section>
-  </main>
+  </div>
 
   <dialog id="symbolExplainerDialog" closedby="any" aria-labelledby="explainerDialogTitle">
     <div class="explainerModalHeader">
@@ -239,6 +381,6 @@
     <div id="explainerDialogBody" class="explainerModalBody"></div>
   </dialog>
 
-  <script src="/static/app.js?v=9"></script>
+  <script src="/static/app.js?v=11"></script>
 </body>
 </html>

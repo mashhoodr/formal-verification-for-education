@@ -9,6 +9,7 @@ from app.models import (
     VerificationResult,
 )
 from app.verifier.linguistic_analyzer import analyze_assessment
+from app.verifier.z3_lock import Z3_MUTEX
 
 
 def _z3_abs(expr: z3.ArithRef) -> z3.ArithRef:
@@ -49,6 +50,11 @@ def _solve_target_option_bounds(
 
 
 def verify_assessment(assessment: Assessment, grade_spec: GradeSpec) -> VerificationResult:
+    with Z3_MUTEX:
+        return _verify_assessment_internal(assessment, grade_spec)
+
+
+def _verify_assessment_internal(assessment: Assessment, grade_spec: GradeSpec) -> VerificationResult:
     metrics = analyze_assessment(assessment, grade_spec)
     solver = z3.Solver()
 
