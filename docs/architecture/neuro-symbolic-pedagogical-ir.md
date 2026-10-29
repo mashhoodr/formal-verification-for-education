@@ -14,17 +14,28 @@ If we attempt to prove high-level pedagogical properties (like Bloom's Taxonomy 
 
 ---
 
-## 2. The Solution: Typed Pedagogical IR + Z3 Blueprint Verification
+## 2. The Solution: Stage 0 (KC Ontology Proof) $\to$ Stage 1 (Assessment Proof)
 
-We separate the system into **two strictly defined phases** connected by a **Typed Pedagogical Intermediate Representation (IR)**:
+To answer *"What is the starting point (Root of Trust) of the whole proof?"*, our architecture separates verification into **two sequential formal proof stages**:
+
+- **Stage 0 (Proving the Curriculum Decomposition & Cross-Grade KC Graph):** Takes a vertical triad of official curriculum standards $\langle \text{SLO}_{G-1}, \text{SLO}_G, \text{SLO}_{G+1} \rangle$ as the external **Root of Trust**, decomposes them into candidate Atomic KCs, and uses Z3 to prove that the **KC Graph itself** is acyclic, grade-monotonic, atomic, clause-complete, and cleanly partitioned into `G-1 Prerequisite Floor`, `G Target Delta`, and `G+1 Forbidden Ceiling`.
+- **Stage 1 (Proving the Generated Assessment Against the Verified KC Graph):** Once the Stage 0 KC Graph is proven `SAT` and locked, Stage 1 extracts the **Typed Pedagogical IR** for a candidate quiz and uses Z3 to prove all 6 formative assessment dimensions.
 
 ```mermaid
 flowchart TD
-    subgraph Phase1["Phase 1: Semantic & Linguistic Extraction (Pre-Proof)"]
-        A["Classroom Context & Curriculum DAG\n(SLOs -> Atomic KCs, Misconception Catalog,\nWorked Examples Taught in Class)"]
+    subgraph Stage0["Stage 0: Curriculum SLO -> Atomic KC Graph Verification (Root of Trust)"]
+        S0["Official Vertical Standards Triad\n(SLO_{G-1}, SLO_G, SLO_{G+1} Clauses)"]
+        S1["LLM / Curriculum KC Decomposer\n(Candidate Atomic KCs, Prereq Edges, Misconceptions)"]
+        S2["Z3 Stage 0 Ontology Kernel\n(Proves Acyclicity, Grade Monotonicity,\nNon-Empty Grade Delta, Atomicity & Clause Coverage)"]
+        S0 --> S1 --> S2
+    end
+
+    subgraph Phase1["Stage 1A: Semantic & Linguistic Extraction (Pre-Proof)"]
+        A["Locked & Verified Atomic KC Graph\n(G-1 Floor, G Target Delta, G+1 Forbidden Ceiling)"]
         B["Candidate Assessment Draft\n(MCQs, Short Answer, Match, Comprehension)"]
         C["Deterministic Linguistic Analyzer\n(Syllables, Sentences, FK Grade, Negations, Clause Depth)"]
         D["Structured Semantic Annotator (LLM / Rubric Tagger)\n(Maps Item -> Atomic KC, Bloom, DoK,\nContext Novelty SEEN/UNSEEN, Distractor -> Misconception ID)"]
+        S2 -->|SAT Lock| A
         A --> D
         B --> C
         B --> D
@@ -36,9 +47,9 @@ flowchart TD
         D --> E
     end
 
-    subgraph Phase2["Phase 2: Z3 Formal SMT Proof & Optimizer Kernel"]
+    subgraph Phase2["Stage 1B: Z3 Formal SMT Proof & Optimizer Kernel"]
         F["Coupled Pedagogical & Psychometric Theorems\n(assert_and_track Implication Guards)"]
-        G["Z3 SolverVerdict\nSAT (Cryptographic Certificate) or UNSAT Core"]
+        G["Z3 Solver Verdict\nSAT (Cryptographic Certificate) or UNSAT Core"]
         H["Z3 Optimizer (z3.Optimize)\nMinimal-Perturbation Repair Prescriptions"]
         E --> F
         F --> G

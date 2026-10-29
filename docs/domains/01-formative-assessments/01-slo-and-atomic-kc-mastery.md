@@ -106,3 +106,45 @@ Given a set of target lesson KCs $\mathcal{K}_{\text{target}}$ and classroom tim
    - Z3 enforces that every $\text{DoK } 1\text{--}2$ diagnostic item maps to **exactly 1 primary KC**, and any $\text{DoK } 3$ synthesis item that combines $k_1 + k_2$ is preceded by standalone checks for $k_1$ and $k_2$!
 4. **Feasibility Knapsack Check (Scope vs. Time Budget):**
    - If a teacher selects $6$ Atomic KCs for a $5$-minute exit ticket, Z3 proves `UNSAT` immediately because $6 \text{ KCs} \times 2 \text{ items} \times 45\text{s} = 9 \text{ minutes} > 5 \text{ minutes}$, and `z3.Optimize` recommends narrowing the exit ticket to $\le 3$ Atomic KCs.
+
+---
+
+## 7. Cross-Grade SLO Overlap & Vertical Boundary Envelopes ($\text{SLO}_{G-1} \to \text{SLO}_G \to \text{SLO}_{G+1}$)
+
+In real K–12 curricula (the **Spiral Curriculum**), SLOs across grades overlap in topic (e.g., *Fractions*, *The Water Cycle*, *Reading Main Idea*), but shift in **parameter domain**, **causal mechanism depth**, and **stimulus representation**.
+
+If you decompose $\text{SLO}_G$ in isolation, an LLM does not know where **Grade $G-1$ ends** or where **Grade $G+1$ begins**:
+- It may generate under-leveled items that only test the Grade $G-1$ subset (**Below-Grade Drift**).
+- Or it may leak Grade $G+1$ mechanisms (e.g., molecular kinetic energy in a Grade 3 Water Cycle quiz) into stems, explanations, or distractors (**Upper-Grade Boundary Leak**).
+
+### The Vertical Triad Boundary Model
+To establish mathematically clean boundaries, we decompose a **Vertical Triad of Official Standards** $\langle \text{SLO}_{G-1}, \text{SLO}_G, \text{SLO}_{G+1} \rangle$ simultaneously into three disjoint zones for Grade $G$:
+
+$$\mathcal{E}(G) = \left\langle \underbrace{\mathcal{K}_{\text{prereq}}(G-1)}_{\text{Prior-Grade Foundation}}, \quad \underbrace{\mathcal{K}_{\text{delta}}(G) = \text{SLO}_G \setminus \text{SLO}_{G-1}}_{\text{Target Grade } G \text{ Mastery Delta}}, \quad \underbrace{\mathcal{F}_{\text{ceiling}}(G+1) = \text{SLO}_{G+1} \setminus \text{SLO}_G}_{\text{Forbidden Future-Grade Ceiling}} \right\rangle$$
+
+1. **Upper-Grade Ceiling Proof (`q_upper_grade_boundary_leak`):**
+   - Everything newly introduced in $\text{SLO}_{G+1}$ automatically becomes the **Forbidden Ceiling $\mathcal{F}_{\text{ceiling}}(G+1)$** for Grade $G$:
+     $$\forall q_i \in \text{Quiz}_G, \quad \text{requiredKcs}(q_i) \cap \mathcal{F}_{\text{ceiling}}(G+1) = \emptyset$$
+2. **Grade-Level Delta Quota Proof (`quiz_grade_delta_focus`):**
+   - At least $70\%$ of the assessment's diagnostic information weight must target $\mathcal{K}_{\text{delta}}(G)$ (what is *newly added* in Grade $G$), while at most $30\%$ may probe $\mathcal{K}_{\text{prereq}}(G-1)$ as a diagnostic bridge to check if a struggling student is missing a prior-grade prerequisite.
+3. **Stimulus & Parameter Envelope Disambiguation:**
+   - When two grades share the same skill verb (e.g., *"Find equivalent fractions"* in Grade 3 vs. Grade 4, or *"Identify the main idea"* in Grade 3 vs. Grade 5), each grade's KC carries explicit domain constraints (e.g., Grade 3 denominators $d \in \{2,3,4,6,8\}$ vs. Grade 4 $d \in \{2,3,4,5,6,8,10,12,100\}$).
+
+---
+
+## 8. Stage 0 Verification: How Do We Prove Our Generated KCs Are Correct First? ("The Root of Trust")
+
+Before we can use Z3 to verify a quiz against Atomic KCs (Stage 1), **how do we verify that the Atomic KCs decomposed from the SLOs are valid in the first place?**
+
+Our external **Root of Trust (Axioms)** is the official curriculum standard text across adjacent grades $\langle \text{SLO}_{G-1}, \text{SLO}_G, \text{SLO}_{G+1} \rangle$ parsed into its constituent grammatical verb-object clauses $C_{\text{SLO}}$.
+
+**Stage 0 Verification** uses Z3 to prove **5 formal structural & boundary properties of the generated KC Graph itself** before locking the KCs for assessment generation:
+
+| Stage 0 Z3 Proof Tracker | Mathematical / SMT Invariant | What LLM Decomposition Flaw It Catches |
+| :--- | :--- | :--- |
+| **0.1 Prerequisite DAG Acyclicity (`kc_dag_acyclic`)** | $\forall (u \to v) \in E_{\text{prereq}}, \; \text{rank}(u) < \text{rank}(v)$ | Catches circular prerequisite loops ($\text{KC}_A \to \text{KC}_B \to \text{KC}_A$). |
+| **0.2 Vertical Grade Monotonicity (`kc_vertical_monotonicity`)** | $\forall (u \to v) \in E_{\text{prereq}}, \; \text{grade}(u) \le \text{grade}(v)$ | Prevents a Grade 3 KC from requiring a Grade 4 or Grade 5 KC as a prerequisite. |
+| **0.3 Non-Empty Grade Delta & Disjoint Ceiling (`kc_grade_delta_disjoint`)** | $\mathcal{K}_{\text{delta}}(G) \neq \emptyset \;\land\; \mathcal{K}_{\text{delta}}(G) \cap \mathcal{K}_{\text{delta}}(G+1) = \emptyset$ | Catches duplicate/unchanged KCs across grades or fuzzy overlap between Grade $G$ targets and Grade $G+1$ ceilings. |
+| **0.4 Structural Atomicity & Misconception Completeness (`kc_atomicity_valid`)** | $\forall k, \; \text{verbCount}(k) = 1 \;\land\; |\mathcal{M}_k| \ge 2$ | Rejects composite "blob" KCs (multiple verbs) or degenerate KCs that lack at least 2 distinct student misconceptions. |
+| **0.5 Complete SLO Clause Coverage (`slo_clause_coverage`)** | $\forall c_j \in C_{\text{SLO}}, \; \sum_{k} \text{covers}(k, c_j) \ge 1$ | Catches silent omission when an LLM decomposes 2 clauses of an SLO and forgets the 3rd clause. |
+
