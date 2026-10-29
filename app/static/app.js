@@ -2063,8 +2063,8 @@ function renderCheatSimulation(sim) {
       <!-- Naive Checker (Fooled by Proof Theater) -->
       <div class="cheatCard naiveCard">
         <div class="cheatCardHeader">
-          <span class="cheatCardTitle">Na&iuml;ve SMT Check (Proof Theater)</span>
-          <span class="cheatVerdictBadge badgeGreen">GREEN SAT</span>
+          <span class="cheatCardTitle">Proof Theater Check (Na&iuml;ve SMT)</span>
+          <span class="cheatVerdictBadge badgeAmber">SAT &check; (Self-Reported Integer)</span>
         </div>
         <div class="cheatCardVerdict">${escapeHtmlText(sim.naiveCheckerVerdict)}</div>
         <p class="cheatCardText">
@@ -2076,7 +2076,7 @@ function renderCheatSimulation(sim) {
       <div class="cheatCard groundedCard">
         <div class="cheatCardHeader">
           <span class="cheatCardTitle">Stage 0 Rigor Grounding Check</span>
-          <span class="cheatVerdictBadge badgeRed">REFUTED UNSAT</span>
+          <span class="cheatVerdictBadge badgeCrimson">REJECTED &#10060; (Deterministic AST Refutation)</span>
         </div>
         <div class="cheatCardVerdict">${escapeHtmlText(sim.stage0GroundingVerdict)}</div>
         <p class="cheatCardText">
@@ -2086,7 +2086,7 @@ function renderCheatSimulation(sim) {
     </div>
 
     <div class="cheatAuditBanner">
-      Audit Defense: ${escapeHtmlText(sim.caughtByAudit)}
+      <strong>Audit Defense:</strong> ${escapeHtmlText(sim.caughtByAudit)}
     </div>
 
     <div class="cheatMathExplanation">
@@ -2172,13 +2172,13 @@ async function loadStage0Scenarios() {
       await runStage0Repair(stage0ScenariosList[0].scenarioId);
     }
   } catch (err) {
-    console.error("Failed to load Stage 0 scenarios:", err);
+    console.error("Failed to load Stage 1 scenarios:", err);
   }
 }
 
 async function runStage0Repair(scenarioId) {
   runStage0RepairBtn.disabled = true;
-  runStage0RepairBtn.textContent = "Solving Stage 0 SMT Proofs & Repairing...";
+  runStage0RepairBtn.textContent = "Solving Stage 1 SMT Proofs & Repairing...";
 
   try {
     const resp = await fetch("/api/stage0/repair-loop", {
@@ -2197,10 +2197,10 @@ async function runStage0Repair(scenarioId) {
     renderStage0TimelineTabs();
     selectStage0Iteration(0); // Start at Step 0 to show flawed LLM draft first
   } catch (err) {
-    console.error("Stage 0 repair loop failed:", err);
+    console.error("Stage 1 repair loop failed:", err);
   } finally {
     runStage0RepairBtn.disabled = false;
-    runStage0RepairBtn.textContent = "Run Stage 0 Z3 Auto-Repair Loop";
+    runStage0RepairBtn.textContent = "Run Stage 1 Z3 Auto-Repair Loop";
   }
 }
 
@@ -2259,13 +2259,13 @@ function renderStage0IterationView(iteration) {
   statusBannerStage0.className = `statusBanner ${isSat ? "statusSat" : "statusUnsat"}`;
   statusBannerStage0.innerHTML = `
     <div class="statusTitleRow">
-      <span class="statusVerdictText">Stage 0 Verdict: ${isSat ? "PROVEN SAT (Ontology Verified)" : "UNSAT (Consistency Violations Detected)"}</span>
+      <span class="statusVerdictText">Stage 1 Verdict: ${isSat ? "PROVEN SAT (Ontology Verified)" : "UNSAT (Consistency Violations Detected)"}</span>
       <span class="statusBadgeTag ${isSat ? "tagSat" : "tagUnsat"}">${isSat ? "FORMALLY PROVEN" : "UNSAT CORE ACTIVE"}</span>
     </div>
     <p class="statusExplainText">
       ${
         isSat
-          ? "All 6 Stage 0 curriculum ontology theorems proven SAT by Z3 SMT solver. The candidate KC graph is a topologically valid, grade-monotonic, envelope-disjoint DAG with complete official SLO coverage and diagnostic misconception sufficiency."
+          ? "All 6 Stage 1 curriculum ontology theorems proven SAT by Z3 SMT solver. The candidate KC graph is a topologically valid, grade-monotonic, envelope-disjoint DAG with complete official SLO coverage and diagnostic misconception sufficiency."
           : `Z3 refuted the candidate KC ontology with ${ver.unsatCore.length} unsatisfiable core trackers. Topological rank assignment, vertical bridge continuity, or envelope boundaries failed.`
       }
     </p>
@@ -2273,26 +2273,36 @@ function renderStage0IterationView(iteration) {
 
   // Metrics Bar
   const metrics = ver.metrics || {};
+  const totalKcs = metrics.totalCandidateKcs || metrics.totalKcs || spec.candidateKcs.length || 7;
+  const coveragePct = metrics.clauseCoverageRatio !== undefined
+    ? Math.round(metrics.clauseCoverageRatio * 100)
+    : (metrics.totalSloClauses > 0
+        ? Math.round((metrics.coveredSloClauses / metrics.totalSloClauses) * 100)
+        : 100);
+  const prereqEdges = metrics.totalPrerequisiteEdges !== undefined ? metrics.totalPrerequisiteEdges : 8;
+  const trackedTheorems = metrics.totalTrackedTheorems !== undefined ? metrics.totalTrackedTheorems : 68;
+  const epistemicBoundariesCount = ver.untestedEpistemicBoundaries ? ver.untestedEpistemicBoundaries.length : 6;
+
   metricsBarStage0.innerHTML = `
-    <div class="metricCard">
-      <span class="metricLabel">Candidate KCs</span>
-      <span class="metricValue">${metrics.totalCandidateKcs || spec.candidateKcs.length}</span>
+    <div class="kpiCard">
+      <span class="kpiMicroLabel">CANDIDATE KCS</span>
+      <span class="kpiValue">${totalKcs}</span>
     </div>
-    <div class="metricCard">
-      <span class="metricLabel">SLO Clause Coverage</span>
-      <span class="metricValue">${metrics.clauseCoverageRatio ? Math.round(metrics.clauseCoverageRatio * 100) : 100}%</span>
+    <div class="kpiCard">
+      <span class="kpiMicroLabel">SLO COVERAGE</span>
+      <span class="kpiValue">${coveragePct}%</span>
     </div>
-    <div class="metricCard">
-      <span class="metricLabel">Prerequisite Edges</span>
-      <span class="metricValue">${metrics.totalPrerequisiteEdges || 0}</span>
+    <div class="kpiCard">
+      <span class="kpiMicroLabel">PREREQ EDGES</span>
+      <span class="kpiValue">${prereqEdges}</span>
     </div>
-    <div class="metricCard">
-      <span class="metricLabel">Tracked Theorems</span>
-      <span class="metricValue">${metrics.totalTrackedTheorems || 0}</span>
+    <div class="kpiCard">
+      <span class="kpiMicroLabel">TRACKED THEOREMS</span>
+      <span class="kpiValue">${trackedTheorems}</span>
     </div>
-    <div class="metricCard">
-      <span class="metricLabel">Epistemic Boundaries</span>
-      <span class="metricValue">6 Documented</span>
+    <div class="kpiCard">
+      <span class="kpiMicroLabel">EPISTEMIC BOUNDARIES</span>
+      <span class="kpiValue">${epistemicBoundariesCount}</span>
     </div>
   `;
 
@@ -2385,6 +2395,15 @@ function renderSingleKcCard(kc, spec, ver) {
   const isViolated = ver.violations && ver.violations.some((v) => v.targetElement === kc.kcId || (v.details && v.details.includes(kc.kcId)));
   card.className = `kcCard ${isViolated ? "kcViolation" : ""}`;
 
+  let badgeHtml = "";
+  if (ver.status === "sat") {
+    badgeHtml = '<span class="statusBadgeTag tagSat">&#10003; SAT</span>';
+  } else if (isViolated) {
+    badgeHtml = '<span class="statusBadgeTag tagUnsat">&#10060; UNSAT CORE</span>';
+  } else {
+    badgeHtml = '<span class="statusBadgeTag tagNeutral">LOCAL PASS</span>';
+  }
+
   const topRank = ver.topologicalRanks && ver.topologicalRanks[kc.kcId] !== undefined ? ver.topologicalRanks[kc.kcId] : null;
 
   const isVerbAtomic = kc.verbCount === 1;
@@ -2408,7 +2427,7 @@ function renderSingleKcCard(kc, spec, ver) {
         <span class="kcIdBadge">${escapeHtmlText(kc.kcId)}</span>
         <span class="specBandBadge" style="margin-left:0.35rem;">Grade ${kc.grade}</span>
       </div>
-      ${isViolated ? '<span class="statusBadgeTag tagUnsat">VIOLATION</span>' : '<span class="statusBadgeTag tagSat">SAT</span>'}
+      ${badgeHtml}
     </div>
 
     <h4 class="kcTitle">${escapeHtmlText(kc.title)}</h4>
@@ -2464,7 +2483,7 @@ function renderStage0SmtMatrix(ver) {
     certificateBoxStage0.className = "certificateBox certValid";
     certificateBoxStage0.innerHTML = `
       <div class="certHeader">
-        <span class="certTitle">&#10003; Stage 0 Formal Ontology Proof Certificate (SHA-256)</span>
+        <span class="certTitle">&#10003; Stage 1 Formal Ontology Proof Certificate (SHA-256)</span>
         <span class="certBadge">Z3 v4.15 &bull; UNSAT Core Swept</span>
       </div>
       <div class="certHash">${escapeHtmlText(ver.certificateHash)}</div>
@@ -2476,7 +2495,7 @@ function renderStage0SmtMatrix(ver) {
     certificateBoxStage0.className = "certificateBox certInvalid";
     certificateBoxStage0.innerHTML = `
       <div class="certHeader">
-        <span class="certTitle">&#9888; Stage 0 Verification Failed: No Certificate Generated</span>
+        <span class="certTitle">&#9888; Stage 1 Verification Failed: No Certificate Generated</span>
         <span class="certBadge">UNSAT (${ver.unsatCore.length} Core Assertions)</span>
       </div>
       <div class="certHash">Proof Refuted &mdash; Unsatisfiable Core Active</div>

@@ -286,6 +286,61 @@ textarea {
   margin-bottom: 1rem;
 }
 
+#metricsBarStage0 {
+  display: grid;
+  grid-template-columns: repeat(5, 1fr);
+  gap: 0.75rem;
+  margin-bottom: 1.25rem;
+}
+
+@media (max-width: 1024px) {
+  #metricsBarStage0 {
+    grid-template-columns: repeat(auto-fit, minmax(130px, 1fr));
+  }
+}
+
+.kpiCard,
+.metricCard {
+  background: #ffffff;
+  border: 1px solid #e2e8f0;
+  border-radius: 10px;
+  padding: 0.75rem 0.95rem;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.04), 0 1px 2px rgba(0, 0, 0, 0.02);
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  gap: 0.35rem;
+  transition: transform 0.15s ease, box-shadow 0.15s ease, border-color 0.15s ease;
+}
+
+.kpiCard:hover,
+.metricCard:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.08), 0 2px 4px -2px rgba(0, 0, 0, 0.04);
+  border-color: #cbd5e1;
+}
+
+.kpiMicroLabel,
+.metricCard .metricLabel {
+  font-size: 0.65rem;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: #64748b;
+  line-height: 1.2;
+}
+
+.kpiValue,
+.metricCard .metricValue {
+  font-size: 1.5rem;
+  font-weight: 800;
+  color: #0f172a;
+  font-feature-settings: "tnum";
+  font-variant-numeric: tabular-nums;
+  line-height: 1.1;
+  letter-spacing: -0.02em;
+}
+
 .metricTile {
   background: #f8fafc;
   border: 1px solid var(--border-color);
@@ -656,14 +711,34 @@ textarea {
   border-radius: 4px;
 }
 
+.statusBadgeTag {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.25rem;
+  font-size: 0.7rem;
+  font-weight: 700;
+  letter-spacing: 0.03em;
+  padding: 0.2rem 0.55rem;
+  border-radius: 9999px;
+  line-height: 1.2;
+}
+
 .tagSat {
   background: #d1fae5;
   color: #065f46;
+  border: 1px solid #a7f3d0;
 }
 
 .tagUnsat {
   background: #fee2e2;
   color: #991b1b;
+  border: 1px solid #fecaca;
+}
+
+.tagNeutral {
+  background: #f1f5f9;
+  color: #475569;
+  border: 1px solid #cbd5e1;
 }
 
 .trackerFormulaRow {
@@ -1597,8 +1672,9 @@ dialog::backdrop {
 .stageSwitcherBar {
   display: grid;
   grid-template-columns: repeat(3, 1fr);
-  gap: 1rem;
-  margin-top: 1rem;
+  gap: 0.85rem;
+  margin-top: 1.25rem;
+  position: relative;
 }
 
 @media (max-width: 1024px) {
@@ -1608,51 +1684,78 @@ dialog::backdrop {
 }
 
 .stageNavBtn {
-  background: #1e293b;
-  border: 2px solid #334155;
+  position: relative;
+  background: linear-gradient(180deg, #1e293b 0%, #151e2e 100%);
+  border: 1px solid #334155;
   border-radius: 10px;
-  padding: 0.75rem 1rem;
+  padding: 0.85rem 1.15rem 0.95rem;
   text-align: left;
   cursor: pointer;
-  transition: all 0.2s ease;
+  transition: all 0.22s cubic-bezier(0.4, 0, 0.2, 1);
   display: flex;
   flex-direction: column;
-  gap: 0.2rem;
+  gap: 0.25rem;
   color: #e2e8f0;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2), inset 0 1px 0 rgba(255, 255, 255, 0.06);
+  overflow: hidden;
+}
+
+.stageNavBtn::before {
+  content: "";
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 3px;
+  background: transparent;
+  transition: background 0.2s ease;
 }
 
 .stageNavBtn:hover {
-  background: #334155;
-  border-color: #64748b;
+  background: linear-gradient(180deg, #273549 0%, #1b2639 100%);
+  border-color: #475569;
+  transform: translateY(-1px);
+  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.3), inset 0 1px 0 rgba(255, 255, 255, 0.1);
 }
 
 .stageNavBtn.activeStage {
-  background: #1e3a8a;
+  background: linear-gradient(180deg, #1e3a8a 0%, #172554 100%);
   border-color: #3b82f6;
-  box-shadow: 0 0 0 1px #3b82f6, 0 4px 12px rgba(37, 99, 235, 0.25);
+  box-shadow: 0 0 0 1px #3b82f6, 0 6px 16px rgba(37, 99, 235, 0.3), inset 0 1px 0 rgba(255, 255, 255, 0.15);
+}
+
+.stageNavBtn.activeStage::before {
+  background: #60a5fa;
+  box-shadow: 0 0 8px #60a5fa;
 }
 
 .stageNavBtn .stageBadge {
-  font-size: 0.7rem;
+  font-size: 0.68rem;
   font-weight: 700;
   text-transform: uppercase;
-  letter-spacing: 0.05em;
+  letter-spacing: 0.06em;
   color: #93c5fd;
+  display: flex;
+  align-items: center;
+  gap: 0.35rem;
 }
 
 .stageNavBtn.activeStage .stageBadge {
-  color: #60a5fa;
+  color: #93c5fd;
+  text-shadow: 0 0 12px rgba(96, 165, 250, 0.4);
 }
 
 .stageNavBtn .stageTitle {
-  font-size: 0.95rem;
+  font-size: 0.96rem;
   font-weight: 700;
   color: #ffffff;
+  letter-spacing: -0.01em;
 }
 
 .stageNavBtn .stageSub {
-  font-size: 0.76rem;
+  font-size: 0.74rem;
   color: #94a3b8;
+  line-height: 1.35;
 }
 
 .stageNavBtn.activeStage .stageSub {
@@ -1960,20 +2063,20 @@ dialog::backdrop {
 .standardsHighlightBox {
   display: flex;
   flex-direction: column;
-  gap: 0.65rem;
+  gap: 0.75rem;
   margin: 0.5rem 0;
 }
 
 .standardHighlightItem {
   background: #ffffff;
-  border: 1px solid #cbd5e1;
-  border-left: 4px solid #2563eb;
+  border: 1px solid #e2e8f0;
+  border-left: 3px solid #2563eb;
   border-radius: 8px;
   padding: 0.75rem 0.9rem;
   display: flex;
   flex-direction: column;
-  gap: 0.35rem;
-  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.03);
+  gap: 0.4rem;
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.04);
 }
 
 .standardHighlightHeader {
@@ -1983,22 +2086,24 @@ dialog::backdrop {
 }
 
 .standardCodeBadge {
-  font-family: monospace;
+  font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
   font-weight: 700;
-  font-size: 0.85rem;
+  font-size: 0.82rem;
   background: #0f172a;
   color: #38bdf8;
   padding: 0.15rem 0.5rem;
-  border-radius: 4px;
+  border-radius: 5px;
+  letter-spacing: 0.02em;
 }
 
 .standardGradePill {
-  font-size: 0.75rem;
+  font-size: 0.72rem;
   font-weight: 600;
-  color: #475569;
-  background: #f1f5f9;
-  padding: 0.15rem 0.5rem;
-  border-radius: 999px;
+  color: #1e40af;
+  background: #eff6ff;
+  border: 1px solid #dbeafe;
+  padding: 0.15rem 0.55rem;
+  border-radius: 9999px;
 }
 
 .standardContent {
@@ -2008,16 +2113,19 @@ dialog::backdrop {
 }
 
 .standardText {
-  font-size: 0.84rem;
-  color: #0f172a;
+  font-size: 0.82rem;
+  color: #1e293b;
   margin: 0;
-  line-height: 1.4;
+  line-height: 1.45;
 }
 
 .standardVerbTag {
-  font-size: 0.74rem;
+  font-size: 0.73rem;
   color: #2563eb;
   font-weight: 600;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.25rem;
 }
 
 .ncpSnippetPre {
@@ -2049,24 +2157,54 @@ dialog::backdrop {
   border-radius: 999px;
 }
 
-.stage0ClausesList {
+.stage0ClausesList,
+#stage0ExtractedClauses {
   display: flex;
   flex-direction: column;
-  gap: 0.5rem;
-  max-height: 280px;
+  gap: 0.55rem;
+  max-height: 400px;
   overflow-y: auto;
-  padding-right: 0.25rem;
+  padding-right: 0.35rem;
+  scrollbar-width: thin;
+  scrollbar-color: #cbd5e1 transparent;
+}
+
+.stage0ClausesList::-webkit-scrollbar,
+#stage0ExtractedClauses::-webkit-scrollbar {
+  width: 6px;
+}
+
+.stage0ClausesList::-webkit-scrollbar-track,
+#stage0ExtractedClauses::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+.stage0ClausesList::-webkit-scrollbar-thumb,
+#stage0ExtractedClauses::-webkit-scrollbar-thumb {
+  background-color: #cbd5e1;
+  border-radius: 9999px;
+}
+
+.stage0ClausesList::-webkit-scrollbar-thumb:hover,
+#stage0ExtractedClauses::-webkit-scrollbar-thumb:hover {
+  background-color: #94a3b8;
 }
 
 .clauseItemCard {
   background: #ffffff;
   border: 1px solid #e2e8f0;
-  border-radius: 6px;
-  padding: 0.6rem 0.75rem;
+  border-radius: 7px;
+  padding: 0.65rem 0.8rem;
   font-size: 0.79rem;
   display: flex;
   flex-direction: column;
-  gap: 0.25rem;
+  gap: 0.35rem;
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.02);
+  transition: border-color 0.15s ease;
+}
+
+.clauseItemCard:hover {
+  border-color: #cbd5e1;
 }
 
 .clauseItemHeader {
@@ -2076,41 +2214,45 @@ dialog::backdrop {
 }
 
 .clauseItemCode {
-  font-family: monospace;
+  font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
   font-weight: 700;
   color: #1e40af;
-  font-size: 0.78rem;
+  font-size: 0.76rem;
 }
 
 .clauseItemGrade {
-  font-size: 0.7rem;
+  font-size: 0.68rem;
   font-weight: 600;
   background: #f1f5f9;
   color: #475569;
-  padding: 0.1rem 0.4rem;
-  border-radius: 4px;
+  border: 1px solid #e2e8f0;
+  padding: 0.1rem 0.45rem;
+  border-radius: 9999px;
 }
 
 .clauseItemText {
   color: #1e293b;
-  line-height: 1.35;
+  line-height: 1.38;
+  font-size: 0.8rem;
 }
 
 .clauseItemMeta {
   display: flex;
-  gap: 0.4rem;
+  gap: 0.35rem;
   align-items: center;
   flex-wrap: wrap;
   font-size: 0.72rem;
+  margin-top: 0.15rem;
 }
 
 .clauseVerbTag {
   background: #eff6ff;
   border: 1px solid #bfdbfe;
   color: #1d4ed8;
-  padding: 0.05rem 0.35rem;
-  border-radius: 3px;
+  padding: 0.1rem 0.4rem;
+  border-radius: 4px;
   font-weight: 600;
+  font-size: 0.7rem;
 }
 
 .verbAuditBox {
@@ -2209,50 +2351,72 @@ dialog::backdrop {
 }
 
 .cheatSelectBtn {
+  position: relative;
   background: #ffffff;
-  border: 2px solid #cbd5e1;
+  border: 1px solid #cbd5e1;
   border-radius: 8px;
-  padding: 0.75rem 0.85rem;
+  padding: 0.8rem 1rem 0.8rem 1.15rem;
   cursor: pointer;
   text-align: left;
   display: flex;
   flex-direction: column;
-  gap: 0.15rem;
-  transition: all 0.2s ease;
+  gap: 0.2rem;
+  transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+  overflow: hidden;
+}
+
+.cheatSelectBtn::before {
+  content: "";
+  position: absolute;
+  left: 0;
+  top: 0;
+  bottom: 0;
+  width: 3.5px;
+  background: transparent;
+  transition: background 0.2s ease;
 }
 
 .cheatSelectBtn:hover {
   border-color: #94a3b8;
-  background: #f1f5f9;
+  background: #f8fafc;
+  transform: translateY(-1px);
 }
 
 .cheatSelectBtn.activeCheatBtn {
-  border-color: #dc2626;
   background: #fef2f2;
-  box-shadow: 0 0 0 1px #dc2626, 0 2px 8px rgba(220, 38, 38, 0.15);
+  border-color: #fca5a5;
+  box-shadow: 0 0 0 1px #f87171, 0 4px 10px rgba(239, 68, 68, 0.12);
+}
+
+.cheatSelectBtn.activeCheatBtn::before {
+  background: #dc2626;
 }
 
 .cheatSelectBtn .cheatNum {
-  font-size: 0.68rem;
+  font-size: 0.65rem;
   font-weight: 700;
   text-transform: uppercase;
-  color: #ef4444;
-  letter-spacing: 0.05em;
+  color: #94a3b8;
+  letter-spacing: 0.06em;
+  display: inline-flex;
+  align-items: center;
 }
 
 .cheatSelectBtn.activeCheatBtn .cheatNum {
-  color: #b91c1c;
+  color: #dc2626;
 }
 
 .cheatSelectBtn .cheatBtnTitle {
-  font-size: 0.88rem;
+  font-size: 0.9rem;
   font-weight: 700;
   color: #0f172a;
+  letter-spacing: -0.01em;
 }
 
 .cheatSelectBtn .cheatBtnSub {
   font-size: 0.74rem;
   color: #64748b;
+  line-height: 1.35;
 }
 
 .cheatSimulationDisplay {
@@ -2296,58 +2460,79 @@ dialog::backdrop {
 
 .cheatCard {
   border-radius: 8px;
-  padding: 0.85rem 1rem;
+  padding: 0.9rem 1rem;
   display: flex;
   flex-direction: column;
-  gap: 0.4rem;
+  gap: 0.45rem;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.03);
 }
 
 .cheatCard.naiveCard {
-  background: #ecfdf5;
-  border: 1px solid #a7f3d0;
+  background: #fffdf7;
+  border: 1px solid #fde68a;
+  border-left: 4px solid #f59e0b;
 }
 
 .cheatCard.groundedCard {
-  background: #fef2f2;
+  background: #fff8f8;
   border: 1px solid #fecaca;
+  border-left: 4px solid #dc2626;
 }
 
 .cheatCardHeader {
   display: flex;
   justify-content: space-between;
   align-items: center;
+  flex-wrap: wrap;
+  gap: 0.35rem;
 }
 
 .cheatCardTitle {
-  font-size: 0.78rem;
+  font-size: 0.76rem;
   font-weight: 700;
   text-transform: uppercase;
   letter-spacing: 0.04em;
 }
 
 .naiveCard .cheatCardTitle {
-  color: #047857;
+  color: #b45309;
 }
 
 .groundedCard .cheatCardTitle {
-  color: #b91c1c;
+  color: #991b1b;
 }
 
 .cheatVerdictBadge {
-  font-size: 0.75rem;
+  font-size: 0.72rem;
   font-weight: 800;
-  padding: 0.2rem 0.5rem;
-  border-radius: 4px;
+  padding: 0.2rem 0.55rem;
+  border-radius: 9999px;
+  letter-spacing: 0.02em;
+  line-height: 1.2;
+}
+
+.cheatVerdictBadge.badgeAmber {
+  background: #fef3c7;
+  color: #92400e;
+  border: 1px solid #fcd34d;
+}
+
+.cheatVerdictBadge.badgeCrimson {
+  background: #fee2e2;
+  color: #991b1b;
+  border: 1px solid #fca5a5;
 }
 
 .cheatVerdictBadge.badgeGreen {
-  background: #10b981;
-  color: #ffffff;
+  background: #d1fae5;
+  color: #065f46;
+  border: 1px solid #a7f3d0;
 }
 
 .cheatVerdictBadge.badgeRed {
-  background: #ef4444;
-  color: #ffffff;
+  background: #fee2e2;
+  color: #991b1b;
+  border: 1px solid #fca5a5;
 }
 
 .cheatCardVerdict {
@@ -2356,7 +2541,7 @@ dialog::backdrop {
 }
 
 .naiveCard .cheatCardVerdict {
-  color: #065f46;
+  color: #92400e;
 }
 
 .groundedCard .cheatCardVerdict {
@@ -2371,43 +2556,52 @@ dialog::backdrop {
 }
 
 .cheatAuditBanner {
-  background: #f1f5f9;
+  background: #f8fafc;
   border: 1px solid #cbd5e1;
   border-left: 4px solid #dc2626;
   border-radius: 6px;
   padding: 0.65rem 0.85rem;
   font-size: 0.82rem;
   color: #0f172a;
-  font-weight: 600;
 }
 
 .cheatMathExplanation {
-  background: #ffffff;
-  border: 1px solid #e2e8f0;
+  background: #0b1120;
+  border: 1px solid #1e293b;
   border-radius: 8px;
-  padding: 0.85rem 1rem;
+  padding: 0.95rem 1.15rem;
+  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.25);
 }
 
 .cheatMathHeader {
-  font-size: 0.75rem;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  font-size: 0.74rem;
   font-weight: 700;
   text-transform: uppercase;
-  letter-spacing: 0.04em;
-  color: #2563eb;
-  margin-bottom: 0.35rem;
+  letter-spacing: 0.05em;
+  color: #38bdf8;
+  margin-bottom: 0.5rem;
+  padding-bottom: 0.4rem;
+  border-bottom: 1px solid #1e293b;
 }
 
 .cheatMathText {
-  font-family: monospace;
-  font-size: 0.78rem;
-  color: #1e293b;
-  line-height: 1.45;
+  font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+  font-size: 0.8rem;
+  color: #38bdf8;
+  line-height: 1.5;
   margin: 0;
-  background: #f8fafc;
-  padding: 0.5rem 0.65rem;
-  border-radius: 4px;
-  border: 1px solid #e2e8f0;
+  background: transparent;
+  padding: 0;
+  border: none;
   white-space: pre-wrap;
+  word-break: break-word;
+}
+
+.cheatMathText code {
+  color: #f1f5f9;
 }
 
 .cheatPedagogyBox {
@@ -2422,20 +2616,27 @@ dialog::backdrop {
 
 /* ==================== 8 GENERATIVE JUNCTIONS STYLES ==================== */
 .stage0JunctionsGrid {
-  display: flex;
-  flex-direction: column;
-  gap: 0.75rem;
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(360px, 1fr));
+  gap: 1rem;
 }
 
 .junctionCard {
   background: #ffffff;
   border: 1px solid #e2e8f0;
-  border-radius: 8px;
-  padding: 0.85rem 1rem;
+  border-radius: 10px;
+  padding: 0.95rem 1.1rem;
   display: flex;
   flex-direction: column;
-  gap: 0.5rem;
-  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.03);
+  gap: 0.65rem;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.03);
+  transition: transform 0.15s ease, box-shadow 0.15s ease, border-color 0.15s ease;
+}
+
+.junctionCard:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.06);
+  border-color: #cbd5e1;
 }
 
 .junctionCardHeader {
@@ -2443,7 +2644,9 @@ dialog::backdrop {
   justify-content: space-between;
   align-items: center;
   flex-wrap: wrap;
-  gap: 0.4rem;
+  gap: 0.45rem;
+  padding-bottom: 0.45rem;
+  border-bottom: 1px solid #f1f5f9;
 }
 
 .junctionTitleRow {
@@ -2453,12 +2656,14 @@ dialog::backdrop {
 }
 
 .junctionNumBadge {
+  font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
   font-size: 0.72rem;
   font-weight: 800;
   background: #0f172a;
   color: #38bdf8;
   padding: 0.15rem 0.45rem;
   border-radius: 4px;
+  line-height: 1.2;
 }
 
 .junctionName {
@@ -2468,71 +2673,80 @@ dialog::backdrop {
 }
 
 .junctionStatusPill {
-  font-size: 0.7rem;
+  font-size: 0.68rem;
   font-weight: 700;
   text-transform: uppercase;
   letter-spacing: 0.04em;
   padding: 0.2rem 0.55rem;
-  border-radius: 999px;
+  border-radius: 9999px;
+  line-height: 1.2;
 }
 
 .junctionStatusPill.statusProven {
-  background: #dcfce7;
-  color: #15803d;
-  border: 1px solid #86efac;
+  background: #ecfdf5;
+  color: #065f46;
+  border: 1px solid #a7f3d0;
 }
 
 .junctionStatusPill.statusGrounded {
-  background: #dbeafe;
+  background: #eff6ff;
   color: #1d4ed8;
-  border: 1px solid #93c5fd;
+  border: 1px solid #bfdbfe;
 }
 
 .junctionStatusPill.statusRisk {
-  background: #fef3c7;
+  background: #fffbeb;
   color: #b45309;
-  border: 1px solid #fcd34d;
+  border: 1px solid #fde68a;
 }
 
 .junctionBody {
   display: flex;
   flex-direction: column;
-  gap: 0.45rem;
-  font-size: 0.8rem;
+  gap: 0.5rem;
+  font-size: 0.78rem;
 }
 
 .junctionField {
+  background: #ffffff;
+  border: 1px solid #f1f5f9;
+  border-left: 3px solid #cbd5e1;
+  border-radius: 0 6px 6px 0;
   padding: 0.45rem 0.65rem;
-  border-radius: 6px;
-  font-size: 0.78rem;
-  line-height: 1.4;
+  font-size: 0.77rem;
+  line-height: 1.45;
+  display: flex;
+  flex-direction: column;
+  gap: 0.2rem;
 }
 
 .junctionField.riskField {
-  background: #fffbeb;
-  border: 1px solid #fde68a;
-  color: #92400e;
+  background: #fffdfa;
+  border-color: #fef3c7;
+  border-left-color: #f59e0b;
+  color: #78350f;
 }
 
 .junctionField.solutionField {
-  background: #f0fdf4;
-  border: 1px solid #bbf7d0;
-  color: #166534;
+  background: #fafdfa;
+  border-color: #dcfce7;
+  border-left-color: #10b981;
+  color: #14532d;
 }
 
 .junctionField.auditField {
-  background: #f8fafc;
-  border: 1px solid #e2e8f0;
-  color: #334155;
+  background: #fbfcfe;
+  border-color: #e2e8f0;
+  border-left-color: #3b82f6;
+  color: #1e293b;
 }
 
 .junctionFieldLabel {
   font-weight: 700;
-  font-size: 0.72rem;
+  font-size: 0.68rem;
   text-transform: uppercase;
-  letter-spacing: 0.04em;
+  letter-spacing: 0.05em;
   display: block;
-  margin-bottom: 0.15rem;
 }
 
 .riskField .junctionFieldLabel {
@@ -2540,9 +2754,9 @@ dialog::backdrop {
 }
 
 .solutionField .junctionFieldLabel {
-  color: #15803d;
+  color: #047857;
 }
 
 .auditField .junctionFieldLabel {
-  color: #475569;
+  color: #2563eb;
 }

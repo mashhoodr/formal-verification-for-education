@@ -4,7 +4,7 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>K-12 Educational Formal Verification Playground (Z3 SMT Kernel)</title>
-  <link rel="stylesheet" href="/static/styles.css?v=12" />
+  <link rel="stylesheet" href="/static/styles.css?v=13" />
 </head>
 <body>
   <header class="topHeader">
@@ -185,7 +185,7 @@
 
   <!-- ==================== STAGE 1: CURRICULUM KC ONTOLOGY PROOF ==================== -->
   <div id="stage1Container" class="mainGrid hiddenPane">
-    <!-- Left Column: Stage 0 Scenario, Triad Controls & Timeline -->
+    <!-- Left Column: Stage 1 Scenario, Triad Controls & Timeline -->
     <section class="panelCard">
       <h2>1. Curriculum Triad &amp; KC Auto-Repair Timeline</h2>
 
@@ -204,20 +204,20 @@
       </div>
 
       <div class="buttonRow">
-        <button type="button" id="runStage0RepairBtn" class="primaryBtn">Run Stage 0 Z3 Auto-Repair Loop</button>
+        <button type="button" id="runStage0RepairBtn" class="primaryBtn">Run Stage 1 Z3 Auto-Repair Loop</button>
       </div>
 
       <!-- Vertical Auto-Repair Timeline Stepper -->
       <div class="timelineSidebarCard">
         <div class="timelineSidebarHeader">
-          <span>Stage 0 Z3 KC Auto-Repair Timeline</span>
+          <span>Stage 1 Z3 KC Auto-Repair Timeline</span>
           <span class="timelineHint">Select step to inspect</span>
         </div>
         <div id="iterationTabsStage0" class="iterationTabsVertical"></div>
         <div id="repairSummaryBoxStage0" class="repairSummaryBox"></div>
       </div>
 
-      <!-- Progressive Disclosures for Stage 0 -->
+      <!-- Progressive Disclosures for Stage 1 -->
       <div class="sidebarDisclosures">
         <details id="sloClausesDetailsStage0" class="sidebarDisclosure" name="stage0SidebarDrawers" open>
           <summary>Official Pakistan NCP SLO Clauses (Bipartite Targets)</summary>
@@ -239,15 +239,15 @@
       </div>
     </section>
 
-    <!-- Right Column: Stage 0 Exploration Lenses & Active Inspection Workspace -->
+    <!-- Right Column: Stage 1 Exploration Lenses & Active Inspection Workspace -->
     <section class="panelCard">
-      <div class="viewToggleRow" role="tablist" aria-label="Stage 0 Exploration Lenses">
+      <div class="viewToggleRow" role="tablist" aria-label="Stage 1 Exploration Lenses">
         <button type="button" id="tabStage0KcsBtn" class="tabBtn activeTab">
           <span class="tabStepTitle"><span class="tabStepNum">1</span> Candidate KCs &amp; Progression Graph</span>
           <span class="tabStepSub">Atomic decomposition across Prior, Target &amp; Next grades</span>
         </button>
         <button type="button" id="tabStage0SmtBtn" class="tabBtn">
-          <span class="tabStepTitle"><span class="tabStepNum">2</span> Inside the Stage 0 Z3 Proof</span>
+          <span class="tabStepTitle"><span class="tabStepNum">2</span> Inside the Stage 1 Z3 Proof</span>
           <span class="tabStepSub">6 symbolic theorems &bull; click chips to slice proof</span>
         </button>
         <button type="button" id="tabStage0BoundariesBtn" class="tabBtn">
@@ -256,7 +256,7 @@
         </button>
       </div>
 
-      <!-- Compact Unified Status & Metrics Header for Stage 0 -->
+      <!-- Compact Unified Status & Metrics Header for Stage 1 -->
       <div id="statusBannerStage0" class="statusBanner"></div>
       <div class="metricsBar" id="metricsBarStage0"></div>
 
@@ -266,7 +266,7 @@
         <div id="stage0KcsGrid" class="stage0KcsGrid"></div>
       </div>
 
-      <!-- TAB 2 PANE: Inside the Stage 0 Z3 Proof -->
+      <!-- TAB 2 PANE: Inside the Stage 1 Z3 Proof -->
       <div id="stage0SmtPane" class="hiddenPane">
         <div id="certificateBoxStage0" class="certificateBox"></div>
         <div id="smtTrackerMatrixStage0" class="smtTrackerMatrix"></div>
@@ -274,19 +274,19 @@
 
         <div class="smtDeepDisclosures">
           <details id="stage0PipelineDetails" class="smtDisclosureCard" name="stage0SmtDrawers">
-            <summary>Stage 0 Mathematical Architecture (6 SMT Theorems)</summary>
+            <summary>Stage 1 Mathematical Architecture (6 SMT Theorems)</summary>
             <div class="disclosureBody">
               <div id="stage0PipelineDiagram" class="smtPipelineDiagram" style="margin-bottom:0;"></div>
             </div>
           </details>
 
           <details id="stage0FullSmtScriptDetails" class="smtDisclosureCard" name="stage0SmtDrawers">
-            <summary>Explore Full Stage 0 SMT-LIB2 Script</summary>
+            <summary>Explore Full Stage 1 SMT-LIB2 Script</summary>
             <div class="disclosureBody">
               <div id="stage0SmtFilterBar" class="smtFilterBar"></div>
               <div id="stage0SmtInteractiveViewer" class="smtInteractiveViewer"></div>
               <details class="rawSmtDetails">
-                <summary>View Raw Unformatted Stage 0 SMT-LIB2 Text</summary>
+                <summary>View Raw Unformatted Stage 1 SMT-LIB2 Text</summary>
                 <pre id="stage0SmtScriptPre" class="codePre" tabindex="0"><code id="stage0SmtScriptCode"></code></pre>
               </details>
             </div>
