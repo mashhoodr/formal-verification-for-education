@@ -4,7 +4,7 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>K-12 Educational Formal Verification Playground (Z3 SMT Kernel)</title>
-  <link rel="stylesheet" href="/static/styles.css?v=7" />
+  <link rel="stylesheet" href="/static/styles.css?v=8" />
 </head>
 <body>
   <header class="topHeader">
@@ -20,9 +20,9 @@
   </header>
 
   <main class="mainGrid">
-    <!-- Left Column: Grade Theorem & Input Controls -->
+    <!-- Left Column: Progressive Disclosure Setup & Controls -->
     <section class="panelCard">
-      <h2>1. Select Scenario & Grade Specification ("Theorem")</h2>
+      <h2>1. Choose Demo Scenario</h2>
 
       <div class="fieldGroup">
         <label for="scenarioSelect">Demo Scenario (Flawed LLM Draft &rarr; Z3 Auto-Repair)</label>
@@ -30,58 +30,82 @@
         <p id="scenarioDescription" class="helperText"></p>
       </div>
 
-      <div class="fieldGroup">
-        <label for="gradeBandSelect">Target Grade Band</label>
-        <select id="gradeBandSelect"></select>
-      </div>
-
-      <div class="rulesGrid">
-        <div class="ruleField">
-          <label for="maxWordsInput">Max Words / Sentence</label>
-          <input type="number" id="maxWordsInput" min="4" max="40" />
+      <div class="specSummaryCard">
+        <div class="specSummaryHeader">
+          <span>Active Grade Theorem Rules</span>
+          <span id="activeGradeBandBadge" class="specBandBadge">Grades 3-5</span>
         </div>
-        <div class="ruleField">
-          <label for="maxSyllablesInput">Max Syllables / Word</label>
-          <input type="number" id="maxSyllablesInput" min="1" max="8" />
-        </div>
-        <div class="ruleField">
-          <label for="fkMinInput">Flesch-Kincaid Min</label>
-          <input type="number" id="fkMinInput" step="0.1" min="0" max="15" />
-        </div>
-        <div class="ruleField">
-          <label for="fkMaxInput">Flesch-Kincaid Max</label>
-          <input type="number" id="fkMaxInput" step="0.1" min="1" max="18" />
-        </div>
-        <div class="ruleField">
-          <label for="optionSpreadInput">Max Option Word Spread</label>
-          <input type="number" id="optionSpreadInput" min="1" max="20" />
-        </div>
-        <div class="ruleField">
-          <label for="quizDurationInput">Quiz Time Budget (min)</label>
-          <input type="number" id="quizDurationInput" min="1" max="60" />
-        </div>
-      </div>
-
-      <div class="fieldGroup">
-        <label for="allowlistInput">Curriculum Topic Allowlist (comma-separated words exempt from syllable cap)</label>
-        <input type="text" id="allowlistInput" placeholder="e.g., evaporation, condensation" />
+        <div id="specSummaryPills" class="specSummaryPills"></div>
       </div>
 
       <div class="buttonRow">
-        <button id="runRepairBtn" class="primaryBtn">Run Generate &rarr; Z3 Verify &rarr; Auto-Repair Loop</button>
-        <button id="verifyJsonBtn" class="secondaryBtn">Verify Edited JSON Only</button>
+        <button type="button" id="runRepairBtn" class="primaryBtn">Run Generate &rarr; Z3 Verify &rarr; Auto-Repair Loop</button>
       </div>
 
-      <div class="fieldGroup editorSection">
-        <label for="assessmentJsonEditor">Assessment JSON (Editable for Live Z3 Probing)</label>
-        <textarea id="assessmentJsonEditor" rows="14" spellcheck="false"></textarea>
+      <!-- Progressive Disclosure Accordion Group (Modern HTML <details name="...">) -->
+      <div class="sidebarDisclosures">
+        <details id="customizeSpecDetails" class="sidebarDisclosure" name="sidebarAdvanced">
+          <summary>Customize Grade Spec Thresholds (6 Rules)</summary>
+          <div class="disclosureBody">
+            <div class="fieldGroup">
+              <label for="gradeBandSelect">Target Grade Band Preset</label>
+              <select id="gradeBandSelect"></select>
+            </div>
+
+            <div class="rulesGrid">
+              <div class="ruleField">
+                <label for="maxWordsInput">Max Words / Sentence</label>
+                <input type="number" id="maxWordsInput" min="4" max="40" />
+              </div>
+              <div class="ruleField">
+                <label for="maxSyllablesInput">Max Syllables / Word</label>
+                <input type="number" id="maxSyllablesInput" min="1" max="8" />
+              </div>
+              <div class="ruleField">
+                <label for="fkMinInput">Flesch-Kincaid Min</label>
+                <input type="number" id="fkMinInput" step="0.1" min="0" max="15" />
+              </div>
+              <div class="ruleField">
+                <label for="fkMaxInput">Flesch-Kincaid Max</label>
+                <input type="number" id="fkMaxInput" step="0.1" min="1" max="18" />
+              </div>
+              <div class="ruleField">
+                <label for="optionSpreadInput">Max Option Word Spread</label>
+                <input type="number" id="optionSpreadInput" min="1" max="20" />
+              </div>
+              <div class="ruleField">
+                <label for="quizDurationInput">Quiz Time Budget (min)</label>
+                <input type="number" id="quizDurationInput" min="1" max="60" />
+              </div>
+            </div>
+
+            <div class="fieldGroup" style="margin-bottom:0;">
+              <label for="allowlistInput">Curriculum Topic Allowlist (comma-separated words exempt from syllable cap)</label>
+              <input type="text" id="allowlistInput" placeholder="e.g., evaporation, condensation" />
+            </div>
+          </div>
+        </details>
+
+        <details id="rawJsonEditorDetails" class="sidebarDisclosure" name="sidebarAdvanced">
+          <summary>Advanced: Edit &amp; Probe Raw Assessment JSON</summary>
+          <div class="disclosureBody">
+            <div class="fieldGroup" style="margin-bottom:0.65rem;">
+              <label for="assessmentJsonEditor">Assessment JSON (Editable for Live Z3 Probing)</label>
+              <textarea id="assessmentJsonEditor" rows="12" spellcheck="false"></textarea>
+            </div>
+            <button type="button" id="verifyJsonBtn" class="secondaryBtn" style="width:100%;">Verify Edited JSON Only</button>
+          </div>
+        </details>
       </div>
     </section>
 
-    <!-- Right Column: Verification Proof & Repair Trace -->
+    <!-- Right Column: Guided Repair Journey & 3-Step Learning Tabs -->
     <section class="panelCard">
       <div class="traceHeader">
-        <h2>2. Z3 Formal Verification & Counterexample Trace</h2>
+        <div>
+          <h2>2. Z3 Verification &amp; Auto-Repair Journey</h2>
+          <p class="journeySubtext">Click each repair step below to see how Z3 guides the LLM from a flawed draft (<code>UNSAT</code>) to a mathematically verified quiz (<code>SAT</code>).</p>
+        </div>
         <div id="iterationTabs" class="iterationTabs"></div>
       </div>
 
@@ -90,30 +114,58 @@
 
       <div class="metricsBar" id="metricsBar"></div>
 
-      <div class="viewToggleRow">
-        <button id="tabVisualBtn" class="tabBtn activeTab">Visual Counterexamples &amp; Prescriptions</button>
-        <button id="tabSmtBtn" class="tabBtn">SMT-LIB2 Formal Proof Script</button>
-        <button id="tabFeasibleMapBtn" class="tabBtn">2D Feasible Proof Space (Why Not if/else?)</button>
+      <!-- Numbered 3-Step Learning Progression Tabs -->
+      <div class="viewToggleRow" role="tablist" aria-label="Verification Exploration Steps">
+        <button type="button" id="tabVisualBtn" class="tabBtn activeTab">
+          <span class="tabStepTitle"><span class="tabStepNum">1</span> Quiz &amp; Repair Prescriptions</span>
+          <span class="tabStepSub">What failed in the quiz &amp; how Z3 fixes it</span>
+        </button>
+        <button type="button" id="tabSmtBtn" class="tabBtn">
+          <span class="tabStepTitle"><span class="tabStepNum">2</span> Inside the Z3 Proof</span>
+          <span class="tabStepSub">Click any rule chip to inspect its proof slice</span>
+        </button>
+        <button type="button" id="tabFeasibleMapBtn" class="tabBtn">
+          <span class="tabStepTitle"><span class="tabStepNum">3</span> 2D Proof Space (Why Not if/else?)</span>
+          <span class="tabStepSub">Interactive geometric mental model</span>
+        </button>
       </div>
 
+      <!-- STEP 1 PANE: Quiz & Repair Prescriptions -->
       <div id="visualProofPane">
         <div id="prescriptionsContainer"></div>
         <div id="questionsContainer"></div>
       </div>
 
+      <!-- STEP 2 PANE: Master-Detail Focus Inside the Z3 Proof -->
       <div id="smtProofPane" class="hiddenPane">
         <div id="certificateBox" class="certificateBox"></div>
-        <div id="smtPipelineDiagram" class="smtPipelineDiagram"></div>
         <div id="smtTrackerMatrix" class="smtTrackerMatrix"></div>
         <div id="smtProofSliceInspector" class="smtProofSliceInspector"></div>
-        <div id="smtFilterBar" class="smtFilterBar"></div>
-        <div id="smtInteractiveViewer" class="smtInteractiveViewer"></div>
-        <details class="rawSmtDetails">
-          <summary>View Raw SMT-LIB2 Script Text</summary>
-          <pre id="smtScriptPre" class="codePre"></pre>
-        </details>
+
+        <!-- Secondary Deep-Dive Drawers (Collapsed by Default to Prevent Clutter) -->
+        <div class="smtDeepDisclosures">
+          <details id="smtPipelineDetails" class="smtDisclosureCard" name="smtDeepDrawers">
+            <summary>How the 3-Stage Z3 SMT Pipeline Works (Architecture Overview)</summary>
+            <div class="disclosureBody">
+              <div id="smtPipelineDiagram" class="smtPipelineDiagram" style="margin-bottom:0;"></div>
+            </div>
+          </details>
+
+          <details id="fullSmtScriptDetails" class="smtDisclosureCard" name="smtDeepDrawers">
+            <summary>Explore Full 115-Line Annotated &amp; Raw SMT-LIB2 Script</summary>
+            <div class="disclosureBody">
+              <div id="smtFilterBar" class="smtFilterBar"></div>
+              <div id="smtInteractiveViewer" class="smtInteractiveViewer"></div>
+              <details class="rawSmtDetails">
+                <summary>View Raw Unformatted SMT-LIB2 Text</summary>
+                <pre id="smtScriptPre" class="codePre" tabindex="0"><code id="smtScriptCode"></code></pre>
+              </details>
+            </div>
+          </details>
+        </div>
       </div>
 
+      <!-- STEP 3 PANE: Clean Above-the-Fold 2D Feasible Proof Space -->
       <div id="feasibleMapPane" class="hiddenPane">
         <div class="feasibleIntroBanner">
           <div>
@@ -163,7 +215,12 @@
           </div>
         </div>
 
-        <div id="feasibleMathExplainer" class="feasibleMathExplainer"></div>
+        <details id="feasibleMathDetails" class="smtDisclosureCard" open>
+          <summary>Mathematical Formulation, Set-Builder Notations &amp; Live Inequality Table</summary>
+          <div class="disclosureBody">
+            <div id="feasibleMathExplainer" class="feasibleMathExplainer" style="margin-top:0;border:none;padding:0;"></div>
+          </div>
+        </details>
       </div>
     </section>
   </main>
@@ -181,6 +238,6 @@
     <div id="explainerDialogBody" class="explainerModalBody"></div>
   </dialog>
 
-  <script src="/static/app.js?v=7"></script>
+  <script src="/static/app.js?v=8"></script>
 </body>
 </html>

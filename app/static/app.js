@@ -30,6 +30,9 @@ const smtProofSliceInspector = document.getElementById("smtProofSliceInspector")
 const smtFilterBar = document.getElementById("smtFilterBar");
 const smtInteractiveViewer = document.getElementById("smtInteractiveViewer");
 const smtScriptPre = document.getElementById("smtScriptPre");
+const smtScriptCode = document.getElementById("smtScriptCode");
+const specSummaryPills = document.getElementById("specSummaryPills");
+const activeGradeBandBadge = document.getElementById("activeGradeBandBadge");
 const tabVisualBtn = document.getElementById("tabVisualBtn");
 const tabSmtBtn = document.getElementById("tabSmtBtn");
 const tabFeasibleMapBtn = document.getElementById("tabFeasibleMapBtn");
@@ -129,6 +132,28 @@ function populateSpecInputs(gradeSpec, allowlistOverride) {
   quizDurationInput.value = gradeSpec.quizDurationMinutes;
   const allowWords = allowlistOverride || gradeSpec.topicAllowlist || [];
   allowlistInput.value = allowWords.join(", ");
+  renderSpecSummaryPills();
+}
+
+function renderSpecSummaryPills() {
+  if (!specSummaryPills) {
+    return;
+  }
+  const spec = readCurrentGradeSpec();
+  if (activeGradeBandBadge && spec.label) {
+    activeGradeBandBadge.textContent = spec.label;
+  }
+  const allowCount = spec.topicAllowlist ? spec.topicAllowlist.length : 0;
+  const allowPreview =
+    allowCount > 0 ? spec.topicAllowlist.slice(0, 3).join(", ") : "None";
+  specSummaryPills.innerHTML = `
+    <span class="specSummaryPill">Sentence: <strong>&le; ${spec.maxWordsPerSentence} words</strong></span>
+    <span class="specSummaryPill">Word Cap: <strong>&le; ${spec.maxSyllablesPerWord} syllables</strong></span>
+    <span class="specSummaryPill">FK Grade: <strong>${spec.fleschKincaidMin}&ndash;${spec.fleschKincaidMax}</strong></span>
+    <span class="specSummaryPill">Option Spread: <strong>&le; ${spec.maxOptionWordSpread} words</strong></span>
+    <span class="specSummaryPill">Time: <strong>&le; ${spec.quizDurationMinutes}m</strong></span>
+    <span class="specSummaryPill">Allowlist: <strong>${allowPreview}</strong></span>
+  `;
 }
 
 function readCurrentGradeSpec() {
@@ -236,7 +261,11 @@ function renderIterationView(iterationRecord) {
     .join("");
 
   questionsContainer.innerHTML = `<h3>Assessment Items & Metrics</h3>${questionsHtml}`;
-  smtScriptPre.textContent = verificationResult.smtLib2Script;
+  if (smtScriptCode) {
+    smtScriptCode.textContent = verificationResult.smtLib2Script;
+  } else if (smtScriptPre) {
+    smtScriptPre.textContent = verificationResult.smtLib2Script;
+  }
   renderSmtVisualization(verificationResult, assessment);
 
   if (probeWordsSlider && probeSyllablesSlider) {
@@ -1738,10 +1767,20 @@ function renderSmtVisualization(verificationResult, assessmentOverride) {
 function renderIterationTabs() {
   iterationTabs.innerHTML = "";
   currentIterations.forEach((iterRecord, idx) => {
+    if (idx > 0) {
+      const connector = document.createElement("span");
+      connector.className = "iterConnector";
+      connector.setAttribute("aria-hidden", "true");
+      connector.textContent = "→";
+      iterationTabs.appendChild(connector);
+    }
     const btn = document.createElement("button");
+    btn.type = "button";
     const statusBadge = iterRecord.verificationResult.status.toUpperCase();
+    const isSatStep = statusBadge === "SAT";
     btn.className = `iterStepBtn ${idx === selectedIterationIndex ? "activeIter" : ""}`;
-    btn.textContent = idx === 0 ? `Draft (${statusBadge})` : `Repair ${idx} (${statusBadge})`;
+    const stepLabel = idx === 0 ? "Draft 0" : `Repair ${idx}`;
+    btn.innerHTML = `<span>${stepLabel}</span> <span class="smtStatusChip ${isSatStep ? "chipSat" : "chipViolated"}" style="padding:0.08rem 0.38rem;font-size:0.68rem;">${statusBadge}</span>`;
     btn.addEventListener("click", () => {
       selectedIterationIndex = idx;
       renderIterationTabs();
@@ -1954,16 +1993,23 @@ async function initializePlayground() {
     });
   }
 
-  [maxWordsInput, maxSyllablesInput, fkMinInput, fkMaxInput, optionSpreadInput].forEach(
-    (inputEl) => {
-      if (inputEl) {
-        inputEl.addEventListener("input", () => {
-          impossibleSpecOverride = false;
-          renderFeasibleProofSpace();
-        });
-      }
+  [
+    maxWordsInput,
+    maxSyllablesInput,
+    fkMinInput,
+    fkMaxInput,
+    optionSpreadInput,
+    quizDurationInput,
+    allowlistInput,
+  ].forEach((inputEl) => {
+    if (inputEl) {
+      inputEl.addEventListener("input", () => {
+        impossibleSpecOverride = false;
+        renderSpecSummaryPills();
+        renderFeasibleProofSpace();
+      });
     }
-  );
+  });
 
   runRepairBtn.addEventListener("click", executeRepairLoop);
   verifyJsonBtn.addEventListener("click", executeVerifyEditedJson);

@@ -323,6 +323,12 @@ def test_api_specs_and_verify_endpoints_return_camel_case():
     assert "tabFeasibleMapBtn" in index_resp.text
     assert "feasibleMapPane" in index_resp.text
     assert "feasibleSpaceSvg" in index_resp.text
+    assert "specSummaryPills" in index_resp.text
+    assert "customizeSpecDetails" in index_resp.text
+    assert "rawJsonEditorDetails" in index_resp.text
+    assert "smtPipelineDetails" in index_resp.text
+    assert "fullSmtScriptDetails" in index_resp.text
+    assert "feasibleMathDetails" in index_resp.text
     assert "smtFilterBar" in index_resp.text
     assert "smtInteractiveViewer" in index_resp.text
 
