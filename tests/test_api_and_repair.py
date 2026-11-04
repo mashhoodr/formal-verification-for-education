@@ -333,6 +333,14 @@ def test_api_specs_and_verify_endpoints_return_camel_case():
     assert "feasibleMathDetails" in index_resp.text
     assert "smtFilterBar" in index_resp.text
     assert "smtInteractiveViewer" in index_resp.text
+    assert "foundationsToggleBtn" in index_resp.text
+    assert "foundationsContainer" in index_resp.text
+    assert "kstDomainSelect" in index_resp.text
+    assert "kstProbeResultCard" in index_resp.text
+    assert "tabFoundationsKstBtn" in index_resp.text
+    assert "tabFoundationsEvalBtn" in index_resp.text
+    assert "evalScorecardContainer" in index_resp.text
+    assert "evalMutantsSelectorGrid" in index_resp.text
 
 
 def test_stage0_api_scenarios_and_repair_loop():

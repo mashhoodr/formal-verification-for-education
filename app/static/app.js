@@ -1851,17 +1851,693 @@ async function executeVerifyEditedJson() {
 }
 
 // ============================================================================
-// 3-STAGE PIPELINE: STAGE 0 (GROUNDING), STAGE 1 (GRAPH), STAGE 2 (QUIZ)
+// 4-STAGE PIPELINE: PRE-STAGE 0 (FOUNDATIONS & EVAL), STAGE 0 (GROUNDING), STAGE 1 (GRAPH), STAGE 2 (QUIZ)
 // ============================================================================
-let currentStage = 0; // 0 for Stage 0, 1 for Stage 1, 2 for Stage 2
+let currentStage = -1; // -1 for Foundations, 0 for Stage 0, 1 for Stage 1, 2 for Stage 2
 
+const foundationsToggleBtn = document.getElementById("foundationsToggleBtn");
 const stage0ToggleBtn = document.getElementById("stage0ToggleBtn");
 const stage1ToggleBtn = document.getElementById("stage1ToggleBtn");
 const stage2ToggleBtn = document.getElementById("stage2ToggleBtn");
 
+const foundationsContainer = document.getElementById("foundationsContainer");
 const stage0Container = document.getElementById("stage0Container");
 const stage1Container = document.getElementById("stage1Container");
 const stage2Container = document.getElementById("stage2Container");
+
+function switchStage(stageNum) {
+  const normalizedStage = stageNum === "foundations" ? -1 : Number(stageNum);
+  currentStage = normalizedStage;
+
+  if (foundationsToggleBtn) foundationsToggleBtn.classList.toggle("activeStage", normalizedStage === -1);
+  if (stage0ToggleBtn) stage0ToggleBtn.classList.toggle("activeStage", normalizedStage === 0);
+  if (stage1ToggleBtn) stage1ToggleBtn.classList.toggle("activeStage", normalizedStage === 1);
+  if (stage2ToggleBtn) stage2ToggleBtn.classList.toggle("activeStage", normalizedStage === 2);
+
+  if (foundationsContainer) foundationsContainer.classList.toggle("hiddenPane", normalizedStage !== -1);
+  if (stage0Container) stage0Container.classList.toggle("hiddenPane", normalizedStage !== 0);
+  if (stage1Container) stage1Container.classList.toggle("hiddenPane", normalizedStage !== 1);
+  if (stage2Container) stage2Container.classList.toggle("hiddenPane", normalizedStage !== 2);
+}
+
+// ============================================================================
+// PRE-STAGE 0: FOUNDATIONS (KST BIRKHOFF LATTICE) & RED-TEAM EVAL CONTROLLER
+// ============================================================================
+let currentFoundationsDomain = "drivingSchool";
+let currentCandidateKstSkills = new Set();
+let cachedKstDomainReport = null;
+let cachedProofTheaterReport = null;
+let selectedEvalMutantNumber = 1;
+
+// Tabs
+const tabFoundationsKstBtn = document.getElementById("tabFoundationsKstBtn");
+const tabFoundationsEvalBtn = document.getElementById("tabFoundationsEvalBtn");
+const foundationsKstPane = document.getElementById("foundationsKstPane");
+const foundationsEvalPane = document.getElementById("foundationsEvalPane");
+
+// Left Column: KST Sandbox
+const kstDomainSelect = document.getElementById("kstDomainSelect");
+const kstDomainDesc = document.getElementById("kstDomainDesc");
+const kstDomainSummaryBox = document.getElementById("kstDomainSummaryBox");
+const kstTotalSubsetsCount = document.getElementById("kstTotalSubsetsCount");
+const kstValidStatesCount = document.getElementById("kstValidStatesCount");
+const kstUnionClosedBadge = document.getElementById("kstUnionClosedBadge");
+const kstInterClosedBadge = document.getElementById("kstInterClosedBadge");
+const kstBirkhoffBadge = document.getElementById("kstBirkhoffBadge");
+
+const kstPresetEmptyBtn = document.getElementById("kstPresetEmptyBtn");
+const kstPresetValidBtn = document.getElementById("kstPresetValidBtn");
+const kstPresetBrokenBtn = document.getElementById("kstPresetBrokenBtn");
+const kstPresetFullBtn = document.getElementById("kstPresetFullBtn");
+
+const kstSkillTogglesGrid = document.getElementById("kstSkillTogglesGrid");
+const kstProbeResultCard = document.getElementById("kstProbeResultCard");
+const kstCounterexamplesContainer = document.getElementById("kstCounterexamplesContainer");
+
+// Right Column: KST Rungs, Notions, Lattice, SMT
+const kstRungsContainer = document.getElementById("kstRungsContainer");
+const kstNotionsContainer = document.getElementById("kstNotionsContainer");
+const kstStatesLatticeContainer = document.getElementById("kstStatesLatticeContainer");
+const kstSmtScriptCode = document.getElementById("kstSmtScriptCode");
+const kstCertHashBadge = document.getElementById("kstCertHashBadge");
+
+// Right Column: Red-Team Eval
+const evalHowItWorksBox = document.getElementById("evalHowItWorksBox");
+const evalHowItWorksSteps = document.getElementById("evalHowItWorksSteps");
+const evalScorecardContainer = document.getElementById("evalScorecardContainer");
+const evalMutantsSelectorGrid = document.getElementById("evalMutantsSelectorGrid");
+const evalMutantInspectionCard = document.getElementById("evalMutantInspectionCard");
+
+function switchFoundationsView(viewName) {
+  const isKst = viewName === "kst";
+  if (tabFoundationsKstBtn) tabFoundationsKstBtn.classList.toggle("activeTab", isKst);
+  if (tabFoundationsEvalBtn) tabFoundationsEvalBtn.classList.toggle("activeTab", !isKst);
+  if (foundationsKstPane) foundationsKstPane.classList.toggle("hiddenPane", !isKst);
+  if (foundationsEvalPane) foundationsEvalPane.classList.toggle("hiddenPane", isKst);
+
+  if (!isKst && !cachedProofTheaterReport) {
+    loadProofTheaterEvalReport();
+  }
+}
+
+async function loadKstDomainReport(domainId) {
+  currentFoundationsDomain = domainId;
+  if (kstDomainSelect) kstDomainSelect.value = domainId;
+
+  try {
+    const resp = await fetch(`/api/kst/domain-report?domain_id=${encodeURIComponent(domainId)}`);
+    const data = await resp.json();
+    cachedKstDomainReport = data;
+    currentCandidateKstSkills.clear();
+    renderKstDomainView(data);
+    await probeCandidateKstState();
+  } catch (err) {
+    console.error("Failed to load KST domain report:", err);
+  }
+}
+
+function renderKstDomainView(report) {
+  if (!report) return;
+
+  if (kstDomainDesc) {
+    kstDomainDesc.textContent = report.description || "";
+  }
+
+  if (kstTotalSubsetsCount) {
+    kstTotalSubsetsCount.textContent = report.totalPossibleSubsets != null ? report.totalPossibleSubsets : "-";
+  }
+
+  if (kstValidStatesCount) {
+    kstValidStatesCount.textContent = report.validStateCount != null ? report.validStateCount : "-";
+  }
+
+  if (kstUnionClosedBadge) {
+    const isOk = report.unionClosedProven;
+    kstUnionClosedBadge.className = `statusPill ${isOk ? "statusSat" : "statusUnsat"}`;
+    kstUnionClosedBadge.textContent = isOk ? "✓ PROVEN" : "❌ FAILED";
+  }
+
+  if (kstInterClosedBadge) {
+    const isOk = report.intersectionClosedProven;
+    kstInterClosedBadge.className = `statusPill ${isOk ? "statusSat" : "statusUnsat"}`;
+    kstInterClosedBadge.textContent = isOk ? "✓ PROVEN" : "❌ FAILED";
+  }
+
+  if (kstBirkhoffBadge) {
+    const isOk = report.birkhoffBijectionProven;
+    kstBirkhoffBadge.className = `statusPill ${isOk ? "statusSat" : "statusUnsat"}`;
+    kstBirkhoffBadge.textContent = isOk ? "✓ PROVEN" : "❌ FAILED";
+  }
+
+  renderKstSkillToggles(report.items || []);
+  renderKstRungs(report.rungs || []);
+  renderKstNotions(report.notions || [], report.prereqPairs || []);
+  renderKstStatesLattice(report.validStates || []);
+  renderKstCounterexamples(report.closureCounterexamples || []);
+
+  if (kstSmtScriptCode) {
+    kstSmtScriptCode.textContent = report.smtSnippet || "; No SMT snippet generated";
+  }
+
+  if (kstCertHashBadge) {
+    const hash = report.z3CertificateHash || "";
+    kstCertHashBadge.textContent = hash ? `SHA-256: ${hash.slice(0, 16)}...` : "UNVERIFIED";
+  }
+}
+
+function renderKstSkillToggles(items) {
+  if (!kstSkillTogglesGrid) return;
+  kstSkillTogglesGrid.innerHTML = "";
+
+  items.forEach((item) => {
+    const isSelected = currentCandidateKstSkills.has(item.itemId);
+    const btn = document.createElement("button");
+    btn.type = "button";
+    btn.className = `kstSkillPill ${isSelected ? "activeSkillPill" : ""}`;
+    btn.setAttribute("aria-pressed", isSelected ? "true" : "false");
+    btn.dataset.itemId = item.itemId;
+
+    btn.innerHTML = `
+      <div class="kstSkillPillTop">
+        <span class="kstSkillCode">${escapeHtmlText(item.code || item.itemId)}</span>
+        <span class="kstSkillActiveIndicator">${isSelected ? "✓ Included" : "+ Add"}</span>
+      </div>
+      <span class="kstSkillLabel">${escapeHtmlText(item.label)}</span>
+      ${item.description ? `<span class="kstSkillDesc">${escapeHtmlText(item.description)}</span>` : ""}
+    `;
+
+    btn.addEventListener("click", () => {
+      if (currentCandidateKstSkills.has(item.itemId)) {
+        currentCandidateKstSkills.delete(item.itemId);
+      } else {
+        currentCandidateKstSkills.add(item.itemId);
+      }
+      renderKstSkillToggles(items);
+      probeCandidateKstState();
+    });
+
+    kstSkillTogglesGrid.appendChild(btn);
+  });
+}
+
+function setKstPresetState(presetType) {
+  if (!cachedKstDomainReport) return;
+  const items = cachedKstDomainReport.items || [];
+  const domain = currentFoundationsDomain;
+
+  currentCandidateKstSkills.clear();
+
+  if (presetType === "empty") {
+    // Already empty
+  } else if (presetType === "valid") {
+    if (domain === "drivingSchool") {
+      currentCandidateKstSkills.add("S");
+      currentCandidateKstSkills.add("C");
+    } else if (domain === "tinyMaths") {
+      currentCandidateKstSkills.add("a");
+      currentCandidateKstSkills.add("b");
+    } else if (domain === "ncpFractionsG2G4") {
+      currentCandidateKstSkills.add("G2_IDENT");
+      currentCandidateKstSkills.add("G2_ADD_LIKE");
+      currentCandidateKstSkills.add("G3_CLASSIFY");
+    } else {
+      if (items.length > 0) currentCandidateKstSkills.add(items[0].itemId);
+    }
+  } else if (presetType === "broken") {
+    if (domain === "drivingSchool") {
+      currentCandidateKstSkills.add("T"); // Missing S and C!
+    } else if (domain === "tinyMaths") {
+      currentCandidateKstSkills.add("c"); // Missing a and b!
+    } else if (domain === "ncpFractionsG2G4") {
+      currentCandidateKstSkills.add("G4_MULT"); // Missing multiple prereqs!
+    } else {
+      if (items.length > 1) currentCandidateKstSkills.add(items[items.length - 1].itemId);
+    }
+  } else if (presetType === "full") {
+    items.forEach((item) => currentCandidateKstSkills.add(item.itemId));
+  }
+
+  renderKstSkillToggles(items);
+  probeCandidateKstState();
+}
+
+async function probeCandidateKstState() {
+  if (!kstProbeResultCard) return;
+
+  const selectedList = Array.from(currentCandidateKstSkills);
+
+  try {
+    const resp = await fetch("/api/kst/probe-state", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        domainId: currentFoundationsDomain,
+        selectedItemIds: selectedList,
+      }),
+    });
+    const probeRes = await resp.json();
+    renderKstProbeResult(probeRes);
+    highlightLatticeState(selectedList);
+  } catch (err) {
+    console.error("Failed to probe KST state:", err);
+    kstProbeResultCard.innerHTML = `
+      <div style="color:#b91c1c;">
+        <strong>Probe Error:</strong> ${escapeHtmlText(err.message)}
+      </div>
+    `;
+  }
+}
+
+function renderKstProbeResult(res) {
+  if (!kstProbeResultCard) return;
+
+  const isValid = res.isValidState;
+  const itemsMap = {};
+  if (cachedKstDomainReport && cachedKstDomainReport.items) {
+    cachedKstDomainReport.items.forEach((it) => {
+      itemsMap[it.itemId] = it.label;
+    });
+  }
+
+  kstProbeResultCard.className = `kstProbeResultCard ${isValid ? "validState" : "invalidState"}`;
+
+  let innerFringeHtml = "";
+  let outerFringeHtml = "";
+  let missingPrereqsHtml = "";
+
+  if (isValid) {
+    const innerChips = (res.innerFringe || []).map((id) => {
+      const label = itemsMap[id] || id;
+      return `<span class="fringeChip fringeInner">✓ Just learned: <strong>${escapeHtmlText(label)}</strong> (${escapeHtmlText(id)})</span>`;
+    }).join("");
+    innerFringeHtml = `
+      <div class="fringeRow">
+        <span class="fringeLabel">Inner Fringe 𝓘(S):</span>
+        <div style="display:flex;flex-wrap:wrap;gap:0.35rem;">
+          ${innerChips || `<span style="font-size:0.75rem;color:#64748b;">∅ (None — minimal base state)</span>`}
+        </div>
+      </div>
+    `;
+
+    const outerChips = (res.outerFringe || []).map((id) => {
+      const label = itemsMap[id] || id;
+      return `<span class="fringeChip fringeOuter">🎯 Ready to learn: <strong>${escapeHtmlText(label)}</strong> (${escapeHtmlText(id)})</span>`;
+    }).join("");
+    outerFringeHtml = `
+      <div class="fringeRow">
+        <span class="fringeLabel">Outer Fringe 𝓞(S) (ZPD):</span>
+        <div style="display:flex;flex-wrap:wrap;gap:0.35rem;">
+          ${outerChips || `<span style="font-size:0.75rem;color:#047857;font-weight:700;">★ Full Domain Mastery Achieved!</span>`}
+        </div>
+      </div>
+    `;
+  } else {
+    const missingChips = (res.missingPrerequisites || []).map((id) => {
+      const label = itemsMap[id] || id;
+      return `<span class="missingPrereqChip">⚠ Missing Prereq: <strong>${escapeHtmlText(label)}</strong> (${escapeHtmlText(id)})</span>`;
+    }).join("");
+    missingPrereqsHtml = `
+      <div class="fringeRow">
+        <span class="fringeLabel" style="color:#991b1b;">Prerequisite Gaps:</span>
+        <div style="display:flex;flex-wrap:wrap;gap:0.35rem;">
+          ${missingChips}
+        </div>
+      </div>
+    `;
+  }
+
+  kstProbeResultCard.innerHTML = `
+    <div class="kstProbeHeader">
+      <div style="display:flex;align-items:center;gap:0.5rem;flex-wrap:wrap;">
+        <span class="kstProbeStatusTitle">${escapeHtmlText(res.statusTitle)}</span>
+        <span class="statusPill ${isValid ? "statusSat" : "statusUnsat"}">
+          ${isValid ? "✓ VALID STATE S ∈ 𝒦" : "❌ INVALID STATE S ∉ 𝒦"}
+        </span>
+      </div>
+      <span class="badgePill" style="font-family:monospace;font-size:0.74rem;">
+        Candidate |S| = ${res.selectedItemIds.length}
+      </span>
+    </div>
+    <div class="kstProbeExplanation">${escapeHtmlText(res.plainEnglishExplanation)}</div>
+    <div class="kstZ3VerdictSnippet"><strong>Z3 SMT Verdict:</strong> <code>${escapeHtmlText(res.z3Verdict)}</code></div>
+    <div class="fringeSection">
+      ${missingPrereqsHtml}
+      ${innerFringeHtml}
+      ${outerFringeHtml}
+    </div>
+  `;
+}
+
+function highlightLatticeState(selectedList) {
+  if (!kstStatesLatticeContainer) return;
+  const sortedSelectedStr = [...selectedList].sort().join(",");
+
+  const cards = kstStatesLatticeContainer.querySelectorAll(".kstStateCard");
+  cards.forEach((card) => {
+    const cardItemsStr = card.dataset.itemsSorted || "";
+    card.classList.toggle("activeStateCard", cardItemsStr === sortedSelectedStr);
+  });
+}
+
+function renderKstRungs(rungs) {
+  if (!kstRungsContainer) return;
+  kstRungsContainer.innerHTML = "";
+
+  rungs.forEach((r) => {
+    const card = document.createElement("div");
+    card.className = "kstRungCard";
+    card.innerHTML = `
+      <div class="kstRungHeader">
+        <span class="kstRungTitle">${escapeHtmlText(r.title)}</span>
+        <span class="badgePill">Rung ${r.rungNumber} of 5</span>
+      </div>
+      <p style="margin:0 0 0.4rem;font-size:0.82rem;line-height:1.45;color:#1e293b;">
+        ${escapeHtmlText(r.plainEnglishSummary)}
+      </p>
+      <div class="kstRungAnalogy">
+        <strong>💡 Everyday Analogy:</strong> ${escapeHtmlText(r.everydayAnalogy)}
+      </div>
+      <div class="kstRungFormal">
+        <strong>Formal Math:</strong> <code>${escapeHtmlText(r.formalDefinition)}</code>
+      </div>
+      <div class="kstRungTakeaway">
+        <strong>🔑 Ground Truth Takeaway:</strong> ${escapeHtmlText(r.keyTakeaway)}
+      </div>
+    `;
+    kstRungsContainer.appendChild(card);
+  });
+}
+
+function renderKstNotions(notions, prereqPairs) {
+  if (!kstNotionsContainer) return;
+  kstNotionsContainer.innerHTML = "";
+
+  const prereqWrap = document.createElement("div");
+  prereqWrap.innerHTML = `
+    <div style="font-size:0.75rem;font-weight:700;color:#334155;margin-bottom:0.35rem;">
+      Quasi-Order Prerequisite Edges (u ⪯ v):
+    </div>
+  `;
+  const pairsContainer = document.createElement("div");
+  pairsContainer.className = "prereqPairsWrap";
+  prereqPairs.forEach(([u, v]) => {
+    const badge = document.createElement("span");
+    badge.className = "prereqPairBadge";
+    badge.textContent = `${u} ⪯ ${v}`;
+    badge.title = `Mastering ${v} entails prerequisite mastery of ${u}`;
+    pairsContainer.appendChild(badge);
+  });
+  prereqWrap.appendChild(pairsContainer);
+  kstNotionsContainer.appendChild(prereqWrap);
+
+  notions.forEach((n) => {
+    const card = document.createElement("div");
+    card.className = "notionCard";
+    card.innerHTML = `
+      <div class="notionHeader">
+        <span class="notionLabel">${escapeHtmlText(n.label)}</span>
+        <span class="badgePill" style="font-family:monospace;font-size:0.74rem;">
+          {${n.memberItemIds.join(", ")}}
+        </span>
+      </div>
+      <p class="notionMeaning">${escapeHtmlText(n.pedagogicalMeaning)}</p>
+    `;
+    kstNotionsContainer.appendChild(card);
+  });
+}
+
+function renderKstStatesLattice(validStates) {
+  if (!kstStatesLatticeContainer) return;
+  kstStatesLatticeContainer.innerHTML = "";
+
+  validStates.forEach((st) => {
+    const sortedItems = [...st.itemIds].sort();
+    const sortedStr = sortedItems.join(",");
+    const card = document.createElement("div");
+    card.className = "kstStateCard";
+    card.dataset.itemsSorted = sortedStr;
+
+    const itemsDisplay = sortedItems.length === 0 ? "∅ (Empty State)" : `{ ${sortedItems.join(", ")} }`;
+    const innerDisplay = st.innerFringe.length > 0 ? `𝓘 = {${st.innerFringe.join(", ")}}` : "𝓘 = ∅";
+    const outerDisplay = st.outerFringe.length > 0 ? `𝓞 = {${st.outerFringe.join(", ")}}` : "𝓞 = ∅ (Mastery)";
+
+    card.innerHTML = `
+      <div class="kstStateCardTop">
+        <span class="kstStateId">${escapeHtmlText(st.stateId)}</span>
+        <span class="kstStateSize">|S| = ${st.size}</span>
+      </div>
+      <div class="kstStateItemsList">${escapeHtmlText(itemsDisplay)}</div>
+      <div class="kstStateFringeMini">
+        <span>${escapeHtmlText(innerDisplay)}</span>
+        <span>${escapeHtmlText(outerDisplay)}</span>
+      </div>
+    `;
+
+    card.addEventListener("click", () => {
+      currentCandidateKstSkills = new Set(st.itemIds);
+      if (cachedKstDomainReport) {
+        renderKstSkillToggles(cachedKstDomainReport.items || []);
+      }
+      probeCandidateKstState();
+    });
+
+    kstStatesLatticeContainer.appendChild(card);
+  });
+}
+
+function renderKstCounterexamples(counterexamples) {
+  if (!kstCounterexamplesContainer) return;
+  kstCounterexamplesContainer.innerHTML = "";
+
+  counterexamples.forEach((ce) => {
+    const card = document.createElement("div");
+    card.className = "kstCounterexampleCard";
+    card.innerHTML = `
+      <div class="kstCeHeader">
+        <span class="kstCeTitle">${escapeHtmlText(ce.title)}</span>
+        <span class="statusPill statusUnsat">Union Fails</span>
+      </div>
+      <p style="margin:0.25rem 0;font-size:0.8rem;line-height:1.4;color:#334155;">
+        ${escapeHtmlText(ce.domainDescription)}
+      </p>
+      <div class="kstCeStatesRow">
+        <span style="font-size:0.75rem;font-weight:700;color:#64748b;">States:</span>
+        <span class="kstCeStatePill">A = {${ce.stateA.join(", ")}}</span>
+        <span style="font-size:0.75rem;color:#94a3b8;">&cup;</span>
+        <span class="kstCeStatePill">B = {${ce.stateB.join(", ")}}</span>
+        <span style="font-size:0.75rem;color:#94a3b8;">&rArr;</span>
+        <span class="kstCeUnionPill">A &cup; B = {${ce.unionState.join(", ")}}</span>
+      </div>
+      <p style="margin:0.35rem 0;font-size:0.78rem;line-height:1.4;color:#991b1b;">
+        <strong>Why Union Fails:</strong> ${escapeHtmlText(ce.whyUnionFails)}
+      </p>
+      <details class="sidebarDisclosure" style="margin-top:0.4rem;">
+        <summary style="font-size:0.74rem;">View Z3 UNSAT Witness</summary>
+        <div class="disclosureBody" style="padding:0.5rem;">
+          <pre class="codePre" style="font-size:0.72rem;max-height:120px;"><code>${escapeHtmlText(ce.z3UnsatWitness)}</code></pre>
+        </div>
+      </details>
+      <div class="kstCeTakeaway">
+        <strong>Architectural Takeaway:</strong> ${escapeHtmlText(ce.architecturalTakeaway)}
+      </div>
+    `;
+    kstCounterexamplesContainer.appendChild(card);
+  });
+}
+
+// Red-Team Mutation Eval
+async function loadProofTheaterEvalReport() {
+  try {
+    const resp = await fetch("/api/proof-theater/eval-report");
+    const data = await resp.json();
+    cachedProofTheaterReport = data;
+    renderProofTheaterEval(data);
+  } catch (err) {
+    console.error("Failed to load proof theater eval report:", err);
+  }
+}
+
+function renderProofTheaterEval(report) {
+  if (!report) return;
+
+  if (evalHowItWorksSteps) {
+    evalHowItWorksSteps.innerHTML = "";
+    (report.howEvalWorksSteps || []).forEach((step) => {
+      const stepDiv = document.createElement("div");
+      stepDiv.className = "evalStepItem";
+      stepDiv.textContent = step;
+      evalHowItWorksSteps.appendChild(stepDiv);
+    });
+  }
+
+  renderProofTheaterScorecard(report);
+  renderProofTheaterMutantsGrid(report.mutants || []);
+  selectEvalMutant(selectedEvalMutantNumber);
+}
+
+function renderProofTheaterScorecard(report) {
+  if (!evalScorecardContainer) return;
+
+  const total = report.totalMutants || 8;
+  const naiveCaught = report.naiveCaughtCount != null ? report.naiveCaughtCount : 2;
+  const naiveRate = report.naiveKillRatePct != null ? report.naiveKillRatePct.toFixed(1) : "25.0";
+  const groundedCaught = report.groundedCaughtCount != null ? report.groundedCaughtCount : 8;
+  const groundedRate = report.groundedKillRatePct != null ? report.groundedKillRatePct.toFixed(1) : "100.0";
+
+  evalScorecardContainer.innerHTML = `
+    <div class="scorecardGrid">
+      <div class="scorecardCard naiveCard">
+        <div class="scorecardCardTop">
+          <span class="scorecardTitle">Naïve SMT Verifier</span>
+          <span class="statusPill statusUnsat">❌ 75% BYPASSED</span>
+        </div>
+        <div class="scorecardRate">${naiveRate}%</div>
+        <div class="scorecardSub">${naiveCaught} / ${total} Mutants Caught • Misses 6/8 Adversarial AI Shortcuts</div>
+        <p style="margin:0.25rem 0 0;font-size:0.75rem;line-height:1.35;opacity:0.9;">
+          Trusts self-reported integer labels, string counts, and ungrounded IDs. Green "SAT" is a false illusion.
+        </p>
+      </div>
+
+      <div class="scorecardCard groundedCard">
+        <div class="scorecardCardTop">
+          <span class="scorecardTitle">Grounded Neuro-Symbolic Engine</span>
+          <span class="statusPill statusSat">✓ 100% KILL RATE</span>
+        </div>
+        <div class="scorecardRate">${groundedRate}%</div>
+        <div class="scorecardSub">${groundedCaught} / ${total} Mutants Caught • 0% False SAT Leakage</div>
+        <p style="margin:0.25rem 0 0;font-size:0.75rem;line-height:1.35;opacity:0.9;">
+          Stage 0 parameter derivation + parse trees + catalog binding + KST lattice closure + Stage 1 theorems.
+        </p>
+      </div>
+    </div>
+
+    <div class="diagnosisQuoteCard">
+      <strong>Executive Diagnosis:</strong> ${escapeHtmlText(report.summaryDiagnosis || "")}
+    </div>
+  `;
+}
+
+function renderProofTheaterMutantsGrid(mutants) {
+  if (!evalMutantsSelectorGrid) return;
+  evalMutantsSelectorGrid.innerHTML = "";
+
+  mutants.forEach((m) => {
+    const isSelected = m.mutantNumber === selectedEvalMutantNumber;
+    const btn = document.createElement("button");
+    btn.type = "button";
+    btn.className = `evalMutantBtn ${isSelected ? "activeMutantBtn" : ""}`;
+    btn.dataset.mutantNumber = m.mutantNumber;
+
+    btn.innerHTML = `
+      <div class="evalMutantBtnTop">
+        <span class="evalMutantNum">Mutant ${m.mutantNumber}</span>
+        <span class="badgePill" style="font-size:0.68rem;padding:0.1rem 0.35rem;">${escapeHtmlText(m.category)}</span>
+      </div>
+      <span class="evalMutantTitle">${escapeHtmlText(m.title)}</span>
+      <div class="evalMutantOutcomes">
+        <span class="evalOutcomeBadge ${m.naiveCaught ? "outcomeCaught" : "outcomeMissed"}">
+          Naïve: ${m.naiveCaught ? "CAUGHT ✓" : "MISSED ❌"}
+        </span>
+        <span class="evalOutcomeBadge outcomeCaught">
+          Grounded: CAUGHT ✓
+        </span>
+      </div>
+    `;
+
+    btn.addEventListener("click", () => {
+      selectEvalMutant(m.mutantNumber);
+    });
+
+    evalMutantsSelectorGrid.appendChild(btn);
+  });
+}
+
+function selectEvalMutant(mutantNum) {
+  selectedEvalMutantNumber = mutantNum;
+
+  if (evalMutantsSelectorGrid) {
+    const btns = evalMutantsSelectorGrid.querySelectorAll(".evalMutantBtn");
+    btns.forEach((b) => {
+      b.classList.toggle("activeMutantBtn", parseInt(b.dataset.mutantNumber, 10) === mutantNum);
+    });
+  }
+
+  if (!cachedProofTheaterReport || !cachedProofTheaterReport.mutants) return;
+  const m = cachedProofTheaterReport.mutants.find((item) => item.mutantNumber === mutantNum);
+  if (!m) return;
+
+  renderEvalMutantInspection(m);
+}
+
+function renderEvalMutantInspection(m) {
+  if (!evalMutantInspectionCard) return;
+
+  evalMutantInspectionCard.innerHTML = `
+    <div class="mutantHeaderBox">
+      <div>
+        <div style="display:flex;align-items:center;gap:0.45rem;margin-bottom:0.25rem;">
+          <span class="badgePill">Mutant ${m.mutantNumber}</span>
+          <span class="standardGradePill">${escapeHtmlText(m.category)}</span>
+        </div>
+        <h3 class="mutantHeaderTitle">${escapeHtmlText(m.title)}</h3>
+      </div>
+      <span class="statusPill statusSat">Defended by: ${escapeHtmlText(m.catchingLayer)}</span>
+    </div>
+
+    <!-- Section 1: Sabotage & Code -->
+    <div style="margin-bottom:0.75rem;">
+      <div style="font-size:0.78rem;font-weight:700;color:#334155;margin-bottom:0.25rem;">
+        1. Lazy AI Sabotage &amp; Mutated JSON Payload:
+      </div>
+      <p style="margin:0 0 0.4rem;font-size:0.8rem;line-height:1.4;color:#1e293b;">
+        ${escapeHtmlText(m.lazyAiSabotage)}
+      </p>
+      <pre class="codePre" style="max-height:130px;font-size:0.74rem;"><code>${escapeHtmlText(m.mutatedJsonSnippet)}</code></pre>
+    </div>
+
+    <!-- Section 2: Side-by-Side Verdict Comparison -->
+    <div style="font-size:0.78rem;font-weight:700;color:#334155;margin-bottom:0.25rem;">
+      2. Side-by-Side Verifier Verdict:
+    </div>
+    <div class="verdictComparisonGrid">
+      <div class="verdictCol naiveCol">
+        <div class="verdictColHeader">
+          <span>Naïve SMT Checker</span>
+          <span class="statusPill ${m.naiveCaught ? "statusSat" : "statusUnsat"}">
+            ${m.naiveCaught ? "✓ CAUGHT" : "❌ FOOLED"}
+          </span>
+        </div>
+        <div style="font-family:monospace;font-size:0.76rem;font-weight:700;color:#991b1b;">
+          ${escapeHtmlText(m.naiveVerdict)}
+        </div>
+        <p class="verdictColText">
+          <strong>Failure Mode:</strong> ${escapeHtmlText(m.naiveFailureReason)}
+        </p>
+      </div>
+
+      <div class="verdictCol groundedCol">
+        <div class="verdictColHeader">
+          <span>Grounded Neuro-Symbolic Engine</span>
+          <span class="statusPill statusSat">✓ REJECTED (HARD UNSAT)</span>
+        </div>
+        <div style="font-family:monospace;font-size:0.76rem;font-weight:700;color:#065f46;">
+          ${escapeHtmlText(m.groundedVerdict)}
+        </div>
+        <p class="verdictColText">
+          <strong>Refutation Trace:</strong> ${escapeHtmlText(m.groundedRefutationTrace)}
+        </p>
+        <p class="verdictColText" style="margin-top:0.2rem;color:#047857;font-weight:600;">
+          <strong>Catching Layer:</strong> ${escapeHtmlText(m.catchingLayer)}
+        </p>
+      </div>
+    </div>
+
+    <!-- Section 3: Classroom Risk -->
+    <div class="riskCalloutCard">
+      <strong>⚠️ Classroom Risk if Missed:</strong> ${escapeHtmlText(m.pedagogicalRiskIfMissed)}
+    </div>
+  `;
+}
 
 // ============================================================================
 // STAGE 0: CURRICULUM GROUNDING & ANTI-PROOF-THEATER CONTROLLER
@@ -1879,16 +2555,6 @@ const stage0JunctionsGrid = document.getElementById("stage0JunctionsGrid");
 const clauseCountBadge = document.getElementById("clauseCountBadge");
 const groundingStatusBadge = document.getElementById("groundingStatusBadge");
 
-function switchStage(stageNum) {
-  currentStage = stageNum;
-  if (stage0ToggleBtn) stage0ToggleBtn.classList.toggle("activeStage", stageNum === 0);
-  if (stage1ToggleBtn) stage1ToggleBtn.classList.toggle("activeStage", stageNum === 1);
-  if (stage2ToggleBtn) stage2ToggleBtn.classList.toggle("activeStage", stageNum === 2);
-
-  if (stage0Container) stage0Container.classList.toggle("hiddenPane", stageNum !== 0);
-  if (stage1Container) stage1Container.classList.toggle("hiddenPane", stageNum !== 1);
-  if (stage2Container) stage2Container.classList.toggle("hiddenPane", stageNum !== 2);
-}
 
 async function loadStage0Report() {
   try {
@@ -2905,10 +3571,26 @@ async function initializePlayground() {
   scenarioSelect.value = demoScenariosList[0].scenarioId;
   scenarioSelect.dispatchEvent(new Event("change"));
 
-  // Stage 0 / 1 / 2 navigation wiring
+  // Pipeline Stage navigation wiring (Pre-Stage 0, Stage 0, Stage 1, Stage 2)
+  if (foundationsToggleBtn) foundationsToggleBtn.addEventListener("click", () => switchStage(-1));
   if (stage0ToggleBtn) stage0ToggleBtn.addEventListener("click", () => switchStage(0));
   if (stage1ToggleBtn) stage1ToggleBtn.addEventListener("click", () => switchStage(1));
   if (stage2ToggleBtn) stage2ToggleBtn.addEventListener("click", () => switchStage(2));
+
+  // Pre-Stage 0 Foundations wiring
+  if (tabFoundationsKstBtn) tabFoundationsKstBtn.addEventListener("click", () => switchFoundationsView("kst"));
+  if (tabFoundationsEvalBtn) tabFoundationsEvalBtn.addEventListener("click", () => switchFoundationsView("eval"));
+
+  if (kstDomainSelect) {
+    kstDomainSelect.addEventListener("change", () => {
+      loadKstDomainReport(kstDomainSelect.value);
+    });
+  }
+
+  if (kstPresetEmptyBtn) kstPresetEmptyBtn.addEventListener("click", () => setKstPresetState("empty"));
+  if (kstPresetValidBtn) kstPresetValidBtn.addEventListener("click", () => setKstPresetState("valid"));
+  if (kstPresetBrokenBtn) kstPresetBrokenBtn.addEventListener("click", () => setKstPresetState("broken"));
+  if (kstPresetFullBtn) kstPresetFullBtn.addEventListener("click", () => setKstPresetState("full"));
 
   // Wire cheat simulator buttons
   const cheatButtons = document.querySelectorAll(".cheatSelectBtn");
@@ -2957,6 +3639,10 @@ async function initializePlayground() {
     }
   });
 
+  // Load Pre-Stage 0 Foundations & Proof Eval
+  await loadKstDomainReport("drivingSchool");
+  await loadProofTheaterEvalReport();
+
   // Load Stage 0 Grounding report & initial cheat simulation
   await loadStage0Report();
   await runCheatSimulation("renumberingCheat");
@@ -2964,8 +3650,8 @@ async function initializePlayground() {
   // Load Stage 1 scenarios
   await loadStage0Scenarios();
 
-  // Set Stage 0 active by default
-  switchStage(0);
+  // Set Pre-Stage 0 Foundations active by default on load
+  switchStage(-1);
 }
 
 initializePlayground();

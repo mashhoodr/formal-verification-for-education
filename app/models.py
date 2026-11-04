@@ -275,3 +275,117 @@ class CheatSimulationResponse(CamelModel):
     mathematical_proof_explanation: str
     pedagogical_significance: str
 
+
+# Knowledge Space Theory (KST) & Birkhoff Lattice Models
+class KstItem(CamelModel):
+    item_id: str
+    code: str
+    label: str
+    description: str
+    grade: Optional[int] = None
+    notion_id: str
+
+
+class KstNotionBundle(CamelModel):
+    notion_id: str
+    label: str
+    member_item_ids: list[str]
+    pedagogical_meaning: str
+
+
+class KstStateInfo(CamelModel):
+    state_id: str
+    item_ids: list[str]
+    size: int
+    inner_fringe: list[str]
+    outer_fringe: list[str]
+
+
+class KstClosureCounterexample(CamelModel):
+    counterexample_id: str
+    title: str
+    domain_description: str
+    states_shown: list[list[str]]
+    state_a: list[str]
+    state_b: list[str]
+    union_state: list[str]
+    why_union_fails: str
+    z3_unsat_witness: str
+    architectural_takeaway: str
+
+
+class KstRungStep(CamelModel):
+    rung_number: int
+    title: str
+    plain_english_summary: str
+    everyday_analogy: str
+    formal_definition: str
+    key_takeaway: str
+
+
+class KstDomainReport(CamelModel):
+    domain_id: str
+    title: str
+    description: str
+    items: list[KstItem]
+    prereq_pairs: list[list[str]]
+    notions: list[KstNotionBundle]
+    valid_states: list[KstStateInfo]
+    total_possible_subsets: int
+    valid_state_count: int
+    union_closed_proven: bool
+    intersection_closed_proven: bool
+    birkhoff_bijection_proven: bool
+    z3_certificate_hash: str
+    smt_snippet: str
+    rungs: list[KstRungStep]
+    closure_counterexamples: list[KstClosureCounterexample]
+
+
+class KstStateProbeRequest(CamelModel):
+    domain_id: str = "drivingSchool"
+    selected_item_ids: list[str] = Field(default_factory=list)
+
+
+class KstStateProbeResponse(CamelModel):
+    domain_id: str
+    selected_item_ids: list[str]
+    is_valid_state: bool
+    status_title: str
+    plain_english_explanation: str
+    missing_prerequisites: list[str]
+    inner_fringe: list[str]
+    outer_fringe: list[str]
+    z3_verdict: str
+
+
+# Red-Team Anti-"Proof Theater" Mutation Evaluation Models
+class ProofTheaterMutantResult(CamelModel):
+    mutant_id: str
+    mutant_number: int
+    title: str
+    category: str
+    lazy_ai_sabotage: str
+    mutated_json_snippet: str
+    naive_verdict: str
+    naive_caught: bool
+    naive_failure_reason: str
+    grounded_verdict: str
+    grounded_caught: bool
+    grounded_refutation_trace: str
+    catching_layer: str
+    pedagogical_risk_if_missed: str
+
+
+class ProofTheaterEvalReport(CamelModel):
+    eval_id: str
+    total_mutants: int
+    naive_caught_count: int
+    naive_kill_rate_pct: float
+    grounded_caught_count: int
+    grounded_kill_rate_pct: float
+    summary_diagnosis: str
+    how_eval_works_steps: list[str]
+    mutants: list[ProofTheaterMutantResult]
+
+

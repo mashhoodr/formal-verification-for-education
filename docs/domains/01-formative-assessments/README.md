@@ -28,6 +28,8 @@ Each dimension below has its own dedicated specification and mathematical formul
    - Proving the 6 Stage 0 Z3 theorems on candidate KC decompositions from the **National Curriculum of Pakistan (NCP)** across Grades $G-1 \to G \to G+1$, and explicitly documenting the **6 epistemic boundaries that are NOT tested by the Stage 0 Z3 proof**.
 8. **[Dimension 8: Generative Junctions, Anti-"Proof Theater" Rigor & Missing Proofs (`08-generative-junctions-and-missing-proofs.md`)](08-generative-junctions-and-missing-proofs.md)**
    - Systematic inventory of the **8 generative junctions** where LLMs or heuristic algorithms generate content, the specific "proof theater" vulnerabilities of each, and the **5 missing proofs** required for complete neuro-symbolic ground truth.
+9. **[Dimension 9: Knowledge Space Theory Foundations & Red-Team Mutation Evaluation (`09-kst-foundations-and-red-team-eval.md`)](09-kst-foundations-and-red-team-eval.md)**
+   - The 5-Rung KST Ladder, Birkhoff–Doignon–Falmagne representation theorem in Z3, why misconceptions break union-closure, and the 8-mutant red-team evaluation proving 100% kill rate against adversarial AI shortcuts.
 
 ---
 

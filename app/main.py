@@ -8,6 +8,7 @@ from app.models import (
     VerifyRequest,
     Stage0RepairRequest,
     Stage0VerifyRequest,
+    KstStateProbeRequest,
 )
 from app.verifier.curriculum_grounding import (
     get_stage0_grounding_report,
@@ -25,6 +26,12 @@ from app.verifier.repair_orchestrator import (
     run_generate_and_verify_loop,
 )
 from app.verifier.z3_kernel import verify_assessment
+from app.verifier.kst_kernel import (
+    get_kst_domain_report,
+    probe_knowledge_state,
+    KST_DOMAINS,
+)
+from app.verifier.proof_theater_eval import run_proof_theater_eval
 
 app = FastAPI(
     title="K-12 Educational Content Formal Verification Kernel",
@@ -115,3 +122,33 @@ def stage1_repair_loop_endpoint(payload: Stage0RepairRequest) -> JSONResponse:
 def stage1_verify_endpoint(payload: Stage0VerifyRequest) -> JSONResponse:
     result = verify_kc_ontology(payload.triad_spec)
     return JSONResponse(content=result.model_dump(by_alias=True))
+
+
+# Knowledge Space Theory (KST) & Birkhoff Lattice Endpoints
+@app.get("/api/kst/domains")
+def get_kst_domains_endpoint() -> JSONResponse:
+    domains_summary = [
+        {"domainId": k, "title": v["title"], "description": v["description"], "itemCount": len(v["items"])}
+        for k, v in KST_DOMAINS.items()
+    ]
+    return JSONResponse(content={"domains": domains_summary})
+
+
+@app.get("/api/kst/domain-report")
+def get_kst_domain_report_endpoint(domain_id: str = "drivingSchool") -> JSONResponse:
+    report = get_kst_domain_report(domain_id)
+    return JSONResponse(content=report.model_dump(by_alias=True))
+
+
+@app.post("/api/kst/probe-state")
+def post_kst_probe_state_endpoint(payload: KstStateProbeRequest) -> JSONResponse:
+    response = probe_knowledge_state(payload.domain_id, payload.selected_item_ids)
+    return JSONResponse(content=response.model_dump(by_alias=True))
+
+
+# Red-Team Anti-"Proof Theater" Mutation Evaluation Endpoints
+@app.get("/api/proof-theater/eval-report")
+def get_proof_theater_eval_report_endpoint() -> JSONResponse:
+    report = run_proof_theater_eval()
+    return JSONResponse(content=report.model_dump(by_alias=True))
+

@@ -4,7 +4,7 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>K-12 Educational Formal Verification Playground (Z3 SMT Kernel)</title>
-  <link rel="stylesheet" href="/static/styles.css?v=13" />
+  <link rel="stylesheet" href="/static/styles.css?v=16" />
 </head>
 <body>
   <header class="topHeader">
@@ -17,9 +17,14 @@
         </p>
       </div>
 
-      <!-- Top-Level Stage Switcher Nav Bar (3-Stage Formal Verification Pipeline) -->
+      <!-- Top-Level Stage Switcher Nav Bar (4-Stage Formal Verification Pipeline) -->
       <nav class="stageSwitcherBar" aria-label="Formal Verification Stage Switcher">
-        <button type="button" id="stage0ToggleBtn" class="stageNavBtn activeStage">
+        <button type="button" id="foundationsToggleBtn" class="stageNavBtn activeStage">
+          <span class="stageBadge">Pre-Stage 0 &bull; Foundations &amp; Eval</span>
+          <span class="stageTitle">5-Rung KST Ladder &amp; Red-Team Eval</span>
+          <span class="stageSub">Birkhoff–Doignon–Falmagne Theorem &bull; Check-by-Hand Prober &bull; 8-Mutant Eval</span>
+        </button>
+        <button type="button" id="stage0ToggleBtn" class="stageNavBtn">
           <span class="stageBadge">Stage 0 &bull; Grounding &amp; Ingestion</span>
           <span class="stageTitle">Raw NCP Standard &rarr; Audited KCs</span>
           <span class="stageSub">Pre-Proof Rigor Gate &bull; 8 Generative Junctions &bull; Anti-Proof Theater</span>
@@ -27,7 +32,7 @@
         <button type="button" id="stage1ToggleBtn" class="stageNavBtn">
           <span class="stageBadge">Stage 1 &bull; Curriculum Graph Proof</span>
           <span class="stageTitle">KC Triad DAG &amp; Invariants</span>
-          <span class="stageSub">Pakistan NCP 2022&ndash;23 (Maths &amp; English) &bull; 6 SMT Theorems &bull; 6 Epistemic Boundaries</span>
+          <span class="stageSub">Pakistan NCP 2022&ndash;23 &bull; 6 SMT Theorems &bull; 6 Epistemic Boundaries</span>
         </button>
         <button type="button" id="stage2ToggleBtn" class="stageNavBtn">
           <span class="stageBadge">Stage 2 &bull; Formative Assessment Proof</span>
@@ -38,8 +43,173 @@
     </div>
   </header>
 
+  <!-- ==================== PRE-STAGE 0: FOUNDATIONS & PROOF EVAL ==================== -->
+  <div id="foundationsContainer" class="mainGrid">
+    <!-- Left Column: Interactive KST Sandbox & Check-by-Hand State Prober -->
+    <section class="panelCard">
+      <h2>1. Interactive KST Sandbox &amp; Check-by-Hand State Prober</h2>
+
+      <div class="fieldGroup">
+        <label for="kstDomainSelect">Curriculum Skill Domain</label>
+        <select id="kstDomainSelect" class="scenarioSelect">
+          <option value="drivingSchool">Driving School Skills Lattice (4 Items &bull; 16 Subsets)</option>
+          <option value="tinyMaths">TinyMaths Claude Ladder (4 Items &bull; 16 Subsets)</option>
+          <option value="ncpFractionsG2G4">Pakistan NCP Fractions Grades 2–4 (7 Items &bull; 128 Subsets)</option>
+        </select>
+        <p id="kstDomainDesc" class="helperText" style="margin-top:0.35rem;"></p>
+      </div>
+
+      <!-- Domain Summary Box (Lattice & Bijection Status) -->
+      <div id="kstDomainSummaryBox" class="kstSummaryBox">
+        <div class="kstKpiGrid">
+          <div class="kstKpiCard">
+            <span class="kstKpiLabel">Total Possible Subsets (2<sup>|Q|</sup>)</span>
+            <span id="kstTotalSubsetsCount" class="kstKpiVal">16</span>
+          </div>
+          <div class="kstKpiCard">
+            <span class="kstKpiLabel">Valid States (|𝒦|)</span>
+            <span id="kstValidStatesCount" class="kstKpiVal">6</span>
+          </div>
+          <div class="kstKpiCard">
+            <span class="kstKpiLabel">Union-Closed</span>
+            <span id="kstUnionClosedBadge" class="statusPill statusSat">✓ PROVEN</span>
+          </div>
+          <div class="kstKpiCard">
+            <span class="kstKpiLabel">Intersection-Closed</span>
+            <span id="kstInterClosedBadge" class="statusPill statusSat">✓ PROVEN</span>
+          </div>
+          <div class="kstKpiCard">
+            <span class="kstKpiLabel">Birkhoff Bijection</span>
+            <span id="kstBirkhoffBadge" class="statusPill statusSat">✓ PROVEN</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- Interactive "Check-by-Hand" Subset Prober -->
+      <div class="kstProberSection">
+        <div class="sectionSubHeader" style="margin-bottom:0.45rem;">
+          <label style="margin:0;font-weight:700;">Interactive "Check-by-Hand" Subset Prober</label>
+          <span class="miniBadge">Live Z3 State Verification</span>
+        </div>
+        <p class="helperText">
+          Toggle individual skills below to construct a candidate state <em>S &sube; Q</em>. Z3 evaluates downward closure under prerequisite quasi-order <em>&preceq;</em> in real time:
+        </p>
+
+        <!-- Quick Preset Buttons -->
+        <div class="kstPresetRow" role="group" aria-label="Knowledge State Presets">
+          <button type="button" id="kstPresetEmptyBtn" class="secondaryBtn kstPresetBtn">Empty State (&empty;)</button>
+          <button type="button" id="kstPresetValidBtn" class="secondaryBtn kstPresetBtn">Sample Valid State</button>
+          <button type="button" id="kstPresetBrokenBtn" class="secondaryBtn kstPresetBtn">Broken State (Missing Prereq)</button>
+          <button type="button" id="kstPresetFullBtn" class="secondaryBtn kstPresetBtn">Full Mastery (Q)</button>
+        </div>
+
+        <!-- Skill Toggle Pills Container -->
+        <div id="kstSkillTogglesGrid" class="kstSkillTogglesGrid" role="group" aria-label="Domain Skill Toggle Pills"></div>
+
+        <!-- Live Z3 State Probe Verdict Card -->
+        <div id="kstProbeResultCard" class="kstProbeResultCard"></div>
+      </div>
+
+      <!-- When Real Life Breaks Union-Closure (Rung 3 Counterexamples) -->
+      <div class="kstCounterexamplesSection">
+        <div class="sectionSubHeader" style="margin-top:1.25rem;margin-bottom:0.45rem;">
+          <label style="margin:0;font-weight:700;">When Real Life Breaks Union-Closure (Rung 3 Counterexamples)</label>
+          <span class="miniBadge" style="background:#fef2f2;color:#991b1b;border-color:#fecaca;">3 Z3 Refutations</span>
+        </div>
+        <p class="helperText">
+          Knowledge Space Theory assumes union-closure (if state <em>A</em> and state <em>B</em> are valid, their union <em>A &cup; B</em> is valid). In real classroom learning, union-closure breaks in three fundamental scenarios verified below:
+        </p>
+        <div id="kstCounterexamplesContainer" class="kstCounterexamplesGrid"></div>
+      </div>
+    </section>
+
+    <!-- Right Column: Lens Switcher (5-Rung Ladder vs. Red-Team 8-Mutant Eval) -->
+    <section class="panelCard">
+      <div class="viewToggleRow twoTabs" role="tablist" aria-label="Foundations Lenses">
+        <button type="button" id="tabFoundationsKstBtn" class="tabBtn activeTab">
+          <span class="tabStepTitle"><span class="tabStepNum">1</span> The 5-Rung KST Proof Ladder &amp; State Lattice</span>
+          <span class="tabStepSub">Step-by-step from sets to Birkhoff–Doignon–Falmagne theorem</span>
+        </button>
+        <button type="button" id="tabFoundationsEvalBtn" class="tabBtn">
+          <span class="tabStepTitle"><span class="tabStepNum">2</span> Red-Team &ldquo;Proof Theater&rdquo; Mutation Eval (8 Mutants)</span>
+          <span class="tabStepSub">How we test the prover itself &bull; 25% Na&iuml;ve vs 100% Grounded Kill Rate</span>
+        </button>
+      </div>
+
+      <!-- Pane 1: The 5-Rung KST Ladder & Complete Lattice -->
+      <div id="foundationsKstPane">
+        <!-- The 5-Rung Progressive Ladder -->
+        <div class="fieldGroup">
+          <div class="sectionSubHeader">
+            <label style="font-weight:700;">The 5 Conceptual Rungs of Knowledge Space Theory</label>
+            <span class="miniBadge">Mathematical Progression</span>
+          </div>
+          <div id="kstRungsContainer" class="kstRungsStack"></div>
+        </div>
+
+        <!-- Quasi-Orders & Equivalence Notions -->
+        <div class="fieldGroup" style="margin-top:1rem;">
+          <div class="sectionSubHeader">
+            <label style="font-weight:700;">Prerequisite Quasi-Orders (u &preceq; v) &amp; Equivalence &ldquo;Notions&rdquo; (x ~ y)</label>
+            <span class="miniBadge">Rung 4 Bundles</span>
+          </div>
+          <div id="kstNotionsContainer" class="kstNotionsBox"></div>
+        </div>
+
+        <!-- Complete Z3-Verified Knowledge Space Lattice K -->
+        <div class="fieldGroup" style="margin-top:1rem;">
+          <div class="sectionSubHeader">
+            <label style="font-weight:700;">Complete Z3-Verified Knowledge Space Lattice 𝒦 &sube; 𝒫(Q)</label>
+            <span class="miniBadge" style="background:#ecfdf5;color:#065f46;border-color:#a7f3d0;">Click Any State to Load</span>
+          </div>
+          <p class="helperText">
+            Every card below is a Z3-certified downward-closed state. Click any card to load that state into the left-column Check-by-Hand Prober:
+          </p>
+          <div id="kstStatesLatticeContainer" class="kstStatesLatticeGrid"></div>
+        </div>
+
+        <!-- Z3 SMT-LIB2 Script & Certificate -->
+        <details class="sidebarDisclosure" style="margin-top:1rem;">
+          <summary>Inside the Z3 SMT-LIB2 Lattice Theorem Proof &amp; SHA-256 Certificate</summary>
+          <div class="disclosureBody">
+            <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:0.5rem;flex-wrap:wrap;gap:0.5rem;">
+              <span class="badgePill">Refutation-of-Negation Invariant Solver</span>
+              <span id="kstCertHashBadge" class="certHashBadge" style="font-family:monospace;font-size:0.75rem;">SHA-256</span>
+            </div>
+            <pre class="codePre"><code id="kstSmtScriptCode"></code></pre>
+          </div>
+        </details>
+      </div>
+
+      <!-- Pane 2: Red-Team "Proof Theater" Mutation Eval (8 Mutants) -->
+      <div id="foundationsEvalPane" class="hiddenPane">
+        <!-- How Eval Works Box -->
+        <div id="evalHowItWorksBox" class="evalHowItWorksCard">
+          <div class="sectionSubHeader" style="margin-bottom:0.4rem;">
+            <label style="margin:0;font-weight:700;">How Red-Team Mutation Testing for Formal Proofs Works</label>
+            <span class="miniBadge">Anti-Proof Theater Harness</span>
+          </div>
+          <div id="evalHowItWorksSteps" class="evalStepsList"></div>
+        </div>
+
+        <!-- Executive Kill-Rate Comparison Scorecard -->
+        <div id="evalScorecardContainer" class="evalScorecardContainer" style="margin-top:1rem;"></div>
+
+        <!-- Interactive 8-Mutant Red-Team Inspector -->
+        <div class="evalInspectorSection" style="margin-top:1.25rem;">
+          <div class="sectionSubHeader" style="margin-bottom:0.5rem;">
+            <label style="margin:0;font-weight:700;">Interactive 8-Mutant Red-Team Inspector</label>
+            <span class="miniBadge">Click Mutant to Inspect Side-by-Side</span>
+          </div>
+          <div id="evalMutantsSelectorGrid" class="evalMutantsSelectorGrid" role="group" aria-label="8 Red-Team Adversarial Mutants"></div>
+          <div id="evalMutantInspectionCard" class="evalMutantInspectionCard" style="margin-top:0.85rem;"></div>
+        </div>
+      </div>
+    </section>
+  </div>
+
   <!-- ==================== STAGE 0: GROUNDING & INGESTION (ANTI-PROOF THEATER GATE) ==================== -->
-  <div id="stage0Container" class="mainGrid">
+  <div id="stage0Container" class="mainGrid hiddenPane">
     <!-- Left Column: Raw NCP Standard, Clause Extraction & Grounding Health -->
     <section class="panelCard">
       <h2>1. Official Pakistan NCP Curriculum &amp; Clause Extraction</h2>
@@ -531,6 +701,6 @@
     <div id="explainerDialogBody" class="explainerModalBody"></div>
   </dialog>
 
-  <script src="/static/app.js?v=12"></script>
+  <script src="/static/app.js?v=16"></script>
 </body>
 </html>

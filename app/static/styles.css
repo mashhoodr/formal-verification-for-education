@@ -366,8 +366,13 @@ textarea {
   margin-bottom: 1.1rem;
 }
 
+.viewToggleRow.twoTabs {
+  grid-template-columns: repeat(2, 1fr);
+}
+
 @media (max-width: 860px) {
-  .viewToggleRow {
+  .viewToggleRow,
+  .viewToggleRow.twoTabs {
     grid-template-columns: 1fr;
   }
 }
@@ -1671,13 +1676,19 @@ dialog::backdrop {
 /* ==================== STAGE SWITCHER ==================== */
 .stageSwitcherBar {
   display: grid;
-  grid-template-columns: repeat(3, 1fr);
+  grid-template-columns: repeat(4, 1fr);
   gap: 0.85rem;
   margin-top: 1.25rem;
   position: relative;
 }
 
-@media (max-width: 1024px) {
+@media (max-width: 1200px) {
+  .stageSwitcherBar {
+    grid-template-columns: repeat(2, 1fr);
+  }
+}
+
+@media (max-width: 640px) {
   .stageSwitcherBar {
     grid-template-columns: 1fr;
   }
@@ -2759,4 +2770,830 @@ dialog::backdrop {
 
 .auditField .junctionFieldLabel {
   color: #2563eb;
+}
+
+/* ==================== PRE-STAGE 0: FOUNDATIONS & PROOF EVAL ==================== */
+
+/* KST Summary & KPI Grid */
+.kstSummaryBox {
+  background: linear-gradient(180deg, #f8fafc 0%, #f1f5f9 100%);
+  border: 1px solid var(--border-color);
+  border-radius: 10px;
+  padding: 0.85rem;
+  margin-top: 0.75rem;
+}
+
+.kstKpiGrid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(130px, 1fr));
+  gap: 0.6rem;
+}
+
+.kstKpiCard {
+  background: #ffffff;
+  border: 1px solid #cbd5e1;
+  border-radius: 8px;
+  padding: 0.65rem 0.75rem;
+  text-align: center;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  gap: 0.25rem;
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.04);
+}
+
+.kstKpiLabel {
+  font-size: 0.72rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  color: var(--text-sub);
+}
+
+.kstKpiVal {
+  font-size: 1.35rem;
+  font-weight: 800;
+  color: #1e293b;
+  font-variant-numeric: tabular-nums;
+  line-height: 1.2;
+}
+
+/* Preset Buttons */
+.kstProberSection {
+  margin-top: 1.25rem;
+  border-top: 1px solid var(--border-color);
+  padding-top: 1rem;
+}
+
+.kstPresetRow {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.45rem;
+  margin: 0.65rem 0 0.85rem;
+}
+
+.kstPresetBtn {
+  font-size: 0.76rem;
+  padding: 0.35rem 0.65rem;
+  border-radius: 6px;
+  background: #f8fafc;
+  color: #334155;
+  border: 1px solid #cbd5e1;
+  cursor: pointer;
+  font-weight: 600;
+  transition: all 0.15s ease;
+}
+
+.kstPresetBtn:hover {
+  background: #e2e8f0;
+  border-color: #94a3b8;
+  color: #0f172a;
+}
+
+/* Skill Toggle Pills Grid */
+.kstSkillTogglesGrid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(190px, 1fr));
+  gap: 0.55rem;
+  margin-bottom: 0.85rem;
+}
+
+.kstSkillPill {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  text-align: left;
+  padding: 0.6rem 0.75rem;
+  border-radius: 8px;
+  border: 1.5px solid #cbd5e1;
+  background: #ffffff;
+  cursor: pointer;
+  transition: all 0.18s cubic-bezier(0.4, 0, 0.2, 1);
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.03);
+}
+
+.kstSkillPill:hover {
+  border-color: #94a3b8;
+  background: #f8fafc;
+  transform: translateY(-1px);
+}
+
+.kstSkillPill.activeSkillPill {
+  background: #eff6ff;
+  border-color: #3b82f6;
+  box-shadow: 0 0 0 1px #3b82f6, 0 2px 6px rgba(59, 130, 246, 0.15);
+}
+
+.kstSkillPillTop {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  width: 100%;
+  margin-bottom: 0.25rem;
+}
+
+.kstSkillCode {
+  font-family: monospace;
+  font-weight: 800;
+  font-size: 0.78rem;
+  color: #1e3a8a;
+}
+
+.kstSkillActiveIndicator {
+  font-size: 0.76rem;
+  font-weight: 700;
+}
+
+.activeSkillPill .kstSkillActiveIndicator {
+  color: #2563eb;
+}
+
+.kstSkillLabel {
+  font-size: 0.82rem;
+  font-weight: 600;
+  color: #0f172a;
+  line-height: 1.3;
+}
+
+.kstSkillDesc {
+  font-size: 0.72rem;
+  color: var(--text-sub);
+  margin-top: 0.2rem;
+  line-height: 1.25;
+}
+
+/* Probe Verdict Card */
+.kstProbeResultCard {
+  border-radius: 10px;
+  padding: 0.95rem 1.1rem;
+  border: 1.5px solid #e2e8f0;
+  background: #ffffff;
+  box-shadow: 0 2px 5px rgba(0, 0, 0, 0.04);
+  transition: all 0.2s ease;
+}
+
+.kstProbeResultCard.validState {
+  background: #f0fdf4;
+  border-color: #86efac;
+}
+
+.kstProbeResultCard.invalidState {
+  background: #fef2f2;
+  border-color: #fca5a5;
+}
+
+.kstProbeHeader {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+  margin-bottom: 0.5rem;
+}
+
+.kstProbeStatusTitle {
+  font-size: 0.88rem;
+  font-weight: 800;
+  letter-spacing: 0.02em;
+}
+
+.validState .kstProbeStatusTitle {
+  color: #14532d;
+}
+
+.invalidState .kstProbeStatusTitle {
+  color: #7f1d1d;
+}
+
+.kstProbeExplanation {
+  font-size: 0.82rem;
+  line-height: 1.45;
+  color: #1e293b;
+  margin: 0.4rem 0 0.6rem;
+}
+
+.kstZ3VerdictSnippet {
+  font-family: monospace;
+  font-size: 0.74rem;
+  padding: 0.3rem 0.55rem;
+  border-radius: 6px;
+  background: rgba(0, 0, 0, 0.04);
+  display: inline-block;
+  color: #334155;
+  margin-bottom: 0.5rem;
+}
+
+/* Fringes & Chips */
+.fringeSection {
+  margin-top: 0.6rem;
+  padding-top: 0.6rem;
+  border-top: 1px dashed rgba(0, 0, 0, 0.12);
+  display: flex;
+  flex-direction: column;
+  gap: 0.45rem;
+}
+
+.fringeRow {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 0.4rem;
+}
+
+.fringeLabel {
+  font-size: 0.74rem;
+  font-weight: 700;
+  color: #334155;
+  min-width: 130px;
+}
+
+.fringeChip {
+  font-size: 0.74rem;
+  font-weight: 600;
+  padding: 0.22rem 0.55rem;
+  border-radius: 6px;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.25rem;
+}
+
+.fringeInner {
+  background: #e0e7ff;
+  color: #3730a3;
+  border: 1px solid #c7d2fe;
+}
+
+.fringeOuter {
+  background: #dcfce7;
+  color: #166534;
+  border: 1px solid #86efac;
+}
+
+.missingPrereqChip {
+  background: #fee2e2;
+  color: #991b1b;
+  border: 1px solid #fca5a5;
+  font-size: 0.74rem;
+  font-weight: 600;
+  padding: 0.22rem 0.55rem;
+  border-radius: 6px;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.25rem;
+}
+
+/* Rung 3 Counterexamples */
+.kstCounterexamplesGrid {
+  display: flex;
+  flex-direction: column;
+  gap: 0.85rem;
+  margin-top: 0.75rem;
+}
+
+.kstCounterexampleCard {
+  border: 1px solid #e2e8f0;
+  border-radius: 9px;
+  background: #ffffff;
+  padding: 0.85rem 1rem;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.03);
+}
+
+.kstCeHeader {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 0.5rem;
+  margin-bottom: 0.45rem;
+}
+
+.kstCeTitle {
+  font-size: 0.86rem;
+  font-weight: 700;
+  color: #0f172a;
+}
+
+.kstCeStatesRow {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+  margin: 0.5rem 0;
+  align-items: center;
+}
+
+.kstCeStatePill {
+  font-family: monospace;
+  font-size: 0.74rem;
+  padding: 0.2rem 0.5rem;
+  border-radius: 5px;
+  background: #f1f5f9;
+  border: 1px solid #cbd5e1;
+  color: #1e293b;
+}
+
+.kstCeUnionPill {
+  font-family: monospace;
+  font-size: 0.74rem;
+  padding: 0.2rem 0.5rem;
+  border-radius: 5px;
+  background: #fef2f2;
+  border: 1px solid #fca5a5;
+  color: #991b1b;
+  font-weight: 700;
+}
+
+.kstCeTakeaway {
+  background: #f0fdf4;
+  border: 1px solid #bbf7d0;
+  border-left: 3.5px solid #10b981;
+  border-radius: 6px;
+  padding: 0.5rem 0.75rem;
+  font-size: 0.78rem;
+  color: #14532d;
+  line-height: 1.4;
+  margin-top: 0.5rem;
+}
+
+/* 5-Rung KST Ladder */
+.kstRungsStack {
+  display: flex;
+  flex-direction: column;
+  gap: 0.85rem;
+  margin-top: 0.5rem;
+}
+
+.kstRungCard {
+  border: 1px solid #e2e8f0;
+  border-left: 4px solid #3b82f6;
+  border-radius: 9px;
+  background: #ffffff;
+  padding: 0.85rem 1rem;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.03);
+}
+
+.kstRungHeader {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 0.45rem;
+}
+
+.kstRungTitle {
+  font-size: 0.88rem;
+  font-weight: 700;
+  color: #0f172a;
+}
+
+.kstRungAnalogy {
+  background: #fefce8;
+  border: 1px solid #fef08a;
+  border-left: 3.5px solid #eab308;
+  border-radius: 6px;
+  padding: 0.45rem 0.7rem;
+  font-size: 0.78rem;
+  color: #713f12;
+  line-height: 1.4;
+  margin: 0.5rem 0;
+}
+
+.kstRungFormal {
+  background: #f8fafc;
+  border: 1px solid #e2e8f0;
+  border-radius: 6px;
+  padding: 0.45rem 0.7rem;
+  font-family: monospace;
+  font-size: 0.76rem;
+  color: #1e293b;
+  line-height: 1.4;
+  margin: 0.45rem 0;
+}
+
+.kstRungTakeaway {
+  background: #eff6ff;
+  border: 1px solid #bfdbfe;
+  border-left: 3.5px solid #3b82f6;
+  border-radius: 6px;
+  padding: 0.45rem 0.7rem;
+  font-size: 0.78rem;
+  color: #1e3a8a;
+  line-height: 1.4;
+}
+
+/* Notions */
+.kstNotionsBox {
+  display: flex;
+  flex-direction: column;
+  gap: 0.65rem;
+  margin-top: 0.45rem;
+}
+
+.prereqPairsWrap {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.4rem;
+  margin-bottom: 0.45rem;
+}
+
+.prereqPairBadge {
+  font-family: monospace;
+  font-size: 0.74rem;
+  padding: 0.2rem 0.5rem;
+  border-radius: 6px;
+  background: #f1f5f9;
+  border: 1px solid #cbd5e1;
+  color: #1e293b;
+  font-weight: 600;
+}
+
+.notionCard {
+  border: 1px solid #e2e8f0;
+  border-radius: 8px;
+  padding: 0.65rem 0.85rem;
+  background: #ffffff;
+}
+
+.notionHeader {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 0.25rem;
+}
+
+.notionLabel {
+  font-size: 0.82rem;
+  font-weight: 700;
+  color: #0f172a;
+}
+
+.notionMeaning {
+  font-size: 0.76rem;
+  color: var(--text-sub);
+  line-height: 1.35;
+  margin: 0;
+}
+
+/* States Lattice Grid */
+.kstStatesLatticeGrid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(170px, 1fr));
+  gap: 0.55rem;
+  margin-top: 0.6rem;
+}
+
+.kstStateCard {
+  border: 1.5px solid #cbd5e1;
+  border-radius: 8px;
+  padding: 0.65rem 0.75rem;
+  background: #ffffff;
+  cursor: pointer;
+  transition: all 0.15s ease;
+  display: flex;
+  flex-direction: column;
+  gap: 0.3rem;
+  text-align: left;
+}
+
+.kstStateCard:hover {
+  border-color: #3b82f6;
+  background: #f8fafc;
+  transform: translateY(-1px);
+}
+
+.kstStateCard.activeStateCard {
+  border-color: #2563eb;
+  background: #eff6ff;
+  box-shadow: 0 0 0 1.5px #2563eb;
+}
+
+.kstStateCardTop {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.kstStateId {
+  font-family: monospace;
+  font-size: 0.75rem;
+  font-weight: 800;
+  color: #1e3a8a;
+}
+
+.kstStateSize {
+  font-size: 0.72rem;
+  color: var(--text-sub);
+  font-weight: 600;
+  font-variant-numeric: tabular-nums;
+}
+
+.kstStateItemsList {
+  font-family: monospace;
+  font-size: 0.76rem;
+  font-weight: 700;
+  color: #0f172a;
+  word-break: break-all;
+}
+
+.kstStateFringeMini {
+  font-size: 0.7rem;
+  color: var(--text-sub);
+  display: flex;
+  flex-direction: column;
+  gap: 0.15rem;
+}
+
+/* ==================== RED-TEAM EVAL PANE ==================== */
+
+.evalHowItWorksCard {
+  background: linear-gradient(180deg, #f8fafc 0%, #f1f5f9 100%);
+  border: 1px solid var(--border-color);
+  border-radius: 10px;
+  padding: 0.85rem;
+}
+
+.evalStepsList {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(210px, 1fr));
+  gap: 0.55rem;
+  margin-top: 0.45rem;
+}
+
+.evalStepItem {
+  background: #ffffff;
+  border: 1px solid #cbd5e1;
+  border-radius: 7px;
+  padding: 0.6rem 0.75rem;
+  font-size: 0.76rem;
+  color: #1e293b;
+  line-height: 1.4;
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.03);
+}
+
+/* Scorecard */
+.evalScorecardContainer {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+}
+
+.scorecardGrid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 0.85rem;
+}
+
+@media (max-width: 680px) {
+  .scorecardGrid {
+    grid-template-columns: 1fr;
+  }
+}
+
+.scorecardCard {
+  border-radius: 10px;
+  padding: 0.95rem 1.15rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.35rem;
+}
+
+.scorecardCard.naiveCard {
+  background: #fef2f2;
+  border: 1.5px solid #fca5a5;
+  color: #7f1d1d;
+}
+
+.scorecardCard.groundedCard {
+  background: #ecfdf5;
+  border: 1.5px solid #6ee7b7;
+  color: #064e3b;
+}
+
+.scorecardCardTop {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.scorecardTitle {
+  font-size: 0.82rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.03em;
+}
+
+.scorecardRate {
+  font-size: 2.1rem;
+  font-weight: 900;
+  font-variant-numeric: tabular-nums;
+  line-height: 1.1;
+}
+
+.naiveCard .scorecardRate {
+  color: #b91c1c;
+}
+
+.groundedCard .scorecardRate {
+  color: #047857;
+}
+
+.scorecardSub {
+  font-size: 0.78rem;
+  font-weight: 600;
+  line-height: 1.35;
+}
+
+.diagnosisQuoteCard {
+  background: #ffffff;
+  border: 1px solid #cbd5e1;
+  border-left: 4px solid #f59e0b;
+  border-radius: 8px;
+  padding: 0.75rem 0.95rem;
+  font-size: 0.8rem;
+  line-height: 1.45;
+  color: #1e293b;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.03);
+}
+
+/* 8-Mutant Selector Grid */
+.evalMutantsSelectorGrid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 0.7rem;
+  margin-top: 0.5rem;
+}
+
+@media (max-width: 768px) {
+  .evalMutantsSelectorGrid {
+    grid-template-columns: 1fr;
+  }
+}
+
+.evalMutantBtn {
+  border: 1.5px solid #cbd5e1;
+  border-radius: 8px;
+  background: #ffffff;
+  padding: 0.75rem 0.85rem;
+  cursor: pointer;
+  text-align: left;
+  display: flex;
+  flex-direction: column;
+  gap: 0.35rem;
+  transition: all 0.15s ease;
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.03);
+}
+
+.evalMutantBtn:hover {
+  border-color: #94a3b8;
+  background: #f8fafc;
+  transform: translateY(-1px);
+}
+
+.evalMutantBtn.activeMutantBtn {
+  border-color: #2563eb;
+  background: #eff6ff;
+  box-shadow: 0 0 0 1.5px #2563eb, 0 3px 8px rgba(37, 99, 235, 0.15);
+}
+
+.evalMutantBtnTop {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 0.4rem;
+}
+
+.evalMutantNum {
+  font-size: 0.72rem;
+  font-weight: 800;
+  text-transform: uppercase;
+  color: #1e3a8a;
+  letter-spacing: 0.03em;
+}
+
+.evalMutantTitle {
+  font-size: 0.8rem;
+  font-weight: 700;
+  color: #0f172a;
+  line-height: 1.25;
+}
+
+.evalMutantOutcomes {
+  display: flex;
+  align-items: center;
+  gap: 0.35rem;
+  margin-top: 0.2rem;
+  flex-wrap: wrap;
+}
+
+.evalOutcomeBadge {
+  font-size: 0.68rem;
+  font-weight: 700;
+  padding: 0.15rem 0.4rem;
+  border-radius: 4px;
+}
+
+.outcomeMissed {
+  background: #fee2e2;
+  color: #991b1b;
+  border: 1px solid #fca5a5;
+}
+
+.outcomeCaught {
+  background: #dcfce7;
+  color: #15803d;
+  border: 1px solid #86efac;
+}
+
+/* Mutant Inspection Card */
+.evalMutantInspectionCard {
+  border: 1.5px solid #cbd5e1;
+  border-radius: 10px;
+  background: #ffffff;
+  padding: 1.1rem;
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.04);
+}
+
+.mutantHeaderBox {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+  padding-bottom: 0.75rem;
+  border-bottom: 1px solid #e2e8f0;
+  margin-bottom: 0.85rem;
+}
+
+.mutantHeaderTitle {
+  font-size: 1.05rem;
+  font-weight: 800;
+  color: #0f172a;
+  margin: 0;
+}
+
+.verdictComparisonGrid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 0.85rem;
+  margin: 0.85rem 0;
+}
+
+@media (max-width: 768px) {
+  .verdictComparisonGrid {
+    grid-template-columns: 1fr;
+  }
+}
+
+.verdictCol {
+  border-radius: 8px;
+  padding: 0.85rem 0.95rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.4rem;
+}
+
+.verdictCol.naiveCol {
+  background: #fff5f5;
+  border: 1.5px solid #fecaca;
+}
+
+.verdictCol.groundedCol {
+  background: #f0fdf4;
+  border: 1.5px solid #bbf7d0;
+}
+
+.verdictColHeader {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  font-size: 0.78rem;
+  font-weight: 800;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+}
+
+.naiveCol .verdictColHeader {
+  color: #991b1b;
+}
+
+.groundedCol .verdictColHeader {
+  color: #065f46;
+}
+
+.verdictColText {
+  font-size: 0.78rem;
+  line-height: 1.4;
+  color: #1e293b;
+  margin: 0;
+}
+
+.riskCalloutCard {
+  background: #fef2f2;
+  border: 1px solid #fecaca;
+  border-left: 4px solid #ef4444;
+  border-radius: 8px;
+  padding: 0.7rem 0.9rem;
+  font-size: 0.78rem;
+  color: #7f1d1d;
+  line-height: 1.4;
+  margin-top: 0.85rem;
 }
