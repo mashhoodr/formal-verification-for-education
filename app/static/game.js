@@ -23,6 +23,375 @@ const gameState = {
 const STORAGE_KEY_XP = "proofTower_playerXp";
 const STORAGE_KEY_CERTIFIED = "proofTower_certifiedFloorIds";
 const STORAGE_KEY_SANDBOX = "proofTower_sandboxMode";
+const STORAGE_KEY_AUDIO = "proofTower_audioEnabled";
+
+/**
+ * Procedural Web Audio API Sound Synthesizer
+ * 100% zero external dependencies, wrapped in try/catch for headless/offline safety.
+ */
+class SoundEngine {
+  constructor() {
+    this.audioContext = null;
+    this.audioEnabled = true;
+  }
+
+  ensureContext() {
+    if (!this.audioEnabled) return null;
+    try {
+      if (!this.audioContext) {
+        const AudioContextClass = window.AudioContext || window.webkitAudioContext;
+        if (AudioContextClass) {
+          this.audioContext = new AudioContextClass();
+        }
+      }
+      if (this.audioContext && this.audioContext.state === "suspended") {
+        this.audioContext.resume();
+      }
+      return this.audioContext;
+    } catch (err) {
+      console.warn("Web Audio context initialization suppressed:", err);
+      return null;
+    }
+  }
+
+  toggleAudio() {
+    this.audioEnabled = !this.audioEnabled;
+    try {
+      localStorage.setItem(STORAGE_KEY_AUDIO, this.audioEnabled.toString());
+    } catch (e) {}
+    return this.audioEnabled;
+  }
+
+  /**
+   * Crisp two-tone wood/stone mechanical block snap (triangle 320Hz -> 580Hz, 60ms)
+   */
+  playClickSound() {
+    const ctx = this.ensureContext();
+    if (!ctx) return;
+    try {
+      const now = ctx.currentTime;
+      const osc = ctx.createOscillator();
+      const gain = ctx.createGain();
+
+      osc.type = "triangle";
+      osc.frequency.setValueAtTime(320, now);
+      osc.frequency.exponentialRampToValueAtTime(580, now + 0.05);
+
+      gain.gain.setValueAtTime(0.2, now);
+      gain.gain.exponentialRampToValueAtTime(0.001, now + 0.06);
+
+      osc.connect(gain);
+      gain.connect(ctx.destination);
+
+      osc.start(now);
+      osc.stop(now + 0.06);
+    } catch (err) {}
+  }
+
+  /**
+   * Electric beam connection zap (sine 440Hz -> 880Hz pitch sweep, 90ms)
+   */
+  playWireSnapSound() {
+    const ctx = this.ensureContext();
+    if (!ctx) return;
+    try {
+      const now = ctx.currentTime;
+      const osc = ctx.createOscillator();
+      const gain = ctx.createGain();
+
+      osc.type = "sine";
+      osc.frequency.setValueAtTime(440, now);
+      osc.frequency.exponentialRampToValueAtTime(880, now + 0.08);
+
+      gain.gain.setValueAtTime(0.25, now);
+      gain.gain.exponentialRampToValueAtTime(0.001, now + 0.09);
+
+      osc.connect(gain);
+      gain.connect(ctx.destination);
+
+      osc.start(now);
+      osc.stop(now + 0.09);
+    } catch (err) {}
+  }
+
+  /**
+   * Brief rising turbine hum (sawtooth 180Hz -> 420Hz, 180ms)
+   */
+  playStressTestChargeSound() {
+    const ctx = this.ensureContext();
+    if (!ctx) return;
+    try {
+      const now = ctx.currentTime;
+      const osc = ctx.createOscillator();
+      const gain = ctx.createGain();
+
+      osc.type = "sawtooth";
+      osc.frequency.setValueAtTime(180, now);
+      osc.frequency.exponentialRampToValueAtTime(420, now + 0.17);
+
+      gain.gain.setValueAtTime(0.18, now);
+      gain.gain.exponentialRampToValueAtTime(0.001, now + 0.18);
+
+      osc.connect(gain);
+      gain.connect(ctx.destination);
+
+      osc.start(now);
+      osc.stop(now + 0.18);
+    } catch (err) {}
+  }
+
+  /**
+   * Low sub-bass rumble + filtered white-noise stone fracture crunch (450ms)
+   */
+  playCrackEarthquakeSound() {
+    const ctx = this.ensureContext();
+    if (!ctx) return;
+    try {
+      const now = ctx.currentTime;
+
+      // Sub-bass rumble
+      const osc = ctx.createOscillator();
+      const rumbleGain = ctx.createGain();
+      osc.type = "sawtooth";
+      osc.frequency.setValueAtTime(110, now);
+      osc.frequency.exponentialRampToValueAtTime(42, now + 0.45);
+      rumbleGain.gain.setValueAtTime(0.32, now);
+      rumbleGain.gain.exponentialRampToValueAtTime(0.001, now + 0.45);
+      osc.connect(rumbleGain);
+      rumbleGain.connect(ctx.destination);
+      osc.start(now);
+      osc.stop(now + 0.45);
+
+      // Noise fracture crunch
+      const bufferLength = Math.floor(ctx.sampleRate * 0.45);
+      const noiseBuffer = ctx.createBuffer(1, bufferLength, ctx.sampleRate);
+      const output = noiseBuffer.getChannelData(0);
+      for (let i = 0; i < bufferLength; i++) {
+        output[i] = Math.random() * 2 - 1;
+      }
+      const noiseSource = ctx.createBufferSource();
+      noiseSource.buffer = noiseBuffer;
+
+      const filter = ctx.createBiquadFilter();
+      filter.type = "bandpass";
+      filter.frequency.setValueAtTime(600, now);
+      filter.frequency.exponentialRampToValueAtTime(120, now + 0.45);
+
+      const noiseGain = ctx.createGain();
+      noiseGain.gain.setValueAtTime(0.26, now);
+      noiseGain.gain.exponentialRampToValueAtTime(0.001, now + 0.45);
+
+      noiseSource.connect(filter);
+      filter.connect(noiseGain);
+      noiseGain.connect(ctx.destination);
+
+      noiseSource.start(now);
+      noiseSource.stop(now + 0.45);
+    } catch (err) {}
+  }
+
+  /**
+   * Bright ascending major arpeggio: C5 (523Hz), E5 (659Hz), G5 (784Hz), C6 (1046Hz)
+   */
+  playSatChimeSound() {
+    const ctx = this.ensureContext();
+    if (!ctx) return;
+    try {
+      const now = ctx.currentTime;
+      const notes = [523.25, 659.25, 783.99, 1046.50];
+      const stepDuration = 0.08;
+
+      notes.forEach((freq, idx) => {
+        const startTime = now + idx * stepDuration;
+        const osc = ctx.createOscillator();
+        const gain = ctx.createGain();
+
+        osc.type = "triangle";
+        osc.frequency.setValueAtTime(freq, startTime);
+
+        gain.gain.setValueAtTime(0.2, startTime);
+        gain.gain.exponentialRampToValueAtTime(0.001, startTime + 0.28);
+
+        osc.connect(gain);
+        gain.connect(ctx.destination);
+
+        osc.start(startTime);
+        osc.stop(startTime + 0.28);
+      });
+    } catch (err) {}
+  }
+
+  /**
+   * Triumphant 4-note brass/synth fanfare (G4 -> C5 -> E5 -> G5) + heavy stamp thud
+   */
+  playLevelUpFanfareSound() {
+    const ctx = this.ensureContext();
+    if (!ctx) return;
+    try {
+      const now = ctx.currentTime;
+      const notes = [
+        { freq: 392.00, start: 0.0, dur: 0.12 },
+        { freq: 523.25, start: 0.12, dur: 0.12 },
+        { freq: 659.25, start: 0.24, dur: 0.14 },
+        { freq: 783.99, start: 0.38, dur: 0.45 }
+      ];
+
+      notes.forEach((n) => {
+        const startTime = now + n.start;
+        const osc = ctx.createOscillator();
+        const gain = ctx.createGain();
+
+        osc.type = "triangle";
+        osc.frequency.setValueAtTime(n.freq, startTime);
+
+        gain.gain.setValueAtTime(0.25, startTime);
+        gain.gain.exponentialRampToValueAtTime(0.001, startTime + n.dur);
+
+        osc.connect(gain);
+        gain.connect(ctx.destination);
+
+        osc.start(startTime);
+        osc.stop(startTime + n.dur);
+      });
+
+      // Heavy stamp thud at the end
+      const stampTime = now + 0.38;
+      const thudOsc = ctx.createOscillator();
+      const thudGain = ctx.createGain();
+      thudOsc.type = "sine";
+      thudOsc.frequency.setValueAtTime(140, stampTime);
+      thudOsc.frequency.exponentialRampToValueAtTime(35, stampTime + 0.35);
+
+      thudGain.gain.setValueAtTime(0.38, stampTime);
+      thudGain.gain.exponentialRampToValueAtTime(0.001, stampTime + 0.35);
+
+      thudOsc.connect(thudGain);
+      thudGain.connect(ctx.destination);
+      thudOsc.start(stampTime);
+      thudOsc.stop(stampTime + 0.35);
+    } catch (err) {}
+  }
+}
+
+const soundEngine = new SoundEngine();
+
+/**
+ * Spawn full-screen visual arcade game effects (particles, camera shakes, rubber stamp, crack flash)
+ */
+function spawnParticles(originX, originY, mode) {
+  const overlay = document.getElementById("gameFxOverlay");
+  if (!overlay) return;
+
+  const defaultX = originX !== null && originX !== undefined ? originX : window.innerWidth / 2;
+  const defaultY = originY !== null && originY !== undefined ? originY : window.innerHeight / 2;
+
+  if (mode === "crack") {
+    // 1. Earthquake camera shake on workbench
+    const workbench = document.getElementById("workbenchPane");
+    if (workbench) {
+      workbench.classList.remove("workbenchEarthquakeShake");
+      void workbench.offsetWidth;
+      workbench.classList.add("workbenchEarthquakeShake");
+      setTimeout(() => workbench.classList.remove("workbenchEarthquakeShake"), 450);
+    }
+
+    // 2. Flash jagged SVG crack screen banner
+    const crackBanner = document.createElement("div");
+    crackBanner.className = "crackBannerFlash";
+    crackBanner.innerHTML = `
+      <svg class="crackBannerSvg" viewBox="0 0 800 200" preserveAspectRatio="none">
+        <path d="M 0,100 L 180,60 L 320,130 L 480,40 L 620,140 L 800,80" stroke="#ef4444" stroke-width="6" fill="none" stroke-linejoin="round"/>
+        <path d="M 180,60 L 230,120 M 320,130 L 370,80 M 480,40 L 530,110" stroke="#fca5a5" stroke-width="3" fill="none"/>
+      </svg>
+    `;
+    overlay.appendChild(crackBanner);
+    setTimeout(() => crackBanner.remove(), 450);
+
+    // 3. Spawn 24 flying red/amber rubble & spark particles
+    const particleColors = ["#ef4444", "#f87171", "#dc2626", "#f59e0b", "#fbbf24", "#7f1d1d"];
+    for (let i = 0; i < 24; i++) {
+      const p = document.createElement("div");
+      p.className = "gameParticle";
+      const size = Math.floor(Math.random() * 8) + 4;
+      p.style.width = `${size}px`;
+      p.style.height = `${size}px`;
+      p.style.backgroundColor = particleColors[i % particleColors.length];
+      p.style.left = `${defaultX}px`;
+      p.style.top = `${defaultY}px`;
+
+      const angle = Math.random() * Math.PI * 2;
+      const distance = Math.random() * 160 + 60;
+      const tx = Math.cos(angle) * distance;
+      const ty = Math.sin(angle) * distance + (Math.random() * 40);
+      const rot = (Math.random() * 720 - 360) + "deg";
+
+      p.style.setProperty("--tx", `${tx}px`);
+      p.style.setProperty("--ty", `${ty}px`);
+      p.style.setProperty("--rot", rot);
+
+      overlay.appendChild(p);
+      setTimeout(() => p.remove(), 900);
+    }
+  } else if (mode === "certified" || mode === "sat") {
+    // 1. Spawn 40 golden/emerald star & confetti particles
+    const confettiColors = ["#10b981", "#34d399", "#fbbf24", "#f59e0b", "#38bdf8", "#ffffff"];
+    for (let i = 0; i < 40; i++) {
+      const p = document.createElement("div");
+      p.className = "gameParticle";
+      const size = Math.floor(Math.random() * 9) + 5;
+      p.style.width = `${size}px`;
+      p.style.height = (i % 2 === 0 ? size : size * 1.6) + "px";
+      p.style.backgroundColor = confettiColors[i % confettiColors.length];
+      p.style.borderRadius = i % 3 === 0 ? "50%" : "2px";
+      p.style.left = `${defaultX}px`;
+      p.style.top = `${defaultY}px`;
+
+      const angle = (Math.random() * Math.PI * 2);
+      const distance = Math.random() * 220 + 80;
+      const tx = Math.cos(angle) * distance;
+      const ty = Math.sin(angle) * distance - 20;
+      const rot = (Math.random() * 720 - 360) + "deg";
+
+      p.style.setProperty("--tx", `${tx}px`);
+      p.style.setProperty("--ty", `${ty}px`);
+      p.style.setProperty("--rot", rot);
+
+      overlay.appendChild(p);
+      setTimeout(() => p.remove(), 900);
+    }
+
+    if (mode === "certified") {
+      // 2. Rubber-Stamp Slam Animation
+      const stamp = document.createElement("div");
+      stamp.className = "rubberStampSlam";
+      stamp.textContent = "✅ FLOOR CERTIFIED!";
+      overlay.appendChild(stamp);
+      setTimeout(() => stamp.remove(), 850);
+
+      // 3. Floating +100 XP popup toward HUD
+      const xpPopup = document.createElement("div");
+      xpPopup.className = "xpArcadePopup";
+      xpPopup.textContent = "+100 XP";
+      xpPopup.style.left = `${defaultX - 40}px`;
+      xpPopup.style.top = `${defaultY - 60}px`;
+      overlay.appendChild(xpPopup);
+      setTimeout(() => xpPopup.remove(), 1250);
+    }
+  }
+}
+
+/**
+ * Update top header sound toggle button UI
+ */
+function updateAudioButtonUI() {
+  const toggleSoundBtn = document.getElementById("toggleSoundBtn");
+  if (!toggleSoundBtn) return;
+  const isEnabled = soundEngine.audioEnabled;
+  toggleSoundBtn.setAttribute("aria-pressed", isEnabled ? "true" : "false");
+  toggleSoundBtn.innerHTML = isEnabled
+    ? `<span class="soundIcon" aria-hidden="true">🔊</span><span class="soundText" id="soundToggleText">Audio: ON</span>`
+    : `<span class="soundIcon" aria-hidden="true">🔇</span><span class="soundText" id="soundToggleText">Audio: MUTED</span>`;
+}
 
 /**
  * Initialize the Proof Architect's Tower on DOMContentLoaded
@@ -57,6 +426,12 @@ function loadStoredProgress() {
     if (sandboxCheckbox) {
       sandboxCheckbox.checked = gameState.sandboxMode;
     }
+
+    const storedAudio = localStorage.getItem(STORAGE_KEY_AUDIO);
+    if (storedAudio !== null) {
+      soundEngine.audioEnabled = (storedAudio === "true");
+    }
+    updateAudioButtonUI();
   } catch (err) {
     console.error("Failed to load stored game progress:", err);
   }
@@ -83,6 +458,7 @@ function saveProgress() {
  */
 function resetAllProgress() {
   if (confirm("Reset all game progress, structural XP, and floor certifications?")) {
+    soundEngine.playClickSound();
     gameState.playerXp = 0;
     gameState.certifiedFloorIds.clear();
     gameState.crackedFloorIds.clear();
@@ -99,9 +475,21 @@ function resetAllProgress() {
  * Wire global action event listeners
  */
 function setupGlobalEventListeners() {
+  const toggleSoundBtn = document.getElementById("toggleSoundBtn");
+  if (toggleSoundBtn) {
+    toggleSoundBtn.addEventListener("click", () => {
+      const isEnabled = soundEngine.toggleAudio();
+      updateAudioButtonUI();
+      if (isEnabled) {
+        soundEngine.playClickSound();
+      }
+    });
+  }
+
   const sandboxCheckbox = document.getElementById("sandboxModeCheckbox");
   if (sandboxCheckbox) {
     sandboxCheckbox.addEventListener("change", (event) => {
+      soundEngine.playClickSound();
       gameState.sandboxMode = event.target.checked;
       saveProgress();
       renderBuildingElevation();
@@ -140,6 +528,7 @@ function setupGlobalEventListeners() {
   const focusStep1Btn = document.getElementById("focusStep1Btn");
   if (focusStep1Btn) {
     focusStep1Btn.addEventListener("click", () => {
+      soundEngine.playClickSound();
       const step1 = document.getElementById("beat1Section");
       if (step1) {
         step1.scrollIntoView({ behavior: "smooth" });
@@ -296,6 +685,21 @@ function renderBuildingElevation() {
   const building = getActiveBuilding();
   if (!building) return;
 
+  // Activate Summit Energy Beacon Beam when entire building is certified
+  const buildingCertifiedCount = building.floors.filter((f) =>
+    gameState.certifiedFloorIds.has(f.floorId)
+  ).length;
+  const isBuildingCertified = buildingCertifiedCount === building.floors.length && building.floors.length > 0;
+
+  const beaconBeamEl = document.getElementById("summitBeaconBeam");
+  if (beaconBeamEl) {
+    if (isBuildingCertified) {
+      beaconBeamEl.classList.remove("hidden");
+    } else {
+      beaconBeamEl.classList.add("hidden");
+    }
+  }
+
   building.floors.forEach((floor, idx) => {
     const isCertified = gameState.certifiedFloorIds.has(floor.floorId);
     const isCracked = gameState.crackedFloorIds.has(floor.floorId);
@@ -325,37 +729,94 @@ function renderBuildingElevation() {
 
     let statusPillClass = "locked";
     let statusPillContent = "🔒 LOCKED";
+    let windowClass = "windowLitLocked";
 
     if (isCertified) {
       statusPillClass = "certified";
       statusPillContent = "✅ CERTIFIED (SAT)";
+      windowClass = "windowLitSat";
     } else if (isCracked) {
       statusPillClass = "cracked";
       statusPillContent = "⚡ CRACKED (UNSAT)";
+      windowClass = "windowLitUnsat";
     } else if (isActive) {
       statusPillClass = "active";
       statusPillContent = "🛠️ ACTIVE FLOOR";
+      windowClass = "windowLitActive";
     } else if (isUnlocked) {
       statusPillClass = "active";
       statusPillContent = "🔓 UNLOCKED";
+      windowClass = "windowLitActive";
     }
 
     card.innerHTML = `
-      <div class="floorCardRowTop">
-        <div class="floorCardBadgeGroup">
-          <span class="floorNumberPill">Floor ${floor.floorNumber}</span>
-          <span class="floorElementTag">${floor.architecturalElement || "Slab"}</span>
+      <div class="floorCorniceBeam floorCorniceBeamTop"></div>
+      <div class="floorPillar floorPillarLeft" aria-hidden="true"></div>
+      <div class="floorPillar floorPillarRight" aria-hidden="true"></div>
+
+      <div class="floorStoryFacade">
+        <div class="floorWindowsRow" aria-hidden="true">
+          <span class="floorArchWindow ${windowClass}"></span>
+          <span class="floorArchWindow ${windowClass}"></span>
+          <span class="floorArchWindow ${windowClass}"></span>
+          <span class="floorArchWindow ${windowClass}"></span>
+          <span class="floorArchWindow ${windowClass}"></span>
+          <span class="floorArchWindow ${windowClass}"></span>
         </div>
-        <span class="floorStatusPill ${statusPillClass}">${statusPillContent}</span>
+
+        ${isCertified ? `
+          <div class="z3SealMedallion" aria-hidden="true">
+            <span class="sealEmbossIcon">✅</span>
+            <span class="sealEmbossText">Z3 SAT</span>
+          </div>
+        ` : ""}
+
+        ${isCracked ? `
+          <svg class="floorCrackSvg" viewBox="0 0 240 60" preserveAspectRatio="none" aria-hidden="true">
+            <path d="M 0,28 L 50,42 L 85,16 L 140,46 L 180,18 L 240,36" stroke="#ef4444" stroke-width="3" fill="none" stroke-linejoin="round"/>
+            <path d="M 85,16 L 110,32" stroke="#fca5a5" stroke-width="1.8" fill="none"/>
+            <path d="M 140,46 L 165,55" stroke="#fca5a5" stroke-width="1.8" fill="none"/>
+          </svg>
+        ` : ""}
+
+        ${isActive ? `
+          <div class="scaffoldingOverlay" aria-hidden="true">
+            <div class="scaffoldingHazardStripes"></div>
+            <div class="weldingSparkContainer">
+              <span class="weldingSpark"></span>
+              <span class="weldingSpark"></span>
+            </div>
+          </div>
+        ` : ""}
+
+        ${!isUnlocked ? `
+          <div class="blueprintBlueprintOverlay" aria-hidden="true">
+            <span class="dimMarker">↕ h_grade</span>
+            <span class="dimMarker">L_req</span>
+          </div>
+        ` : ""}
+
+        <div class="floorStoryContent">
+          <div class="floorCardRowTop">
+            <div class="floorCardBadgeGroup">
+              <span class="floorNumberPill">Floor ${floor.floorNumber}</span>
+              <span class="floorElementTag">${floor.architecturalElement || "Slab"}</span>
+            </div>
+            <span class="floorStatusPill ${statusPillClass}">${statusPillContent}</span>
+          </div>
+          <div class="floorCardTitle">${floor.title}</div>
+          <div class="floorCardBottom">
+            <span>Mechanic: ${formatMechanicName(floor.mechanicType)}</span>
+            <span class="floorCardXp">+${floor.xpReward || 100} XP</span>
+          </div>
+        </div>
       </div>
-      <div class="floorCardTitle">${floor.title}</div>
-      <div class="floorCardBottom">
-        <span>Mechanic: ${formatMechanicName(floor.mechanicType)}</span>
-        <span class="floorCardXp">+${floor.xpReward || 100} XP</span>
-      </div>
+
+      <div class="floorCorniceBeam floorCorniceBeamBottom"></div>
     `;
 
     card.addEventListener("click", () => {
+      soundEngine.playClickSound();
       if (isUnlocked) {
         loadFloor(floor.floorId);
       } else {
@@ -579,11 +1040,17 @@ function renderSetLatticeBuilder(floor, container) {
     const isCracked = gameState.activeCrackedElementIds.includes(stateId);
 
     const card = document.createElement("div");
-    card.className = "latticeStateCard";
+    card.className = "latticeStateCard latticeTileCard";
     if (isSelected) card.classList.add("selected");
     if (isCracked) card.classList.add("crackedHighlight");
 
     card.innerHTML = `
+      ${isCracked ? `
+        <svg class="tileCrackOverlay" viewBox="0 0 100 100" preserveAspectRatio="none" aria-hidden="true">
+          <path d="M 50,0 L 45,35 L 60,50 L 35,75 L 50,100" stroke="#ef4444" stroke-width="3" fill="none" stroke-linejoin="round"/>
+          <path d="M 45,35 L 25,45 M 60,50 L 75,65" stroke="#fca5a5" stroke-width="1.8" fill="none"/>
+        </svg>
+      ` : ""}
       <div class="stateCardHeader">
         <span class="stateLabel">${stateLabel}</span>
         <span class="stateCheckboxPill">${isSelected ? "✓ Included" : "✗ Excluded"}</span>
@@ -602,6 +1069,7 @@ function renderSetLatticeBuilder(floor, container) {
     `;
 
     card.addEventListener("click", () => {
+      soundEngine.playClickSound();
       if (gameState.currentWidgetState.selectedStates.has(stateId)) {
         gameState.currentWidgetState.selectedStates.delete(stateId);
       } else {
@@ -663,7 +1131,7 @@ function renderGraphWiringBoard(floor, container) {
       gameState.activeCrackedElementIds.includes(toId);
 
     const card = document.createElement("div");
-    card.className = "wiringEdgeCard";
+    card.className = "wiringEdgeCard edgeToggleCard";
     if (isConnected) card.classList.add("connected");
     if (isCracked) card.classList.add("crackedHighlight");
 
@@ -671,10 +1139,18 @@ function renderGraphWiringBoard(floor, container) {
     const toNode = nodes.find((n) => n.id === toId) || { id: toId };
 
     card.innerHTML = `
+      ${isCracked ? `
+        <svg class="tileCrackOverlay" viewBox="0 0 100 100" preserveAspectRatio="none" aria-hidden="true">
+          <path d="M 50,0 L 45,35 L 60,50 L 35,75 L 50,100" stroke="#ef4444" stroke-width="3" fill="none" stroke-linejoin="round"/>
+          <path d="M 45,35 L 25,45 M 60,50 L 75,65" stroke="#fca5a5" stroke-width="1.8" fill="none"/>
+        </svg>
+      ` : ""}
       <div class="edgeDirection">
+        <span class="nodeSocketDot" aria-hidden="true"></span>
         <span>${fromNode.id}</span>
         <span class="edgeArrow">──►</span>
         <span>${toNode.id}</span>
+        <span class="nodeSocketDot" aria-hidden="true"></span>
       </div>
       <span class="edgeStatusBadge">
         ${isConnected ? "✓ Connected" : "✗ Broken"}
@@ -682,6 +1158,7 @@ function renderGraphWiringBoard(floor, container) {
     `;
 
     card.addEventListener("click", () => {
+      soundEngine.playWireSnapSound();
       if (isConnected) {
         gameState.currentWidgetState.edges = gameState.currentWidgetState.edges.filter(
           (e) => !(e.from === fromId && e.to === toId)
@@ -720,7 +1197,7 @@ function renderRuleInspectorGate(floor, container) {
     const isCracked = gameState.activeCrackedElementIds.includes(block.id);
 
     const card = document.createElement("div");
-    card.className = "contractorBlockCard";
+    card.className = "contractorBlockCard inspectorBlockCard";
     if (isAccepted) card.classList.add("accepted");
     else card.classList.add("rejected");
 
@@ -761,6 +1238,12 @@ function renderRuleInspectorGate(floor, container) {
     }
 
     card.innerHTML = `
+      ${isCracked ? `
+        <svg class="tileCrackOverlay" viewBox="0 0 100 100" preserveAspectRatio="none" aria-hidden="true">
+          <path d="M 50,0 L 45,35 L 60,50 L 35,75 L 50,100" stroke="#ef4444" stroke-width="3" fill="none" stroke-linejoin="round"/>
+          <path d="M 45,35 L 25,45 M 60,50 L 75,65" stroke="#fca5a5" stroke-width="1.8" fill="none"/>
+        </svg>
+      ` : ""}
       <div class="blockCardTop">
         <h4 class="blockTitle">${block.label || block.title || block.id}</h4>
       </div>
@@ -781,12 +1264,14 @@ function renderRuleInspectorGate(floor, container) {
     const rejectBtn = card.querySelector('[data-action="reject"]');
 
     acceptBtn.addEventListener("click", () => {
+      soundEngine.playClickSound();
       gameState.currentWidgetState.acceptedBlockIds.add(block.id);
       gameState.activeCrackedElementIds = [];
       renderActiveWidget();
     });
 
     rejectBtn.addEventListener("click", () => {
+      soundEngine.playClickSound();
       gameState.currentWidgetState.acceptedBlockIds.delete(block.id);
       gameState.activeCrackedElementIds = [];
       renderActiveWidget();
@@ -921,6 +1406,7 @@ function renderPolytopeTuner(floor, container) {
 
     const input = card.querySelector("input");
     input.addEventListener("input", (e) => {
+      soundEngine.playClickSound();
       const newVal = parseFloat(e.target.value);
       gameState.currentWidgetState.sliderValues[sliderId] = newVal;
       const display = card.querySelector(`#val_${sliderId}`);
@@ -991,6 +1477,8 @@ async function handleRunStressTest() {
   const floor = getActiveFloor();
   if (!floor) return;
 
+  soundEngine.playStressTestChargeSound();
+
   const testBtn = document.getElementById("runStressTestBtn");
   if (testBtn) {
     testBtn.disabled = true;
@@ -1019,6 +1507,15 @@ async function handleRunStressTest() {
     gameState.activeCrackedElementIds = result.crackedElementIds || [];
 
     displayBuildFeedback(result);
+
+    // Audio & FX triggers
+    if (result.isSat) {
+      soundEngine.playSatChimeSound();
+      spawnParticles(null, null, "sat");
+    } else {
+      soundEngine.playCrackEarthquakeSound();
+      spawnParticles(null, null, "crack");
+    }
 
     // Update left elevation tower
     if (result.isSat) {
@@ -1291,6 +1788,7 @@ function setupBeat2Challenge(floor) {
       `;
 
       card.addEventListener("click", () => {
+        soundEngine.playClickSound();
         gameState.selectedSabotageOptionId = opt.optionId;
         const allOptionCards = optionsGrid.querySelectorAll(".sabotageOptionCard");
         allOptionCards.forEach((c) => c.classList.remove("selected"));
@@ -1396,6 +1894,10 @@ function displaySabotageFeedback(result, floor) {
     if (titleEl) titleEl.textContent = result.statusTitle || "Spot-the-Crack Certified! (SAT)";
     if (badgeEl) badgeEl.textContent = `✅ +${floor.xpReward || 100} XP`;
 
+    // Audio fanfare & confetti + stamp celebration
+    soundEngine.playLevelUpFanfareSound();
+    spawnParticles(null, null, "certified");
+
     // Award XP if floor wasn't certified previously
     if (!gameState.certifiedFloorIds.has(floor.floorId)) {
       gameState.certifiedFloorIds.add(floor.floorId);
@@ -1414,6 +1916,10 @@ function displaySabotageFeedback(result, floor) {
     if (iconEl) iconEl.textContent = "❌";
     if (titleEl) titleEl.textContent = result.statusTitle || "Crack Missed! (Retry)";
     if (badgeEl) badgeEl.textContent = "Retry";
+
+    // Sub-bass crunch and crack rubble particle burst
+    soundEngine.playCrackEarthquakeSound();
+    spawnParticles(null, null, "crack");
 
     if (ascendRow) ascendRow.classList.add("hidden");
   }
@@ -1456,7 +1962,7 @@ function handleAscendToNextFloor() {
 }
 
 /**
- * Update top HUD stats counters
+ * Update top HUD stats counters, rank badge, and progress bar
  */
 function updateHudStats() {
   const xpEl = document.getElementById("playerXpDisplay");
@@ -1464,14 +1970,46 @@ function updateHudStats() {
     xpEl.textContent = `${gameState.playerXp} XP`;
   }
 
+  // Calculate rank
+  const rankBadgeEl = document.getElementById("playerRankBadge");
+  if (rankBadgeEl) {
+    let rankTitle = "🔨 Apprentice";
+    if (gameState.playerXp >= 1100) {
+      rankTitle = "🏆 Master Proof Architect";
+    } else if (gameState.playerXp >= 700) {
+      rankTitle = "🏛️ Senior Architect";
+    } else if (gameState.playerXp >= 300) {
+      rankTitle = "📐 Journeyman";
+    }
+    rankBadgeEl.textContent = rankTitle;
+  }
+
+  let totalFloors = 0;
+  gameState.buildings.forEach((b) => {
+    totalFloors += b.floors.length;
+  });
+  const certifiedCount = gameState.certifiedFloorIds.size;
+
   const certifiedEl = document.getElementById("certifiedFloorsDisplay");
   if (certifiedEl) {
-    let totalFloors = 0;
-    gameState.buildings.forEach((b) => {
-      totalFloors += b.floors.length;
-    });
-    const certifiedCount = gameState.certifiedFloorIds.size;
     certifiedEl.textContent = `${certifiedCount} / ${totalFloors || 12}`;
+  }
+
+  // Update Tower Integrity Progress Bar
+  const integrityPercentEl = document.getElementById("towerIntegrityPercent");
+  const progressBarFillEl = document.getElementById("hudProgressBarFill");
+  const progressBarTrackEl = document.getElementById("hudProgressBarTrack");
+  const totalCount = totalFloors || 12;
+  const pct = Math.min(100, Math.round((certifiedCount / totalCount) * 100));
+
+  if (integrityPercentEl) {
+    integrityPercentEl.textContent = `${pct}%`;
+  }
+  if (progressBarFillEl) {
+    progressBarFillEl.style.width = `${pct}%`;
+  }
+  if (progressBarTrackEl) {
+    progressBarTrackEl.setAttribute("aria-valuenow", pct.toString());
   }
 
   const buildingProgressEl = document.getElementById("buildingProgressDisplay");

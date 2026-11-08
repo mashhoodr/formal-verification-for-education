@@ -19,6 +19,44 @@ def test_game_studio_page_serves_html():
     response = client.get("/game")
     assert response.status_code == 200
     assert "Proof Architect's Tower" in response.text
+    # Verify version bump and audio/visual architectural markup
+    assert "/static/game.css?v=2" in response.text
+    assert "/static/game.js?v=2" in response.text
+    assert "toggleSoundBtn" in response.text
+    assert "playerRankBadge" in response.text
+    assert "towerIntegrityPercent" in response.text
+    assert "hudProgressBarFill" in response.text
+    assert "skylineStars" in response.text
+    assert "craneRig" in response.text
+    assert "summitBeaconBeam" in response.text
+    assert "gameFxOverlay" in response.text
+
+
+def test_game_studio_static_assets_contain_audio_and_modern_web_guidance():
+    # Verify CSS contains modern web linear easing custom properties, 3D blocks, FX and reduced motion
+    css_res = client.get("/static/game.css")
+    assert css_res.status_code == 200
+    assert "--spring-easing:" in css_res.text
+    assert "--bounce-easing:" in css_res.text
+    assert "prefers-reduced-motion" in css_res.text
+    assert "workbenchEarthquakeShake" in css_res.text
+    assert "rubberStampSlam" in css_res.text
+    assert "tileCrackOverlay" in css_res.text
+    assert "latticeTileCard" in css_res.text
+    assert "edgeToggleCard" in css_res.text
+
+    # Verify JS contains procedural Web Audio API synthesizer and particle burst FX
+    js_res = client.get("/static/game.js")
+    assert js_res.status_code == 200
+    assert "class SoundEngine" in js_res.text
+    assert "playClickSound" in js_res.text
+    assert "playWireSnapSound" in js_res.text
+    assert "playStressTestChargeSound" in js_res.text
+    assert "playCrackEarthquakeSound" in js_res.text
+    assert "playSatChimeSound" in js_res.text
+    assert "playLevelUpFanfareSound" in js_res.text
+    assert "spawnParticles" in js_res.text
+    assert "summitBeaconBeam" in js_res.text
 
 
 def test_api_game_buildings_endpoint_returns_3_buildings_and_12_floors():

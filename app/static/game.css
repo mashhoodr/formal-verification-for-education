@@ -50,6 +50,10 @@
 
   --font-sans: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
   --font-mono: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace;
+
+  /* Modern Web Guidance Physics-Based Spring & Bounce Easings */
+  --spring-easing: linear(0, 0.016 0.5%, 0.06 1%, 0.226 2%, 1.116 5.4%, 1.375 6.6%, 1.527 7.7%, 1.565 8.2%, 1.585 8.8%, 1.581 9.3%, 1.559 9.8%, 1.458 10.9%, 0.937 14.3%, 0.784 15.5%, 0.693 16.6%, 0.67 17.1%, 0.657 17.7%, 0.671 18.7%, 0.729 19.8%, 1.042 23.3%, 1.13 24.5%, 1.182 25.6%, 1.201 26.7%, 1.192 27.7%, 1.156 28.8%, 0.977 32.2%, 0.925 33.4%, 0.894 34.5%, 0.882 35.6%, 0.887 36.6%, 0.907 37.7%, 1.045 42.4%, 1.069 44.5%, 1.059 46.3%, 0.979 50.9%, 0.96 53.4%, 0.966 55.3%, 1.013 59.9%, 1.024 62.3%, 0.986 71.2%, 1.008 79.9%, 0.995 88.9%, 1);
+  --bounce-easing: linear(0, 0.214 14.7%, 0.386 23.7%, 0.598 31.9%, 0.999 44.7%, 0.807 52.6%, 0.762 56%, 0.747 59.4%, 0.758 62.4%, 0.793 65.6%, 0.999 77.4%, 0.961 81.2%, 0.949 84.8%, 0.956 88%, 0.993 95.5%, 1);
 }
 
 * {
@@ -184,6 +188,42 @@ body {
   border-color: var(--active-color);
 }
 
+.soundToggleBtn {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.45rem;
+  background: var(--bg-card);
+  color: var(--text-secondary);
+  border: 1px solid var(--border-card);
+  border-bottom: 3.5px solid #090e1a;
+  padding: 0.48rem 0.85rem;
+  border-radius: 8px;
+  font-size: 0.82rem;
+  font-weight: 700;
+  cursor: pointer;
+  transition: transform 0.15s cubic-bezier(0.34, 1.56, 0.64, 1), background-color 0.15s ease, border-color 0.15s ease;
+  transition-timing-function: var(--spring-easing), ease, ease;
+  user-select: none;
+}
+
+.soundToggleBtn:hover {
+  background: var(--bg-card-hover);
+  color: #ffffff;
+  border-color: var(--border-highlight);
+  transform: translateY(-1px);
+}
+
+.soundToggleBtn:active {
+  transform: translateY(2px);
+  border-bottom-width: 1.5px;
+}
+
+.soundToggleBtn[aria-pressed="false"] {
+  opacity: 0.75;
+  color: var(--text-muted);
+  border-color: var(--locked-border);
+}
+
 .sandboxToggleLabel {
   display: inline-flex;
   align-items: center;
@@ -314,6 +354,66 @@ body {
   color: var(--gold-color);
 }
 
+.hudRankItem {
+  border-color: rgba(251, 191, 36, 0.45);
+  background: linear-gradient(135deg, rgba(251, 191, 36, 0.12) 0%, rgba(15, 23, 42, 0.85) 100%);
+  min-width: 140px;
+}
+
+.rankBadge {
+  font-size: 0.92rem;
+  color: var(--gold-color);
+  font-weight: 800;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+  letter-spacing: -0.01em;
+}
+
+.hudProgressItem {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  gap: 0.3rem;
+  background: var(--bg-card);
+  border: 1px solid var(--border-card);
+  padding: 0.4rem 0.85rem;
+  border-radius: 8px;
+  min-width: 150px;
+}
+
+.progressMetaRow {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.progressPercent {
+  font-size: 0.72rem;
+  font-weight: 800;
+  color: var(--sat-color);
+  font-variant-numeric: tabular-nums;
+}
+
+.hudProgressBarTrack {
+  width: 100%;
+  height: 8px;
+  background: #070c17;
+  border-radius: 999px;
+  overflow: hidden;
+  border: 1px solid var(--border-subtle);
+  position: relative;
+}
+
+.hudProgressBarFill {
+  height: 100%;
+  width: 0%;
+  background: linear-gradient(90deg, #0284c7 0%, #10b981 60%, #fbbf24 100%);
+  border-radius: 999px;
+  transition: width 0.5s cubic-bezier(0.4, 0, 0.2, 1);
+  box-shadow: 0 0 10px rgba(16, 185, 129, 0.6);
+}
+
 /* ==========================================================================
    2-Pane Main Layout
    ========================================================================== */
@@ -393,18 +493,153 @@ body {
 
 /* Elevation Viewport */
 .elevationViewport {
-  background: #070b14;
+  background: #060913;
   border: 1px solid var(--border-card);
-  border-radius: 12px;
-  padding: 1rem;
+  border-radius: 14px;
+  padding: 1.25rem 1rem;
   display: flex;
   flex-direction: column;
-  gap: 0.65rem;
+  gap: 0.85rem;
   position: relative;
+  overflow: hidden;
+  box-shadow: inset 0 0 30px rgba(0, 0, 0, 0.7);
+}
+
+/* Skyline Starfield & Blueprint Atmosphere */
+.skylineBackdrop {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  overflow: hidden;
+  border-radius: 14px;
+  z-index: 0;
+}
+
+.skylineStars {
+  position: absolute;
+  inset: 0;
   background-image: 
-    linear-gradient(rgba(56, 189, 248, 0.04) 1px, transparent 1px),
-    linear-gradient(90deg, rgba(56, 189, 248, 0.04) 1px, transparent 1px);
-  background-size: 20px 20px;
+    radial-gradient(1.5px 1.5px at 20px 30px, #ffffff, rgba(0,0,0,0)),
+    radial-gradient(1px 1px at 50px 80px, #38bdf8, rgba(0,0,0,0)),
+    radial-gradient(1.5px 1.5px at 110px 40px, #fbbf24, rgba(0,0,0,0)),
+    radial-gradient(1.2px 1.2px at 180px 70px, #ffffff, rgba(0,0,0,0)),
+    radial-gradient(1.5px 1.5px at 240px 20px, #38bdf8, rgba(0,0,0,0)),
+    radial-gradient(1px 1px at 90px 140px, #ffffff, rgba(0,0,0,0)),
+    radial-gradient(1.5px 1.5px at 160px 190px, #fbbf24, rgba(0,0,0,0)),
+    radial-gradient(1.2px 1.2px at 220px 240px, #38bdf8, rgba(0,0,0,0)),
+    radial-gradient(1px 1px at 40px 300px, #ffffff, rgba(0,0,0,0));
+  background-size: 260px 320px;
+  opacity: 0.65;
+  animation: twinkleStars 5s ease-in-out infinite alternate;
+}
+
+@keyframes twinkleStars {
+  0% { opacity: 0.45; transform: scale(1); }
+  50% { opacity: 0.85; transform: scale(1.02); }
+  100% { opacity: 0.55; transform: scale(1); }
+}
+
+.blueprintGridLines {
+  position: absolute;
+  inset: 0;
+  background-image: 
+    linear-gradient(rgba(56, 189, 248, 0.05) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(56, 189, 248, 0.05) 1px, transparent 1px);
+  background-size: 22px 22px;
+}
+
+.skylineGlowAura {
+  position: absolute;
+  top: 0;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 300px;
+  height: 180px;
+  background: radial-gradient(circle, rgba(56, 189, 248, 0.12) 0%, transparent 70%);
+  pointer-events: none;
+}
+
+/* Crane & Summit Beacon Deck */
+.craneSummitDeck {
+  position: relative;
+  z-index: 3;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.35rem;
+  padding-bottom: 0.4rem;
+}
+
+.craneRig {
+  width: 100%;
+  max-width: 320px;
+  display: flex;
+  justify-content: center;
+}
+
+.craneSvg {
+  width: 100%;
+  height: auto;
+  max-height: 80px;
+  filter: drop-shadow(0 2px 6px rgba(0,0,0,0.6));
+}
+
+.craneTrolleyGroup {
+  animation: craneTrolleyMove 8s ease-in-out infinite alternate;
+}
+
+@keyframes craneTrolleyMove {
+  0% { transform: translateX(0); }
+  100% { transform: translateX(35px); }
+}
+
+.craneHoistCable {
+  animation: cableSway 3s ease-in-out infinite alternate;
+  transform-origin: top center;
+}
+
+@keyframes cableSway {
+  0% { transform: rotate(-2deg); }
+  100% { transform: rotate(2deg); }
+}
+
+/* Summit Energy Beacon Beam */
+.summitBeaconBeam {
+  position: absolute;
+  top: -90px;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 44px;
+  height: 140px;
+  pointer-events: none;
+  z-index: 10;
+  display: flex;
+  justify-content: center;
+  align-items: flex-end;
+}
+
+.beaconCore {
+  width: 6px;
+  height: 100%;
+  background: linear-gradient(180deg, #ffffff 0%, #34d399 30%, #10b981 70%, #059669 100%);
+  border-radius: 999px;
+  box-shadow: 0 0 16px #34d399, 0 0 32px #10b981;
+  animation: beaconPulse 1.2s ease-in-out infinite alternate;
+}
+
+.beaconGlowPillar {
+  position: absolute;
+  bottom: 0;
+  width: 44px;
+  height: 100%;
+  background: linear-gradient(180deg, rgba(52, 211, 153, 0.4) 0%, rgba(16, 185, 129, 0.15) 60%, transparent 100%);
+  filter: blur(6px);
+  animation: beaconPulse 1.2s ease-in-out infinite alternate;
+}
+
+@keyframes beaconPulse {
+  0% { transform: scaleX(0.85); opacity: 0.7; }
+  100% { transform: scaleX(1.3); opacity: 1; filter: blur(8px); }
 }
 
 .skylineSpire {
@@ -415,76 +650,298 @@ body {
   background: rgba(56, 189, 248, 0.1);
   border: 1px dashed var(--border-highlight);
   color: var(--active-color);
-  padding: 0.4rem;
+  padding: 0.35rem 0.75rem;
   border-radius: 6px;
   font-size: 0.75rem;
   font-weight: 700;
   text-transform: uppercase;
   letter-spacing: 0.04em;
+  width: 100%;
 }
 
 /* The stack container: Rendered bottom-to-top using column-reverse */
 .towerStackContainer {
   display: flex;
   flex-direction: column-reverse;
-  gap: 0.6rem;
+  gap: 0.75rem;
+  position: relative;
+  z-index: 2;
 }
 
-.bedrockFoundation {
-  background: #111827;
-  border: 2px solid #374151;
-  border-radius: 8px;
-  padding: 0.65rem 0.5rem;
-  text-align: center;
-  font-size: 0.72rem;
-  font-weight: 700;
-  color: var(--text-muted);
-  letter-spacing: 0.04em;
-}
+/* ==========================================================================
+   3D Architectural Building Story Tiers
+   ========================================================================== */
 
-/* Elevation Floor Card */
 .elevationFloorCard {
-  background: var(--bg-card);
-  border: 1.5px solid var(--border-card);
+  background: #0d1527;
+  border: 2px solid var(--border-card);
   border-radius: 10px;
-  padding: 0.85rem 1rem;
-  cursor: pointer;
-  transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
-  display: flex;
-  flex-direction: column;
-  gap: 0.35rem;
   position: relative;
   overflow: hidden;
+  cursor: pointer;
+  display: flex;
+  flex-direction: column;
+  transition: transform 0.25s cubic-bezier(0.34, 1.56, 0.64, 1), border-color 0.2s ease, box-shadow 0.2s ease;
+  transition-timing-function: var(--spring-easing), ease, ease;
   user-select: none;
+  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.5);
 }
 
 .elevationFloorCard:hover:not(.locked) {
   border-color: var(--border-highlight);
-  transform: translateY(-2px);
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.4);
+  transform: translateY(-3px);
+  box-shadow: 0 8px 20px rgba(0, 0, 0, 0.65);
 }
 
+.elevationFloorCard:active:not(.locked) {
+  transform: translateY(1px);
+}
+
+/* Top & Bottom Cornice Slabs */
+.floorCorniceBeam {
+  height: 6px;
+  width: 100%;
+  background: linear-gradient(180deg, #334155 0%, #1e293b 100%);
+  border-top: 1px solid #475569;
+  border-bottom: 1px solid #0b1120;
+  position: relative;
+  z-index: 3;
+}
+
+.floorCorniceBeamBottom {
+  border-top: 1px solid #0b1120;
+  border-bottom: 1px solid #475569;
+}
+
+/* Structural Pillars Left & Right */
+.floorPillar {
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  width: 14px;
+  background: linear-gradient(90deg, #1e293b 0%, #334155 50%, #0f172a 100%);
+  z-index: 4;
+  box-shadow: inset 0 0 4px rgba(0, 0, 0, 0.6);
+}
+
+.floorPillarLeft {
+  left: 0;
+  border-right: 1.5px solid #475569;
+}
+
+.floorPillarRight {
+  right: 0;
+  border-left: 1.5px solid #475569;
+}
+
+/* Facade & Story Windows */
+.floorStoryFacade {
+  position: relative;
+  padding: 0.65rem 1rem 0.65rem 1.4rem;
+  z-index: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 0.35rem;
+  min-height: 86px;
+  justify-content: center;
+}
+
+.floorWindowsRow {
+  display: flex;
+  gap: 0.45rem;
+  position: absolute;
+  right: 20px;
+  top: 10px;
+  z-index: 0;
+  pointer-events: none;
+}
+
+.floorArchWindow {
+  width: 13px;
+  height: 20px;
+  border-radius: 6px 6px 0 0;
+  background: #1e293b;
+  border: 1px solid #334155;
+  transition: all 0.25s ease;
+}
+
+.floorArchWindow.windowLitSat {
+  background: linear-gradient(180deg, #6ee7b7 0%, #059669 100%);
+  border-color: #a7f3d0;
+  box-shadow: 0 0 10px rgba(16, 185, 129, 0.85);
+  opacity: 0.95;
+}
+
+.floorArchWindow.windowLitUnsat {
+  background: linear-gradient(180deg, #fca5a5 0%, #dc2626 100%);
+  border-color: #fecaca;
+  box-shadow: 0 0 10px rgba(239, 68, 68, 0.9);
+  animation: windowAlarmFlicker 0.45s ease-in-out infinite alternate;
+  opacity: 1;
+}
+
+@keyframes windowAlarmFlicker {
+  0% { opacity: 0.5; filter: brightness(0.8); }
+  100% { opacity: 1; filter: brightness(1.3); }
+}
+
+.floorArchWindow.windowLitActive {
+  background: linear-gradient(180deg, #fde68a 0%, #d97706 100%);
+  border-color: #fef3c7;
+  box-shadow: 0 0 8px rgba(245, 158, 11, 0.7);
+  opacity: 0.85;
+}
+
+.floorArchWindow.windowLitLocked {
+  background: rgba(56, 189, 248, 0.05);
+  border: 1px dashed rgba(56, 189, 248, 0.35);
+  opacity: 0.35;
+}
+
+/* Floor Card States */
 .elevationFloorCard.activeFloor {
   border-color: var(--active-color);
-  background: var(--active-bg);
-  box-shadow: 0 0 16px rgba(56, 189, 248, 0.25);
+  background: linear-gradient(135deg, rgba(56, 189, 248, 0.16) 0%, #0e1b2f 100%);
+  box-shadow: 0 0 18px rgba(56, 189, 248, 0.35);
 }
 
 .elevationFloorCard.certified {
   border-color: var(--sat-border);
-  background: var(--sat-bg);
+  background: linear-gradient(135deg, rgba(16, 185, 129, 0.14) 0%, #0c1c1f 100%);
+  box-shadow: 0 0 16px rgba(16, 185, 129, 0.28);
 }
 
 .elevationFloorCard.cracked {
   border-color: var(--unsat-border);
-  background: var(--unsat-bg);
+  background: linear-gradient(135deg, rgba(239, 68, 68, 0.16) 0%, #200f14 100%);
   animation: crackShudder 0.4s ease-in-out;
+  box-shadow: 0 0 16px rgba(239, 68, 68, 0.3);
 }
 
 .elevationFloorCard.locked {
   opacity: 0.65;
   cursor: not-allowed;
   border-style: dashed;
+  border-color: rgba(56, 189, 248, 0.35);
+  background: rgba(15, 23, 42, 0.7);
+}
+
+/* Z3 SAT Certified Seal Medallion */
+.z3SealMedallion {
+  position: absolute;
+  right: 24px;
+  top: 50%;
+  transform: translateY(-50%);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  width: 46px;
+  height: 46px;
+  border-radius: 50%;
+  background: radial-gradient(circle, #065f46 0%, #022c22 100%);
+  border: 2px solid #10b981;
+  box-shadow: 0 0 14px rgba(16, 185, 129, 0.6);
+  z-index: 2;
+  pointer-events: none;
+  animation: sealSpinGlow 8s linear infinite;
+}
+
+@keyframes sealSpinGlow {
+  0% { transform: translateY(-50%) rotate(0deg); }
+  50% { box-shadow: 0 0 20px rgba(16, 185, 129, 0.85); }
+  100% { transform: translateY(-50%) rotate(360deg); }
+}
+
+.sealEmbossIcon {
+  font-size: 1.1rem;
+  line-height: 1;
+}
+
+.sealEmbossText {
+  font-size: 0.52rem;
+  font-weight: 800;
+  color: #a7f3d0;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+}
+
+/* UNSAT Crack SVG Fissure */
+.floorCrackSvg {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  z-index: 2;
+  pointer-events: none;
+  filter: drop-shadow(0 0 8px rgba(239, 68, 68, 0.9));
+}
+
+/* Active Floor Scaffolding Overlay */
+.scaffoldingOverlay {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  z-index: 1;
+}
+
+.scaffoldingHazardStripes {
+  position: absolute;
+  bottom: 0;
+  left: 14px;
+  right: 14px;
+  height: 4px;
+  background: repeating-linear-gradient(45deg, #f59e0b, #f59e0b 8px, #1e293b 8px, #1e293b 16px);
+}
+
+.weldingSparkContainer {
+  position: absolute;
+  right: 28px;
+  bottom: 12px;
+}
+
+.weldingSpark {
+  display: inline-block;
+  width: 4px;
+  height: 4px;
+  border-radius: 50%;
+  background: #ffffff;
+  box-shadow: 0 0 10px #38bdf8, 0 0 18px #ffffff;
+  animation: weldingSparkFlicker 0.35s ease-in-out infinite alternate;
+}
+
+@keyframes weldingSparkFlicker {
+  0% { transform: scale(0.6); opacity: 0.3; }
+  100% { transform: scale(1.6); opacity: 1; }
+}
+
+/* Locked Blueprint Overlay */
+.blueprintBlueprintOverlay {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  z-index: 1;
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  padding-right: 24px;
+}
+
+.dimMarker {
+  font-family: var(--font-mono);
+  font-size: 0.68rem;
+  color: rgba(56, 189, 248, 0.5);
+  border: 1px dashed rgba(56, 189, 248, 0.35);
+  padding: 0.1rem 0.35rem;
+  border-radius: 4px;
+}
+
+.floorStoryContent {
+  position: relative;
+  z-index: 3;
+  display: flex;
+  flex-direction: column;
+  gap: 0.35rem;
 }
 
 @keyframes crackShudder {
@@ -576,6 +1033,53 @@ body {
 .floorCardXp {
   color: var(--gold-color);
   font-weight: 700;
+}
+
+/* Bedrock Cliff Base with Anchor Bolts */
+.bedrockFoundation {
+  position: relative;
+  background: #0f172a;
+  border: 2.5px solid #334155;
+  border-radius: 10px;
+  padding: 0.85rem 0.85rem 0.75rem;
+  text-align: center;
+  overflow: hidden;
+  box-shadow: inset 0 3px 8px rgba(0, 0, 0, 0.7);
+  display: flex;
+  flex-direction: column;
+  gap: 0.35rem;
+  z-index: 2;
+}
+
+.bedrockStrataLayer {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  opacity: 0.12;
+  background: repeating-linear-gradient(135deg, #64748b, #64748b 4px, transparent 4px, transparent 12px);
+}
+
+.anchorBoltsRow {
+  display: flex;
+  justify-content: space-around;
+  font-size: 0.95rem;
+  opacity: 0.85;
+}
+
+.anchorBolt {
+  filter: drop-shadow(0 2px 4px rgba(0,0,0,0.7));
+}
+
+.bedrockLabel {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.4rem;
+  font-size: 0.72rem;
+  font-weight: 800;
+  color: var(--text-muted);
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
 }
 
 /* ==========================================================================
@@ -1175,27 +1679,40 @@ body {
 
 .sabotageOptionCard {
   background: var(--bg-card);
-  border: 1.5px solid var(--border-card);
+  border: 2px solid var(--border-card);
+  border-bottom: 5px solid #090e1a;
   border-radius: 10px;
   padding: 0.85rem 1.1rem;
   cursor: pointer;
   display: flex;
   align-items: flex-start;
   gap: 0.85rem;
-  transition: all 0.15s ease;
+  transition: transform 0.2s cubic-bezier(0.34, 1.56, 0.64, 1), background-color 0.15s ease, border-color 0.15s ease, box-shadow 0.15s ease;
+  transition-timing-function: var(--spring-easing), ease, ease, ease;
   user-select: none;
+  box-shadow: 0 4px 0 rgba(0, 0, 0, 0.4), 0 6px 12px rgba(0, 0, 0, 0.3);
+  position: relative;
 }
 
 .sabotageOptionCard:hover {
   border-color: var(--border-highlight);
   background: var(--bg-card-hover);
-  transform: translateX(3px);
+  transform: translateY(-2px);
+  border-bottom-width: 6px;
+  box-shadow: 0 6px 0 rgba(0, 0, 0, 0.45), 0 10px 18px rgba(0, 0, 0, 0.4);
+}
+
+.sabotageOptionCard:active {
+  transform: translateY(3px);
+  border-bottom-width: 2px;
+  box-shadow: 0 1px 0 rgba(0, 0, 0, 0.4), 0 2px 4px rgba(0, 0, 0, 0.2);
 }
 
 .sabotageOptionCard.selected {
   border-color: var(--warn-color);
+  border-bottom-color: #b45309;
   background: var(--warn-bg);
-  box-shadow: 0 0 14px rgba(245, 158, 11, 0.2);
+  box-shadow: 0 4px 0 #78350f, 0 0 18px rgba(245, 158, 11, 0.3);
 }
 
 .optionRadio {
@@ -1280,37 +1797,65 @@ body {
 .setLatticeGrid {
   display: grid;
   grid-template-columns: repeat(auto-fill, minmax(210px, 1fr));
-  gap: 0.75rem;
+  gap: 0.85rem;
 }
 
-.latticeStateCard {
+.latticeStateCard, .latticeTileCard {
   background: var(--bg-card);
-  border: 1.5px solid var(--border-card);
+  border: 2px solid var(--border-card);
+  border-bottom: 5px solid #090e1a;
   border-radius: 10px;
   padding: 0.85rem;
   cursor: pointer;
   display: flex;
   flex-direction: column;
   gap: 0.45rem;
-  transition: all 0.15s ease;
+  transition: transform 0.2s cubic-bezier(0.34, 1.56, 0.64, 1), background-color 0.15s ease, border-color 0.15s ease, box-shadow 0.15s ease;
+  transition-timing-function: var(--spring-easing), ease, ease, ease;
   user-select: none;
+  box-shadow: 0 4px 0 rgba(0, 0, 0, 0.4), 0 6px 12px rgba(0, 0, 0, 0.3);
+  position: relative;
+  overflow: hidden;
 }
 
-.latticeStateCard:hover {
+.latticeStateCard:hover, .latticeTileCard:hover {
   border-color: var(--border-highlight);
   background: var(--bg-card-hover);
+  transform: translateY(-2px);
+  border-bottom-width: 6px;
+  box-shadow: 0 6px 0 rgba(0, 0, 0, 0.45), 0 10px 18px rgba(0, 0, 0, 0.4);
 }
 
-.latticeStateCard.selected {
+.latticeStateCard:active, .latticeTileCard:active {
+  transform: translateY(3px);
+  border-bottom-width: 2px;
+  box-shadow: 0 1px 0 rgba(0, 0, 0, 0.4), 0 2px 4px rgba(0, 0, 0, 0.2);
+}
+
+.latticeStateCard.selected, .latticeTileCard.selected {
   border-color: var(--active-color);
+  border-bottom-color: #0369a1;
   background: var(--active-bg);
-  box-shadow: 0 0 14px rgba(56, 189, 248, 0.2);
+  box-shadow: 0 4px 0 #075985, 0 0 16px rgba(56, 189, 248, 0.28);
 }
 
-.latticeStateCard.crackedHighlight {
+.latticeStateCard.crackedHighlight, .latticeTileCard.crackedHighlight {
   border-color: var(--unsat-border) !important;
+  border-bottom-color: #991b1b !important;
   background: var(--unsat-bg) !important;
   animation: crackShudder 0.35s ease-in-out;
+  box-shadow: 0 4px 0 #7f1d1d, 0 0 20px rgba(239, 68, 68, 0.4) !important;
+}
+
+/* SVG Jagged Crack Overlay for Tiles */
+.tileCrackOverlay {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  pointer-events: none;
+  z-index: 5;
+  filter: drop-shadow(0 0 6px rgba(239, 68, 68, 0.95));
 }
 
 .stateCardHeader {
@@ -1334,7 +1879,7 @@ body {
   color: var(--text-muted);
 }
 
-.latticeStateCard.selected .stateCheckboxPill {
+.latticeStateCard.selected .stateCheckboxPill, .latticeTileCard.selected .stateCheckboxPill {
   background: var(--active-color);
   color: var(--text-inverse);
 }
@@ -1403,12 +1948,13 @@ body {
 .wiringEdgesGrid {
   display: grid;
   grid-template-columns: repeat(auto-fill, minmax(240px, 1fr));
-  gap: 0.65rem;
+  gap: 0.75rem;
 }
 
-.wiringEdgeCard {
+.wiringEdgeCard, .edgeToggleCard {
   background: var(--bg-card);
-  border: 1.5px solid var(--border-card);
+  border: 2px solid var(--border-card);
+  border-bottom: 5px solid #090e1a;
   border-radius: 10px;
   padding: 0.75rem 0.95rem;
   cursor: pointer;
@@ -1416,37 +1962,88 @@ body {
   align-items: center;
   justify-content: space-between;
   gap: 0.6rem;
-  transition: all 0.15s ease;
+  transition: transform 0.2s cubic-bezier(0.34, 1.56, 0.64, 1), background-color 0.15s ease, border-color 0.15s ease, box-shadow 0.15s ease;
+  transition-timing-function: var(--spring-easing), ease, ease, ease;
   user-select: none;
+  box-shadow: 0 4px 0 rgba(0, 0, 0, 0.4), 0 6px 12px rgba(0, 0, 0, 0.3);
+  position: relative;
+  overflow: hidden;
 }
 
-.wiringEdgeCard:hover {
+.wiringEdgeCard:hover, .edgeToggleCard:hover {
   border-color: var(--border-highlight);
   background: var(--bg-card-hover);
+  transform: translateY(-2px);
+  border-bottom-width: 6px;
+  box-shadow: 0 6px 0 rgba(0, 0, 0, 0.45), 0 10px 18px rgba(0, 0, 0, 0.4);
 }
 
-.wiringEdgeCard.connected {
+.wiringEdgeCard:active, .edgeToggleCard:active {
+  transform: translateY(3px);
+  border-bottom-width: 2px;
+  box-shadow: 0 1px 0 rgba(0, 0, 0, 0.4), 0 2px 4px rgba(0, 0, 0, 0.2);
+}
+
+.wiringEdgeCard.connected, .edgeToggleCard.connected {
   border-color: var(--active-color);
-  background: var(--active-bg);
+  border-bottom-color: #0369a1;
+  background: linear-gradient(90deg, rgba(56, 189, 248, 0.15) 0%, rgba(14, 165, 233, 0.22) 100%);
+  box-shadow: 0 4px 0 #075985, 0 0 16px rgba(56, 189, 248, 0.32);
 }
 
-.wiringEdgeCard.crackedHighlight {
+.wiringEdgeCard.crackedHighlight, .edgeToggleCard.crackedHighlight {
   border-color: var(--unsat-border) !important;
+  border-bottom-color: #991b1b !important;
   background: var(--unsat-bg) !important;
   animation: crackShudder 0.35s ease-in-out;
+  box-shadow: 0 4px 0 #7f1d1d, 0 0 20px rgba(239, 68, 68, 0.4) !important;
 }
 
 .edgeDirection {
   display: flex;
   align-items: center;
-  gap: 0.4rem;
-  font-size: 0.84rem;
+  gap: 0.5rem;
+  font-size: 0.86rem;
   font-weight: 700;
   color: #ffffff;
 }
 
+.nodeSocketDot {
+  display: inline-block;
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: #334155;
+  border: 1px solid #64748b;
+  margin-right: 0.2rem;
+}
+
+.wiringEdgeCard.connected .nodeSocketDot {
+  background: #38bdf8;
+  border-color: #e0f2fe;
+  box-shadow: 0 0 8px #38bdf8;
+}
+
 .edgeArrow {
-  color: var(--active-color);
+  font-weight: 800;
+  color: var(--text-muted);
+  letter-spacing: -0.05em;
+  transition: all 0.2s ease;
+}
+
+.wiringEdgeCard.connected .edgeArrow, .edgeToggleCard.connected .edgeArrow {
+  background: linear-gradient(90deg, #38bdf8 0%, #ffffff 50%, #38bdf8 100%);
+  background-size: 200% 100%;
+  animation: energyFlow 1.2s linear infinite;
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  color: transparent;
+  filter: drop-shadow(0 0 4px rgba(56, 189, 248, 0.8));
+}
+
+@keyframes energyFlow {
+  0% { background-position: 100% 0; }
+  100% { background-position: -100% 0; }
 }
 
 .edgeStatusBadge {
@@ -1458,7 +2055,7 @@ body {
   color: var(--text-muted);
 }
 
-.wiringEdgeCard.connected .edgeStatusBadge {
+.wiringEdgeCard.connected .edgeStatusBadge, .edgeToggleCard.connected .edgeStatusBadge {
   background: var(--active-color);
   color: var(--text-inverse);
 }
@@ -1470,30 +2067,46 @@ body {
   gap: 0.85rem;
 }
 
-.contractorBlockCard {
+.contractorBlockCard, .inspectorBlockCard {
   background: var(--bg-card);
-  border: 1.5px solid var(--border-card);
+  border: 2px solid var(--border-card);
+  border-bottom: 5px solid #090e1a;
   border-radius: 10px;
   padding: 0.95rem;
   display: flex;
   flex-direction: column;
   gap: 0.65rem;
-  transition: all 0.15s ease;
+  transition: transform 0.2s cubic-bezier(0.34, 1.56, 0.64, 1), background-color 0.15s ease, border-color 0.15s ease, box-shadow 0.15s ease;
+  transition-timing-function: var(--spring-easing), ease, ease, ease;
+  box-shadow: 0 4px 0 rgba(0, 0, 0, 0.4), 0 6px 12px rgba(0, 0, 0, 0.3);
+  position: relative;
+  overflow: hidden;
 }
 
-.contractorBlockCard.accepted {
+.contractorBlockCard:hover, .inspectorBlockCard:hover {
+  transform: translateY(-2px);
+  border-bottom-width: 6px;
+  box-shadow: 0 6px 0 rgba(0, 0, 0, 0.45), 0 10px 18px rgba(0, 0, 0, 0.4);
+}
+
+.contractorBlockCard.accepted, .inspectorBlockCard.accepted {
   border-color: var(--sat-border);
+  border-bottom-color: #047857;
   background: var(--sat-bg);
+  box-shadow: 0 4px 0 #064e3b, 0 0 16px rgba(16, 185, 129, 0.3);
 }
 
-.contractorBlockCard.rejected {
+.contractorBlockCard.rejected, .inspectorBlockCard.rejected {
   border-color: var(--unsat-border);
+  border-bottom-color: #991b1b;
   background: var(--unsat-bg);
+  box-shadow: 0 4px 0 #7f1d1d;
 }
 
-.contractorBlockCard.crackedHighlight {
+.contractorBlockCard.crackedHighlight, .inspectorBlockCard.crackedHighlight {
   border-color: var(--unsat-border) !important;
-  box-shadow: 0 0 16px var(--unsat-glow);
+  border-bottom-color: #7f1d1d !important;
+  box-shadow: 0 4px 0 #450a0a, 0 0 20px var(--unsat-glow) !important;
   animation: crackShudder 0.35s ease-in-out;
 }
 
@@ -1680,4 +2293,182 @@ body {
   justify-content: space-between;
   font-size: 0.7rem;
   color: var(--text-muted);
+}
+
+/* ==========================================================================
+   Full-Screen / Overlay Game FX System
+   ========================================================================== */
+
+.gameFxOverlay {
+  position: fixed;
+  inset: 0;
+  pointer-events: none;
+  z-index: 9999;
+  overflow: hidden;
+}
+
+/* Floating Particles (Sparks, Rubble, Stars, Confetti) */
+.gameParticle {
+  position: absolute;
+  pointer-events: none;
+  border-radius: 2px;
+  will-change: transform, opacity;
+  animation: particleFly 0.9s cubic-bezier(0.25, 1, 0.5, 1) forwards;
+}
+
+@keyframes particleFly {
+  0% {
+    transform: translate(0, 0) scale(1) rotate(0deg);
+    opacity: 1;
+  }
+  100% {
+    transform: translate(var(--tx), var(--ty)) scale(0.2) rotate(var(--rot));
+    opacity: 0;
+  }
+}
+
+/* Workbench Earthquake Camera Shake (UNSAT crack) */
+.workbenchEarthquakeShake {
+  animation: workbenchEarthquake 0.45s cubic-bezier(0.36, 0.07, 0.19, 0.97) both;
+}
+
+@keyframes workbenchEarthquake {
+  0%, 100% { transform: translate(0, 0) rotate(0deg); }
+  15% { transform: translate(-7px, 4px) rotate(-0.5deg); }
+  30% { transform: translate(6px, -5px) rotate(0.4deg); }
+  45% { transform: translate(-5px, 3px) rotate(-0.3deg); }
+  60% { transform: translate(4px, -3px) rotate(0.2deg); }
+  75% { transform: translate(-2px, 1px) rotate(-0.1deg); }
+}
+
+/* Red Crack Flash Screen Overlay */
+.crackBannerFlash {
+  position: fixed;
+  inset: 0;
+  pointer-events: none;
+  z-index: 10000;
+  background: radial-gradient(circle, rgba(239, 68, 68, 0.28) 0%, rgba(220, 38, 38, 0.08) 70%, transparent 100%);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  animation: crackFlashFade 0.45s ease-out forwards;
+}
+
+.crackBannerSvg {
+  width: 90%;
+  max-width: 900px;
+  height: 200px;
+  filter: drop-shadow(0 0 16px rgba(239, 68, 68, 1));
+}
+
+@keyframes crackFlashFade {
+  0% { opacity: 0; transform: scale(0.96); }
+  25% { opacity: 1; transform: scale(1.02); }
+  100% { opacity: 0; transform: scale(1.05); }
+}
+
+/* Rubber-Stamp Slam Animation (Certified SAT) */
+.rubberStampSlam {
+  position: fixed;
+  top: 48%;
+  left: 50%;
+  transform: translate(-50%, -50%) rotate(-6deg) scale(0.2);
+  border: 5px solid #10b981;
+  color: #10b981;
+  background: rgba(6, 78, 59, 0.92);
+  padding: 1.1rem 2.2rem;
+  border-radius: 14px;
+  font-size: 2rem;
+  font-weight: 900;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  z-index: 10001;
+  pointer-events: none;
+  box-shadow: 0 0 45px rgba(16, 185, 129, 0.8), inset 0 0 20px rgba(16, 185, 129, 0.4);
+  text-shadow: 0 0 14px rgba(16, 185, 129, 0.9);
+  transition: transform 0.45s cubic-bezier(0.34, 1.56, 0.64, 1);
+  transition-timing-function: var(--bounce-easing);
+  animation: rubberStampDrop 0.8s cubic-bezier(0.34, 1.56, 0.64, 1) forwards;
+}
+
+@keyframes rubberStampDrop {
+  0% {
+    opacity: 0;
+    transform: translate(-50%, -50%) rotate(-18deg) scale(2.8);
+  }
+  45% {
+    opacity: 1;
+    transform: translate(-50%, -50%) rotate(-6deg) scale(1);
+  }
+  80% {
+    opacity: 1;
+    transform: translate(-50%, -50%) rotate(-6deg) scale(1);
+  }
+  100% {
+    opacity: 0;
+    transform: translate(-50%, -50%) rotate(-4deg) scale(1.08);
+  }
+}
+
+/* Floating Arcade +XP Popup */
+.xpArcadePopup {
+  position: fixed;
+  pointer-events: none;
+  z-index: 10002;
+  font-size: 2.2rem;
+  font-weight: 900;
+  color: #fbbf24;
+  text-shadow: 0 0 16px rgba(251, 191, 36, 0.9), 0 0 28px #b45309;
+  letter-spacing: -0.02em;
+  animation: xpPopupFloat 1.25s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+}
+
+@keyframes xpPopupFloat {
+  0% {
+    opacity: 0;
+    transform: translate(0, 0) scale(0.6);
+  }
+  20% {
+    opacity: 1;
+    transform: translate(0, -25px) scale(1.2);
+  }
+  80% {
+    opacity: 1;
+    transform: translate(15px, -70px) scale(1);
+  }
+  100% {
+    opacity: 0;
+    transform: translate(25px, -110px) scale(0.85);
+  }
+}
+
+/* ==========================================================================
+   Reduced Motion Accessibility Conformance
+   ========================================================================== */
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
+
+  .skylineStars,
+  .craneTrolleyGroup,
+  .craneHoistCable,
+  .beaconCore,
+  .beaconGlowPillar,
+  .z3SealMedallion,
+  .weldingSpark,
+  .workbenchEarthquakeShake,
+  .rubberStampSlam,
+  .crackBannerFlash,
+  .gameParticle,
+  .xpArcadePopup {
+    animation: none !important;
+    transform: none !important;
+  }
 }

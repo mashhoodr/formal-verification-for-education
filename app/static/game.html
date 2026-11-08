@@ -4,7 +4,7 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>The Proof Architect's Tower — K-12 Formal Verification Game</title>
-  <link rel="stylesheet" href="/static/game.css?v=1" />
+  <link rel="stylesheet" href="/static/game.css?v=2" />
 </head>
 <body>
   <!-- ==================== TOP NAVIGATION & STATUS BAR ==================== -->
@@ -25,6 +25,10 @@
         <a href="/" class="workbenchLinkBtn" title="Return to Prover Lab Workbench">
           <span aria-hidden="true">🔬</span> Prover Lab Workbench (/)
         </a>
+        <button type="button" id="toggleSoundBtn" class="soundToggleBtn" title="Toggle Procedural Web Audio API Sound Effects" aria-pressed="true">
+          <span class="soundIcon" aria-hidden="true">🔊</span>
+          <span class="soundText" id="soundToggleText">Audio: ON</span>
+        </button>
         <label class="sandboxToggleLabel" title="Unlock all 12 floors without prerequisites">
           <input type="checkbox" id="sandboxModeCheckbox" />
           <span class="toggleText">🔓 Sandbox Mode (All Floors Unlocked)</span>
@@ -42,6 +46,10 @@
       </nav>
 
       <div class="playerHudStats" aria-label="Player Progress">
+        <div class="hudStatItem hudRankItem" title="Architectural Verification Rank">
+          <span class="hudLabel">Architect Rank</span>
+          <span class="hudValue rankBadge" id="playerRankBadge">🔨 Apprentice</span>
+        </div>
         <div class="hudStatItem" title="Structural Experience Points earned from Z3 certifications">
           <span class="hudLabel">Structural XP</span>
           <span class="hudValue xpValue" id="playerXpDisplay">0 XP</span>
@@ -53,6 +61,15 @@
         <div class="hudStatItem" title="Floors certified in current building">
           <span class="hudLabel">Building Progress</span>
           <span class="hudValue" id="buildingProgressDisplay">0 / 5</span>
+        </div>
+        <div class="hudProgressItem" title="Overall Tower Verification Progress">
+          <div class="progressMetaRow">
+            <span class="hudLabel">Tower Integrity</span>
+            <span class="progressPercent" id="towerIntegrityPercent">0%</span>
+          </div>
+          <div class="hudProgressBarTrack" role="progressbar" aria-valuenow="0" aria-valuemin="0" aria-valuemax="100" id="hudProgressBarTrack">
+            <div class="hudProgressBarFill" id="hudProgressBarFill" style="width: 0%;"></div>
+          </div>
         </div>
       </div>
     </div>
@@ -77,9 +94,53 @@
 
       <!-- Architectural Cross-Section Elevation View -->
       <div class="elevationViewport" id="elevationViewport">
-        <div class="skylineSpire" id="skylineSpire">
-          <span class="spireIcon">⚡</span>
-          <span class="spireText">Z3 SAT Summit Spire</span>
+        <!-- Skyline Starfield & Blueprint Atmosphere -->
+        <div class="skylineBackdrop" aria-hidden="true">
+          <div class="skylineStars" id="skylineStars"></div>
+          <div class="blueprintGridLines"></div>
+          <div class="skylineGlowAura"></div>
+        </div>
+
+        <!-- Animated Construction Crane & Summit Beacon -->
+        <div class="craneSummitDeck" id="craneSummitDeck">
+          <!-- Summit Energy Beacon Beam shooting skyward when certified -->
+          <div class="summitBeaconBeam hidden" id="summitBeaconBeam" aria-hidden="true">
+            <div class="beaconCore"></div>
+            <div class="beaconGlowPillar"></div>
+          </div>
+
+          <!-- Construction Crane SVG -->
+          <div class="craneRig" id="craneRig" aria-label="Architectural Construction Crane">
+            <svg class="craneSvg" viewBox="0 0 280 90" preserveAspectRatio="xMidYMid meet" aria-hidden="true">
+              <!-- Lattice Mast -->
+              <line x1="80" y1="20" x2="80" y2="90" stroke="#f59e0b" stroke-width="4" stroke-linecap="round"/>
+              <line x1="72" y1="32" x2="88" y2="44" stroke="#f59e0b" stroke-width="1.8"/>
+              <line x1="88" y1="44" x2="72" y2="56" stroke="#f59e0b" stroke-width="1.8"/>
+              <line x1="72" y1="56" x2="88" y2="68" stroke="#f59e0b" stroke-width="1.8"/>
+              <line x1="88" y1="68" x2="72" y2="80" stroke="#f59e0b" stroke-width="1.8"/>
+              <!-- Operator Cab -->
+              <rect x="68" y="22" width="24" height="18" rx="2" fill="#1e293b" stroke="#f59e0b" stroke-width="2"/>
+              <circle cx="80" cy="30" r="3" fill="#38bdf8"/>
+              <!-- Jib Arm & Peak Cable Rigging -->
+              <line x1="16" y1="22" x2="250" y2="22" stroke="#f59e0b" stroke-width="4.5" stroke-linecap="round"/>
+              <line x1="16" y1="22" x2="80" y2="6" stroke="#fbbf24" stroke-width="2"/>
+              <line x1="80" y1="6" x2="250" y2="22" stroke="#fbbf24" stroke-width="2"/>
+              <circle cx="80" cy="6" r="3" fill="#fbbf24"/>
+              <!-- Counterweights -->
+              <rect x="20" y="16" width="26" height="13" rx="2" fill="#475569" stroke="#334155" stroke-width="2"/>
+              <!-- Trolley & Cable Hook -->
+              <g class="craneTrolleyGroup">
+                <rect x="180" y="21" width="14" height="6" rx="1.5" fill="#38bdf8"/>
+                <line x1="187" y1="27" x2="187" y2="58" stroke="#cbd5e1" stroke-width="1.5" stroke-dasharray="2 1" class="craneHoistCable"/>
+                <path d="M 187,58 C 187,66 195,66 195,62 C 195,59 189,59 189,61" stroke="#f8fafc" stroke-width="2.2" fill="none" stroke-linecap="round"/>
+              </g>
+            </svg>
+          </div>
+
+          <div class="skylineSpire" id="skylineSpire">
+            <span class="spireIcon">⚡</span>
+            <span class="spireText">Z3 SAT Summit Spire</span>
+          </div>
         </div>
 
         <!-- Floors are rendered bottom-to-top from Floor 1 Bedrock to Top Floor Penthouse -->
@@ -87,8 +148,20 @@
           <!-- Dynamically populated floor cards -->
         </div>
 
-        <div class="bedrockFoundation" id="bedrockFoundation">
-          <span class="bedrockPattern">🪨 🪨 🪨 Mathematical Bedrock Foundation (First-Order SMT) 🪨 🪨 🪨</span>
+        <!-- Granite Bedrock Foundation Slab with Subterranean Anchor Bolts -->
+        <div class="bedrockFoundation" id="bedrockFoundation" aria-label="Mathematical Bedrock Foundation">
+          <div class="bedrockStrataLayer strataUpper"></div>
+          <div class="anchorBoltsRow" aria-hidden="true">
+            <span class="anchorBolt" title="Subterranean Anchor Bolt 1">🔩</span>
+            <span class="anchorBolt" title="Subterranean Anchor Bolt 2">🔩</span>
+            <span class="anchorBolt" title="Subterranean Anchor Bolt 3">🔩</span>
+            <span class="anchorBolt" title="Subterranean Anchor Bolt 4">🔩</span>
+          </div>
+          <div class="bedrockLabel">
+            <span class="bedrockIcon">🪨</span>
+            <span class="bedrockText">Mathematical Bedrock Foundation (First-Order SMT)</span>
+            <span class="bedrockIcon">🪨</span>
+          </div>
         </div>
       </div>
     </aside>
@@ -296,7 +369,10 @@
     </section>
   </main>
 
+  <!-- ==================== FULL-SCREEN GAME FX OVERLAY ==================== -->
+  <div id="gameFxOverlay" class="gameFxOverlay" aria-hidden="true"></div>
+
   <!-- ==================== GAME CLIENT SCRIPT ==================== -->
-  <script src="/static/game.js?v=1"></script>
+  <script src="/static/game.js?v=2"></script>
 </body>
 </html>
