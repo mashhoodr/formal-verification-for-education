@@ -104,8 +104,7 @@ body {
   border-bottom: 1px solid var(--border-card);
   padding: 1rem 1.5rem 0.75rem;
   box-shadow: 0 4px 20px rgba(0, 0, 0, 0.4);
-  position: sticky;
-  top: 0;
+  position: relative;
   z-index: 100;
 }
 
