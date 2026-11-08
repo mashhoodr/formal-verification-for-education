@@ -1,0 +1,302 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>The Proof Architect's Tower — K-12 Formal Verification Game</title>
+  <link rel="stylesheet" href="/static/game.css?v=1" />
+</head>
+<body>
+  <!-- ==================== TOP NAVIGATION & STATUS BAR ==================== -->
+  <header class="gameHeader" role="banner">
+    <div class="headerTop">
+      <div class="brand">
+        <div class="brandTitleRow">
+          <span class="gameLogoIcon" aria-hidden="true">🏢</span>
+          <h1>The Proof Architect's Tower</h1>
+          <span class="headerBadge">Z3 SMT Formal Physics Engine</span>
+        </div>
+        <p class="brandSubtitle">
+          Ascend 12 architectural floors across 3 K-12 proof domains. Experience why curriculum and assessment rules exist by building, breaking, and certifying them with live SMT logic.
+        </p>
+      </div>
+
+      <div class="headerControls">
+        <a href="/" class="workbenchLinkBtn" title="Return to Prover Lab Workbench">
+          <span aria-hidden="true">🔬</span> Prover Lab Workbench (/)
+        </a>
+        <label class="sandboxToggleLabel" title="Unlock all 12 floors without prerequisites">
+          <input type="checkbox" id="sandboxModeCheckbox" />
+          <span class="toggleText">🔓 Sandbox Mode (All Floors Unlocked)</span>
+        </label>
+        <button type="button" id="resetProgressBtn" class="resetProgressBtn" title="Reset all certified floors and XP">
+          <span aria-hidden="true">🔄</span> Reset Progress
+        </button>
+      </div>
+    </div>
+
+    <!-- HUD Stats & Building Switcher -->
+    <div class="headerHudRow">
+      <nav class="buildingTabs" id="buildingTabs" aria-label="Building Switcher">
+        <!-- Building tabs will be dynamically rendered here -->
+      </nav>
+
+      <div class="playerHudStats" aria-label="Player Progress">
+        <div class="hudStatItem" title="Structural Experience Points earned from Z3 certifications">
+          <span class="hudLabel">Structural XP</span>
+          <span class="hudValue xpValue" id="playerXpDisplay">0 XP</span>
+        </div>
+        <div class="hudStatItem" title="Total floors certified across all buildings">
+          <span class="hudLabel">Certified Floors</span>
+          <span class="hudValue" id="certifiedFloorsDisplay">0 / 12</span>
+        </div>
+        <div class="hudStatItem" title="Floors certified in current building">
+          <span class="hudLabel">Building Progress</span>
+          <span class="hudValue" id="buildingProgressDisplay">0 / 5</span>
+        </div>
+      </div>
+    </div>
+  </header>
+
+  <!-- ==================== MAIN 2-PANE GAME CONTAINER ==================== -->
+  <main class="gameLayout">
+    <!-- LEFT PANE: Building Elevation Tower (36%) -->
+    <aside class="towerPane" id="towerPane" aria-label="Building Elevation Tower">
+      <div class="towerHeaderCard">
+        <div class="towerMetaTop">
+          <span class="buildingIcon" id="towerBuildingIcon" aria-hidden="true">🏛️</span>
+          <div>
+            <h2 class="buildingTitle" id="towerBuildingTitle">The Knowledge Space Tower</h2>
+            <p class="buildingSubtitle" id="towerBuildingSubtitle">Doignon &amp; Falmagne (1985) / Birkhoff Representation Lattice</p>
+          </div>
+        </div>
+        <p class="buildingDesc" id="towerBuildingDesc">
+          Ascend from primitive sets to the Birkhoff Penthouse. Master empty and full set axioms, downward closure gravity, union lattices, and Outer Fringe navigation.
+        </p>
+      </div>
+
+      <!-- Architectural Cross-Section Elevation View -->
+      <div class="elevationViewport" id="elevationViewport">
+        <div class="skylineSpire" id="skylineSpire">
+          <span class="spireIcon">⚡</span>
+          <span class="spireText">Z3 SAT Summit Spire</span>
+        </div>
+
+        <!-- Floors are rendered bottom-to-top from Floor 1 Bedrock to Top Floor Penthouse -->
+        <div class="towerStackContainer" id="towerStackContainer" role="list">
+          <!-- Dynamically populated floor cards -->
+        </div>
+
+        <div class="bedrockFoundation" id="bedrockFoundation">
+          <span class="bedrockPattern">🪨 🪨 🪨 Mathematical Bedrock Foundation (First-Order SMT) 🪨 🪨 🪨</span>
+        </div>
+      </div>
+    </aside>
+
+    <!-- RIGHT PANE: Active Floor Hands-On Workbench (64%) -->
+    <section class="workbenchPane" id="workbenchPane" aria-label="Active Floor Workbench">
+      <!-- Active Floor Header -->
+      <div class="activeFloorHeader" id="activeFloorHeader">
+        <div class="floorTagRow">
+          <span class="floorElementPill" id="floorElementPill">Bedrock Slab</span>
+          <span class="floorIndexBadge" id="floorIndexBadge">Floor 1 of 5</span>
+          <span class="floorMechanicBadge" id="floorMechanicBadge">🧩 Set Lattice Builder</span>
+          <span class="floorStatusBadge" id="floorStatusBadge">🛠️ Active Floor</span>
+        </div>
+        <h2 class="floorMainTitle" id="floorMainTitle">Bedrock: Sets, Empty Set (∅) &amp; Full Mastery (Q)</h2>
+      </div>
+
+      <!-- BEAT 1: TRY & BREAK IT (Hands-On Z3 Construction) -->
+      <section class="beatSection beat1Section" id="beat1Section" aria-label="Beat 1: Try &amp; Break It">
+        <div class="beatSectionHeader">
+          <div class="beatTitleRow">
+            <span class="beatBadge">Beat 1</span>
+            <h3>🧱 Try &amp; Break It: Hands-On Z3 Construction</h3>
+          </div>
+          <span class="beatRuleNotice">Productive Failure First • Formally Verified by Z3</span>
+        </div>
+
+        <!-- 1-Sentence Action Prompt Banner -->
+        <div class="tryItPromptBanner" id="tryItPromptBanner">
+          <span class="promptBulb" aria-hidden="true">💡</span>
+          <div class="promptTextContent">
+            <strong>Goal:</strong>
+            <span id="tryItPromptText">Toggle which student skill combinations belong in a valid Driving School foundation, then hit ⚡ Test Structure!</span>
+          </div>
+        </div>
+
+        <!-- Dynamic Puzzle Area -->
+        <div class="puzzleWidgetContainer" id="puzzleWidgetContainer">
+          <!-- Injected dynamic widget depending on mechanicType -->
+        </div>
+
+        <!-- Action Controls Row -->
+        <div class="puzzleActionsRow">
+          <button type="button" id="runStressTestBtn" class="actionBtn primaryActionBtn">
+            <span class="btnIcon" aria-hidden="true">⚡</span> Run Z3 Structural Stress-Test
+          </button>
+          <button type="button" id="resetStarterBtn" class="actionBtn secondaryActionBtn" title="Reload original flawed starter state">
+            <span class="btnIcon" aria-hidden="true">🔄</span> Reset to Flawed Starter
+          </button>
+          <button type="button" id="snapSolutionBtn" class="actionBtn hintActionBtn" title="Load mathematically valid target configuration">
+            <span class="btnIcon" aria-hidden="true">💡</span> Snap to Valid Solution
+          </button>
+          <button type="button" id="toggleBlueprintBtn" class="actionBtn textActionBtn" title="Peek at underlying mathematical blueprint">
+            <span class="btnIcon" aria-hidden="true">📖</span> Peek at Math Blueprint
+          </button>
+        </div>
+
+        <!-- Live Z3 SMT Diagnostic Feedback Card -->
+        <div class="z3FeedbackCard hidden" id="z3BuildFeedbackCard" aria-live="polite">
+          <div class="feedbackHeaderRow">
+            <div class="feedbackTitleGroup">
+              <span class="feedbackIcon" id="feedbackIcon">⚡</span>
+              <h4 class="feedbackTitle" id="feedbackTitle">Structural Crack Detected! (UNSAT)</h4>
+            </div>
+            <span class="feedbackVerdictBadge" id="feedbackVerdictBadge">Z3 UNSAT</span>
+          </div>
+
+          <div class="feedbackBody">
+            <div class="failureHeadlineBox" id="failureHeadlineBox">
+              <span class="headlineTag">Counterexample Flaw:</span>
+              <p class="headlineText" id="failureHeadlineText"></p>
+            </div>
+
+            <div class="counterexampleBox" id="counterexampleBox">
+              <span class="counterexampleTag">Z3 Solver Witness:</span>
+              <p class="counterexampleText" id="counterexampleText"></p>
+            </div>
+
+            <div class="repairHintBox" id="repairHintBox">
+              <span class="hintTag">Architectural Repair Hint:</span>
+              <p class="repairHintText" id="repairHintText"></p>
+            </div>
+
+            <!-- Optional Collapsible Z3 SMT Trace -->
+            <details class="traceDetails" id="traceDetails">
+              <summary class="traceSummary">🔍 View Z3 SMT-LIB2 Refutation Trace</summary>
+              <pre class="traceCodeBlock"><code id="traceCodeBlock">; Loading Z3 SMT Trace...</code></pre>
+            </details>
+          </div>
+        </div>
+
+        <!-- Just-in-Time Blueprint Card (Aha! Unlock) -->
+        <div class="blueprintCard" id="jitBlueprintCard">
+          <div class="blueprintHeader">
+            <span class="blueprintTag">📐 Just-in-Time Blueprint: Formal Pedagogical Invariant</span>
+            <h4 class="blueprintHeadline" id="blueprintHeadline">Axiom 1: Every Knowledge Structure Needs a Ground Floor (∅) and a Ceiling (Q)</h4>
+          </div>
+
+          <div class="blueprintGrid">
+            <div class="blueprintColumn">
+              <span class="blueprintColLabel">💭 Everyday Analogy</span>
+              <p class="blueprintText" id="blueprintEverydayAnalogy">
+                Before day 1 at driving school, a student knows nothing (∅). After passing the final exam, they know every skill (Q). A school curriculum that forgets day 1 or graduation has no foundation.
+              </p>
+            </div>
+
+            <div class="blueprintColumn">
+              <span class="blueprintColLabel">📐 Formal Mathematical Rule</span>
+              <div class="formalRuleBox" id="blueprintFormalRule">
+                Let Q be a domain of items. A family 𝒦 ⊆ 𝒫(Q) is a Knowledge Structure iff ∅ ∈ 𝒦 and Q ∈ 𝒦.
+              </div>
+            </div>
+          </div>
+
+          <div class="blueprintTakeawayRow">
+            <span class="takeawayLabel">🏗️ Architectural Takeaway:</span>
+            <span class="takeawayText" id="blueprintTakeaway">
+              Without ∅ and Q, an educational diagnostic system cannot handle complete beginners or graduating masters.
+            </span>
+          </div>
+        </div>
+      </section>
+
+      <!-- BEAT 2: SABOTAGE / SPOT-THE-CRACK CHALLENGE (Certify Floor) -->
+      <section class="beatSection beat2Section" id="beat2Section" aria-label="Beat 2: Spot-the-Crack Sabotage Challenge">
+        <div class="beatSectionHeader">
+          <div class="beatTitleRow">
+            <span class="beatBadge">Beat 2</span>
+            <h3>🔨 Spot-the-Crack Sabotage Challenge: Certify Floor</h3>
+          </div>
+          <span class="beatXpBadge" id="beatXpBadge">+100 Structural XP</span>
+        </div>
+
+        <!-- Locked Overlay Notice -->
+        <div class="lockedOverlay" id="beat2LockedOverlay">
+          <span class="lockIcon" aria-hidden="true">🔒</span>
+          <h4>Floor Certification Challenge Locked</h4>
+          <p>
+            Complete <strong>Step 1</strong> above by achieving a valid <strong>Z3 SAT</strong> stress-test to unlock this sabotage challenge and certify this floor.
+          </p>
+          <button type="button" class="actionBtn primaryActionBtn" id="focusStep1Btn">
+            Go to Step 1 Construction &uarr;
+          </button>
+        </div>
+
+        <!-- Active Beat 2 Container -->
+        <div class="beat2ActiveContainer hidden" id="beat2ActiveContainer">
+          <!-- Real-World Scenario Callout -->
+          <div class="scenarioContextCard">
+            <div class="cardMetaLabel">📖 Real-World Classroom / Contractor Scenario</div>
+            <p class="scenarioText" id="sabotageScenarioText">
+              A computerized adaptive testing system using this structure is given a brand-new student who fails both the Steering and Clutch diagnostic questions.
+            </p>
+          </div>
+
+          <!-- Challenge Prompt -->
+          <div class="sabotagePromptCard">
+            <div class="cardMetaLabel">❓ Sabotage Audit Question</div>
+            <p class="challengePromptText" id="sabotagePromptText">
+              A careless curriculum designer submits a knowledge structure 𝒦 = {{S}, {C}, {S, C}} for Driving School. Why will Z3 refute this in production?
+            </p>
+          </div>
+
+          <!-- Options Grid -->
+          <fieldset class="sabotageOptionsFieldset">
+            <legend class="srOnly">Select the counterexample or flaw that refutes the invariant</legend>
+            <div class="sabotageOptionsGrid" id="sabotageOptionsGrid">
+              <!-- Dynamically populated option cards -->
+            </div>
+          </fieldset>
+
+          <!-- Sabotage Action Row -->
+          <div class="sabotageActionsRow">
+            <button type="button" id="submitSabotageBtn" class="actionBtn certifyActionBtn" disabled>
+              <span class="btnIcon" aria-hidden="true">⚡</span> Submit Counterexample to Z3
+            </button>
+            <span class="selectionHint" id="selectionHint">Select an option above to verify</span>
+          </div>
+
+          <!-- Sabotage Feedback Card -->
+          <div class="sabotageFeedbackCard hidden" id="sabotageFeedbackCard" aria-live="polite">
+            <div class="feedbackHeaderRow">
+              <div class="feedbackTitleGroup">
+                <span class="feedbackIcon" id="sabotageResultIcon">✅</span>
+                <h4 class="feedbackTitle" id="sabotageResultTitle">Spot-the-Crack Certified! (SAT)</h4>
+              </div>
+              <span class="feedbackVerdictBadge" id="sabotageResultBadge">✅ +100 XP</span>
+            </div>
+
+            <p class="sabotageExplanationText" id="sabotageExplanationText"></p>
+
+            <details class="traceDetails" id="sabotageTraceDetails">
+              <summary class="traceSummary">🔍 View Z3 UNSAT Refutation Witness</summary>
+              <pre class="traceCodeBlock"><code id="sabotageTraceCodeBlock">; Z3 UNSAT Trace</code></pre>
+            </details>
+
+            <div class="ascendRow hidden" id="ascendRow">
+              <button type="button" id="ascendNextFloorBtn" class="actionBtn ascendActionBtn">
+                🚀 Ascend to Next Floor Up &rarr;
+              </button>
+            </div>
+          </div>
+        </div>
+      </section>
+    </section>
+  </main>
+
+  <!-- ==================== GAME CLIENT SCRIPT ==================== -->
+  <script src="/static/game.js?v=1"></script>
+</body>
+</html>

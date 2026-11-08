@@ -9,6 +9,8 @@ from app.models import (
     Stage0RepairRequest,
     Stage0VerifyRequest,
     KstStateProbeRequest,
+    GameBuildVerifyRequest,
+    GameSabotageRequest,
 )
 from app.verifier.curriculum_grounding import (
     get_stage0_grounding_report,
@@ -32,6 +34,11 @@ from app.verifier.kst_kernel import (
     KST_DOMAINS,
 )
 from app.verifier.proof_theater_eval import run_proof_theater_eval
+from app.verifier.proof_game_engine import (
+    list_game_buildings,
+    verify_floor_build,
+    verify_sabotage_challenge,
+)
 
 app = FastAPI(
     title="K-12 Educational Content Formal Verification Kernel",
@@ -151,4 +158,32 @@ def post_kst_probe_state_endpoint(payload: KstStateProbeRequest) -> JSONResponse
 def get_proof_theater_eval_report_endpoint() -> JSONResponse:
     report = run_proof_theater_eval()
     return JSONResponse(content=report.model_dump(by_alias=True))
+
+
+# ---------------------------------------------------------------------------
+# Proof Architect's Tower Game Routes (/game)
+# ---------------------------------------------------------------------------
+
+@app.get("/game")
+def serve_game_studio() -> FileResponse:
+    return FileResponse(str(STATIC_DIR / "game.html"))
+
+
+@app.get("/api/game/buildings")
+def get_game_buildings_endpoint() -> JSONResponse:
+    buildings = [b.model_dump(by_alias=True) for b in list_game_buildings()]
+    return JSONResponse(content={"buildings": buildings})
+
+
+@app.post("/api/game/verify-floor-build")
+def post_game_verify_floor_build_endpoint(payload: GameBuildVerifyRequest) -> JSONResponse:
+    result = verify_floor_build(payload)
+    return JSONResponse(content=result.model_dump(by_alias=True))
+
+
+@app.post("/api/game/verify-sabotage-challenge")
+def post_game_verify_sabotage_challenge_endpoint(payload: GameSabotageRequest) -> JSONResponse:
+    result = verify_sabotage_challenge(payload)
+    return JSONResponse(content=result.model_dump(by_alias=True))
+
 

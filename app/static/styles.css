@@ -63,6 +63,48 @@ body {
   font-size: 0.92rem;
 }
 
+.heroTopRow {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 1.5rem;
+  flex-wrap: wrap;
+  margin-bottom: 0.85rem;
+}
+
+.heroText {
+  flex: 1;
+  min-width: 320px;
+}
+
+.heroActions {
+  display: flex;
+  align-items: center;
+  flex-shrink: 0;
+}
+
+.gameLaunchBtn {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  background: linear-gradient(135deg, #d97706 0%, #ea580c 50%, #dc2626 100%);
+  color: #ffffff;
+  padding: 0.75rem 1.35rem;
+  border-radius: 8px;
+  font-weight: 700;
+  font-size: 0.95rem;
+  text-decoration: none;
+  border: 1px solid rgba(255, 255, 255, 0.3);
+  box-shadow: 0 4px 14px rgba(220, 38, 38, 0.35);
+  transition: transform 0.15s ease, box-shadow 0.15s ease, filter 0.15s ease;
+}
+
+.gameLaunchBtn:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 6px 18px rgba(220, 38, 38, 0.5);
+  filter: brightness(1.1);
+}
+
 .mainGrid {
   max-width: 1440px;
   margin: 1.5rem auto;

@@ -389,3 +389,87 @@ class ProofTheaterEvalReport(CamelModel):
     mutants: list[ProofTheaterMutantResult]
 
 
+# ---------------------------------------------------------------------------
+# Proof Architect's Tower Game Models (/game)
+# ---------------------------------------------------------------------------
+
+class GameSabotageOption(CamelModel):
+    option_id: str
+    label: str
+    detail: str
+
+
+class GameSabotageChallenge(CamelModel):
+    prompt: str
+    scenario_context: str
+    options: list[GameSabotageOption]
+    correct_option_id: str
+    explanation_on_success: str
+    z3_unsat_trace: str
+
+
+class GameBlueprintCard(CamelModel):
+    headline: str
+    everyday_analogy: str
+    formal_rule: str
+    takeaway: str
+
+
+class GameFloorSpec(CamelModel):
+    floor_id: str
+    floor_number: int
+    architectural_element: str
+    title: str
+    try_it_prompt: str
+    mechanic_type: str
+    puzzle_config: dict
+    blueprint_card: GameBlueprintCard
+    sabotage_challenge: GameSabotageChallenge
+    xp_reward: int = 100
+
+
+class GameBuildingPack(CamelModel):
+    building_id: str
+    title: str
+    subtitle: str
+    icon: str
+    description: str
+    floors: list[GameFloorSpec]
+
+
+class GameBuildVerifyRequest(CamelModel):
+    building_id: str
+    floor_id: str
+    player_state: dict
+
+
+class GameBuildVerifyResponse(CamelModel):
+    building_id: str
+    floor_id: str
+    is_sat: bool
+    status_title: str
+    failure_headline: str = ""
+    counterexample_witness: str = ""
+    cracked_element_ids: list[str] = Field(default_factory=list)
+    repair_hint: str = ""
+    z3_smt_trace: str = ""
+    z3_certificate_hash: str | None = None
+    blueprint_card: GameBlueprintCard
+
+
+class GameSabotageRequest(CamelModel):
+    building_id: str
+    floor_id: str
+    selected_option_id: str
+
+
+class GameSabotageResponse(CamelModel):
+    building_id: str
+    floor_id: str
+    correct: bool
+    status_title: str
+    explanation: str
+    z3_unsat_trace: str
+
+
+
